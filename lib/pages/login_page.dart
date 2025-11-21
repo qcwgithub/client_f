@@ -1,4 +1,4 @@
-import 'package:client_f/pages/main_page.dart';
+import 'main_page.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
