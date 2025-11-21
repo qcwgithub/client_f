@@ -1,7 +1,7 @@
-import 'package:client_f/pages/create_page.dart';
-import 'package:client_f/pages/discover_page.dart';
-import 'package:client_f/pages/home_page.dart';
-import 'package:client_f/pages/profile_page.dart';
+import 'create_page.dart';
+import 'discover_page.dart';
+import 'home_page.dart';
+import 'profile_page.dart';
 import 'package:flutter/material.dart';
 
 class MainPage extends StatefulWidget {
