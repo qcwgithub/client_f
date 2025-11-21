@@ -1,65 +1,49 @@
-import 'create_page.dart';
-import 'discover_page.dart';
-import 'home_page.dart';
-import 'profile_page.dart';
+import 'package:client_f/widgets/scene_card.dart';
 import 'package:flutter/material.dart';
 
-class MainPage extends StatefulWidget {
+class MainPage extends StatelessWidget {
   const MainPage({super.key});
 
-  @override
-  State<StatefulWidget> createState() {
-    return _MainPageState();
-  }
-}
-
-class _MainPageState extends State<MainPage> {
-  int currentIndex = 0;
-  
-  final List<Widget> pages = const [
-    HomePage(),
-    DiscoverPage(),
-    CreatePage(),
-    ProfilePage(),
+  final List<Map<String, String>> _fakeScenes = const [
+    {
+      "title": "I'm at Taylor Swift Concert",
+      "subtitle": "Anyone here at gate B?",
+    },
+    {
+      "title": "Coding Flutter in a café",
+      "subtitle": "What are you guys building today?",
+    },
+    {
+      "title": "Stuck at airport delay",
+      "subtitle": "How long have you waited?",
+    },
+    {
+      "title": "Watching NBA Game",
+      "subtitle": "Lakers vs Celtics — who wins?",
+    },
+    {
+      "title": "Learning Japanese",
+      "subtitle": "Any good tips?",
+    },
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: currentIndex,
-        children: pages,
+      appBar: AppBar(
+        title: const Text("Scenes"),
       ),
-      bottomNavigationBar: NavigationBar(
-        height: 65,
-        selectedIndex: currentIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            currentIndex = index;
-          });
+      body: ListView.builder(
+        padding: const EdgeInsets.all(12),
+        itemCount: _fakeScenes.length,
+        itemBuilder: (context, index) {
+          final s = _fakeScenes[index];
+          return SceneCard (
+            title: s["title"]!,
+            subtitle: s["subtitle"]!,
+          );
         },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined), 
-            selectedIcon: Icon(Icons.home),
-            label: "Home"
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.explore_outlined), 
-            selectedIcon: Icon(Icons.explore),
-            label: "Discover"
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.add_circle_outlined), 
-            selectedIcon: Icon(Icons.add_circle),
-            label: "Create"
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outlined), 
-            selectedIcon: Icon(Icons.person),
-            label: "Profile"
-          ),
-        ]),
+      ),
     );
   }
 }

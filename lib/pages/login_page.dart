@@ -1,4 +1,4 @@
-import 'main_page.dart';
+import 'home_page.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -57,7 +57,7 @@ class _LoginState extends State<LoginPage>{
               child: FilledButton(
                 onPressed: () {
                   Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) {
-                    return const MainPage();
+                    return const HomePage();
                   }));
                 }, 
                 child: const Padding(

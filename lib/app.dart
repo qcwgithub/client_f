@@ -1,12 +1,7 @@
 
-
-import 'package:client_f/pages/discover_page.dart';
 import 'package:client_f/pages/home_page.dart';
-import 'package:client_f/pages/profile_page.dart';
 
-import 'providers/nav_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -37,41 +32,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      // home: const MyHomePage(title: 'Flutter Demo Home Page'),
-      home: const MainNavigation(),
-    );
-  }
-}
-
-class MainNavigation extends StatelessWidget {
-  const MainNavigation({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final nav = context.watch<NavProvider>();
-
-    final pages = [
-      const HomePage(),
-      const DiscoverPage(),
-      // const MessagesPage(),
-      const ProfilePage(),
-    ];
-
-    return Scaffold(
-      body: IndexedStack(
-        index: nav.index,
-        children: pages,
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: nav.index,
-        onDestinationSelected: nav.setIndex,
-        destinations: const[
-          NavigationDestination(icon: Icon(Icons.home), label: "Home"),
-          NavigationDestination(icon: Icon(Icons.search), label: "Explore"),
-          // NavigationDestination(icon: Icon(Icons.chat_bubble), label: "Messages"),
-          NavigationDestination(icon: Icon(Icons.person), label: "Profile"),
-        ],
-      ),
+      home: const HomePage(),
     );
   }
 }
