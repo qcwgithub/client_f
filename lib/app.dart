@@ -10,6 +10,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false, // 去掉 DEBUG 横幅
       title: 'Scene Hub',
       theme: ThemeData(
         primarySwatch: Colors.blue,

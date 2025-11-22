@@ -27,7 +27,7 @@ class SceneCard extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) {
-                    return ChatPage();
+                    return ChatPage(sceneName: title);
                   },
                 ),
               );

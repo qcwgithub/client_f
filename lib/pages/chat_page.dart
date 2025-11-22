@@ -1,9 +1,13 @@
 import 'package:client_f/providers/message_provider.dart';
+import 'package:client_f/widgets/chat_input.dart';
+import 'package:client_f/widgets/chat_message_item.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({super.key});
+  final String sceneName;
+
+  const ChatPage({super.key, required this.sceneName});
 
   @override
   State<StatefulWidget> createState() {
@@ -12,83 +16,55 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  final controller = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToBottom();
+    });
+  }
+
+  void _scrollToBottom() {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final messageProvider = Provider.of<MessageProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text("TODO")),
+      appBar: AppBar(title: Text(widget.sceneName)),
 
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder(
-              stream: messageProvider.messageStream, 
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const SizedBox();
-                }
-
-                final msgs = snapshot.data!;
-                return ListView.builder(
-                  itemCount: msgs.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(msgs[index]),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              }
-            ),
-          ), 
-          _buildInput(messageProvider)
-        ]
-      ),
-    );
-  }
-
-  Widget _buildInput(MessageProvider provider) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      color: Colors.grey.shade200,
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                hintText: "Type...",
-                border: OutlineInputBorder(),
-              ),
+            child: ListView.builder(
+              controller: _scrollController,
+              itemCount: messageProvider.messages.length,
+              itemBuilder: (context, index) =>
+                  ChatMessageItem(message: messageProvider.messages[index]),
             ),
           ),
+          ChatInput(
+            callback: (msg) {
+              messageProvider.sendMessage(msg);
 
-          const SizedBox(width: 8),
-
-          IconButton(
-            onPressed: () {
-              if (controller.text.trim().isEmpty) {
-                return;
-              }
-
-              provider.sendMessage(controller.text.trim());
-              controller.clear();
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _scrollToBottom();
+              });
             },
-            icon: const Icon(Icons.send),
-          )
+          ),
         ],
       ),
     );
