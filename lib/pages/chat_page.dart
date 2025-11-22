@@ -25,6 +25,42 @@ class _ChatPageState extends State<ChatPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToBottom();
     });
+
+    _scrollController.addListener(() async {
+      bool isTop =
+          _scrollController.position.atEdge &&
+          _scrollController.position.pixels != 0;
+
+      if (isTop) {
+        print("isTop!");
+        double beforePixels = _scrollController.position.pixels;
+        double beforeExtent = 0;
+        bool loaded = await MessageProvider.instance!.loadOlderMessages(() {
+          beforeExtent = _scrollController.position.maxScrollExtent;
+        });
+
+        if (loaded) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            double afterExtent = _scrollController.position.maxScrollExtent;
+            double diff = afterExtent - beforeExtent;
+            _scrollController.jumpTo(beforePixels + diff);
+            print("extent ${beforeExtent} -> ${afterExtent} jumpTo ${beforePixels + diff}");
+          });
+        }
+      }
+    });
+  }
+
+  void _scrollToTop() {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: Duration(milliseconds: 0),
+      curve: Curves.linear,
+    );
   }
 
   void _scrollToBottom() {
@@ -33,7 +69,7 @@ class _ChatPageState extends State<ChatPage> {
     }
 
     _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
+      _scrollController.position.minScrollExtent,
       duration: Duration(milliseconds: 250),
       curve: Curves.easeOut,
     );
@@ -41,6 +77,7 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    print("build");
     final messageProvider = Provider.of<MessageProvider>(context);
 
     return Scaffold(
@@ -51,9 +88,12 @@ class _ChatPageState extends State<ChatPage> {
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
+              reverse: true, // !
               itemCount: messageProvider.messages.length,
-              itemBuilder: (context, index) =>
-                  ChatMessageItem(message: messageProvider.messages[index]),
+              itemBuilder: (context, index) => ChatMessageItem(
+                message: messageProvider
+                    .messages[messageProvider.messages.length - 1 - index],
+              ),
             ),
           ),
           ChatInput(

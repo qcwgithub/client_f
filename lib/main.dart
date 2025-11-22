@@ -15,7 +15,7 @@ void main() {
     window_size.setWindowMinSize(const Size(400, 700));
     window_size.setWindowMaxSize(const Size(400, 1000));
 
-    window_size.setWindowFrame(const Rect.fromLTWH(1500, 100, 400, 800));
+    window_size.setWindowFrame(const Rect.fromLTWH(1500, 100, 200, 400));
   }
   runApp(
     MultiProvider(providers: [
