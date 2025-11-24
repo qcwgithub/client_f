@@ -3,15 +3,18 @@ import 'package:flutter/material.dart';
 class MessageItem {
   final String text;
   final bool isMe;
-  MessageItem({required this.text, required this.isMe});
+  final int timeS;
+  MessageItem({required this.text, required this.isMe, required this.timeS});
 }
 
 class MessageProvider extends ChangeNotifier {
   final List<MessageItem> _messageItems = [];
   List<MessageItem> get messageItems => _messageItems;
 
+  int _max = 10000;
   int _current = 10000;
   static int pageCount = 20;
+  static int latesetTimeS = 1763955346;
 
   static MessageProvider? instance;
 
@@ -21,6 +24,7 @@ class MessageProvider extends ChangeNotifier {
       var item = MessageItem(
         text: _current.toString() + (i == pageCount - 1 ? "(page end)" : ""),
         isMe: i % 8 == 0,
+        timeS: latesetTimeS - (_max - _current) * 60,
       );
       _messageItems.insert(0, item);
       _current--;
@@ -49,6 +53,7 @@ class MessageProvider extends ChangeNotifier {
             _current.toString() +
             (_current == 1 || i == pageCount - 1 ? "(page end)" : ""),
         isMe: i % 8 == 0,
+        timeS: latesetTimeS - (_max - _current) * 60,
       );
       _messageItems.insert(0, item);
       _current--;
@@ -69,7 +74,11 @@ class MessageProvider extends ChangeNotifier {
   }
 
   void sendMessage(String text) {
-    var item = MessageItem(text: text, isMe: true);
+    var item = MessageItem(
+      text: text,
+      isMe: true,
+      timeS: (DateTime.now().millisecondsSinceEpoch / 1000).toInt(),
+    );
     _messageItems.add(item);
     notifyListeners();
   }

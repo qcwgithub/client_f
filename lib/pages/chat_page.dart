@@ -92,17 +92,23 @@ class _ChatPageState extends State<ChatPage> {
               reverse: true, // !
               itemCount: messageProvider.messageItems.length,
               itemBuilder: (context, index) {
-                var item =
-                    messageProvider.messageItems[messageProvider
-                            .messageItems
-                            .length -
-                        1 -
-                        index];
+                int L = messageProvider.messageItems.length;
+                int itemIndex = L - 1 - index;
+                var item = messageProvider.messageItems[itemIndex];
+                int timeS = item.timeS;
+                if (itemIndex < L - 1) {
+                  var prevItem = messageProvider.messageItems[itemIndex + 1];
+                  if (item.isMe == prevItem.isMe && timeS - prevItem.timeS < 300) {
+                    timeS = 0;
+                  }
+                }
                 return ChatMessageItem(
                   text: item.text,
                   isMe: item.isMe,
                   avatarUrl:
                       "https://gips3.baidu.com/it/u=2776647388,3101487920&fm=3074&app=3074&f=PNG?w=2048&h=2048",
+                  timeS: timeS,
+                  userName: "userName",
                 );
               },
             ),
