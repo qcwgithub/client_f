@@ -35,7 +35,7 @@ class _ChatPageState extends State<ChatPage> {
         // print("isTop!");
         // double beforePixels = _scrollController.position.pixels;
         // double beforeExtent = 0;
-        // bool loaded = 
+        // bool loaded =
         await MessageProvider.instance!.loadOlderMessages(() {
           // beforeExtent = _scrollController.position.maxScrollExtent;
         });
@@ -90,11 +90,21 @@ class _ChatPageState extends State<ChatPage> {
             child: ListView.builder(
               controller: _scrollController,
               reverse: true, // !
-              itemCount: messageProvider.messages.length,
-              itemBuilder: (context, index) => ChatMessageItem(
-                message: messageProvider
-                    .messages[messageProvider.messages.length - 1 - index],
-              ),
+              itemCount: messageProvider.messageItems.length,
+              itemBuilder: (context, index) {
+                var item =
+                    messageProvider.messageItems[messageProvider
+                            .messageItems
+                            .length -
+                        1 -
+                        index];
+                return ChatMessageItem(
+                  text: item.text,
+                  isMe: item.isMe,
+                  avatarUrl:
+                      "https://gips3.baidu.com/it/u=2776647388,3101487920&fm=3074&app=3074&f=PNG?w=2048&h=2048",
+                );
+              },
             ),
           ),
           ChatInput(

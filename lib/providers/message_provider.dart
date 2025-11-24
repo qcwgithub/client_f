@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 
+class MessageItem {
+  final String text;
+  final bool isMe;
+  MessageItem({required this.text, required this.isMe});
+}
+
 class MessageProvider extends ChangeNotifier {
-  final List<String> _messages = [];
-  List<String> get messages => _messages;
+  final List<MessageItem> _messageItems = [];
+  List<MessageItem> get messageItems => _messageItems;
 
   int _current = 10000;
   static int pageCount = 20;
@@ -12,7 +18,11 @@ class MessageProvider extends ChangeNotifier {
   MessageProvider() {
     instance = this;
     for (int i = 0; i < pageCount; i++) {
-      _messages.insert(0, _current.toString() + (i == pageCount - 1 ? "(page end)" : ""));
+      var item = MessageItem(
+        text: _current.toString() + (i == pageCount - 1 ? "(page end)" : ""),
+        isMe: i % 8 == 0,
+      );
+      _messageItems.insert(0, item);
       _current--;
     }
   }
@@ -34,14 +44,19 @@ class MessageProvider extends ChangeNotifier {
         break;
       }
 
-      _messages.insert(0, _current.toString() + (_current == 1 || i == pageCount - 1 ? "(page end)" : ""));
+      var item = MessageItem(
+        text:
+            _current.toString() +
+            (_current == 1 || i == pageCount - 1 ? "(page end)" : ""),
+        isMe: i % 8 == 0,
+      );
+      _messageItems.insert(0, item);
       _current--;
       addCount++;
     }
 
     _isLoading = false;
     if (addCount > 0) {
-
       beforeNotify();
       notifyListeners();
     }
@@ -53,8 +68,9 @@ class MessageProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void sendMessage(String msg) {
-    _messages.add(msg);
+  void sendMessage(String text) {
+    var item = MessageItem(text: text, isMe: true);
+    _messageItems.add(item);
     notifyListeners();
   }
 }
