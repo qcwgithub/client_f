@@ -1,4 +1,4 @@
-import 'package:client_f/pages/chat_page.dart';
+import 'package:scene_hub/pages/chat_page.dart';
 import 'package:flutter/material.dart';
 
 class SceneCard extends StatelessWidget {

@@ -1,6 +1,6 @@
-import 'package:client_f/providers/message_provider.dart';
-import 'package:client_f/widgets/chat_input.dart';
-import 'package:client_f/widgets/chat_message_item.dart';
+import 'package:scene_hub/providers/message_provider.dart';
+import 'package:scene_hub/widgets/chat_input.dart';
+import 'package:scene_hub/widgets/chat_message_item.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -32,21 +32,22 @@ class _ChatPageState extends State<ChatPage> {
           _scrollController.position.pixels != 0;
 
       if (isTop) {
-        print("isTop!");
-        double beforePixels = _scrollController.position.pixels;
-        double beforeExtent = 0;
-        bool loaded = await MessageProvider.instance!.loadOlderMessages(() {
-          beforeExtent = _scrollController.position.maxScrollExtent;
+        // print("isTop!");
+        // double beforePixels = _scrollController.position.pixels;
+        // double beforeExtent = 0;
+        // bool loaded = 
+        await MessageProvider.instance!.loadOlderMessages(() {
+          // beforeExtent = _scrollController.position.maxScrollExtent;
         });
 
-        if (loaded) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            double afterExtent = _scrollController.position.maxScrollExtent;
-            double diff = afterExtent - beforeExtent;
-            _scrollController.jumpTo(beforePixels + diff);
-            print("extent ${beforeExtent} -> ${afterExtent} jumpTo ${beforePixels + diff}");
-          });
-        }
+        // if (loaded) {
+        //   WidgetsBinding.instance.addPostFrameCallback((_) {
+        //     double afterExtent = _scrollController.position.maxScrollExtent;
+        //     double diff = afterExtent - beforeExtent;
+        //     _scrollController.jumpTo(beforePixels + diff);
+        //     print("extent ${beforeExtent} -> ${afterExtent} jumpTo ${beforePixels + diff}");
+        //   });
+        // }
       }
     });
   }

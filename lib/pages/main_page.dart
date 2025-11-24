@@ -1,4 +1,4 @@
-import 'package:client_f/widgets/scene_card.dart';
+import 'package:scene_hub/widgets/scene_card.dart';
 import 'package:flutter/material.dart';
 
 class MainPage extends StatelessWidget {

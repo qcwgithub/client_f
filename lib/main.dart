@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:client_f/providers/message_provider.dart';
-import 'package:client_f/providers/nav_provider.dart';
+import 'package:scene_hub/providers/message_provider.dart';
+import 'package:scene_hub/providers/nav_provider.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

@@ -1,5 +1,5 @@
 
-import 'package:client_f/pages/home_page.dart';
+import 'package:scene_hub/pages/home_page.dart';
 
 import 'package:flutter/material.dart';
 
@@ -13,6 +13,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false, // 去掉 DEBUG 横幅
       title: 'Scene Hub',
       theme: ThemeData(
+        brightness: Brightness.dark,
         primarySwatch: Colors.blue,
         useMaterial3: true,
 
@@ -31,7 +32,7 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        // colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
       home: const HomePage(),
     );

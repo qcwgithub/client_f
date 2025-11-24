@@ -16,7 +16,7 @@ class ChatMessageItem extends StatelessWidget {
             color: Colors.blue.shade100,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Text(message),
+          child: Text(message, style: TextStyle(color: Colors.black)),
         ),
       ),
     );
