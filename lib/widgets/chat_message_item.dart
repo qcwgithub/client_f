@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:scene_hub/pages/user_page.dart';
 
 class ChatMessageItem extends StatelessWidget {
   final String text;
@@ -16,6 +17,17 @@ class ChatMessageItem extends StatelessWidget {
     required this.timeS,
   });
 
+  void _onClickAvatar(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) {
+          return UserPage(userName: userName, avatarUrl: avatarUrl);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final Radius radius = Radius.circular(12);
@@ -29,7 +41,7 @@ class ChatMessageItem extends StatelessWidget {
             : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!isMe) _buildAvatar(),
+          if (!isMe) _buildAvatar(context, _onClickAvatar),
 
           // const SizedBox(width: 8),
           Flexible(
@@ -82,23 +94,27 @@ class ChatMessageItem extends StatelessWidget {
             ),
           ),
 
-          if (isMe) _buildAvatar(),
+          if (isMe) _buildAvatar(context, _onClickAvatar),
         ],
       ),
     );
   }
 
-  Widget _buildAvatar() {
-    return Container(
-      // padding: isMe ? EdgeInsets.only() : EdgeInsets.only(top: 5),
-      width: 38,
-      height: 38,
-      margin: isMe
-          ? const EdgeInsets.only(right: 6, left: 6)
-          : const EdgeInsets.only(right: 6, left: 6, top: 12),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(6), // 圆角方形
-        child: Image.network(avatarUrl, fit: BoxFit.cover),
+  Widget _buildAvatar(BuildContext context, Function(BuildContext) onClick) {
+    return GestureDetector(
+      onTap: () => onClick(context),
+
+      child: Container(
+        // padding: isMe ? EdgeInsets.only() : EdgeInsets.only(top: 5),
+        width: 38,
+        height: 38,
+        margin: isMe
+            ? const EdgeInsets.only(right: 6, left: 6)
+            : const EdgeInsets.only(right: 6, left: 6, top: 12),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(6), // 圆角方形
+          child: Image.network(avatarUrl, fit: BoxFit.cover),
+        ),
       ),
     );
   }
