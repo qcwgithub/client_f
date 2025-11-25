@@ -1,10 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:scene_hub/me.dart';
 
 class MessageItem {
-  final String text;
-  final bool isMe;
-  final int timeS;
-  MessageItem({required this.text, required this.isMe, required this.timeS});
+  String messageId;
+  String? roomId;
+
+  // sender
+  String senderId;
+  String? senderName;
+  String? senderAvatarUrl;
+
+  // system
+  // text
+  // image
+  // join
+  // leave
+  String type;
+  String content;
+
+  // millisecond
+  int timestamp;
+
+  MessageItem({
+    required this.messageId,
+    required this.senderId,
+    this.senderName,
+    this.senderAvatarUrl,
+    required this.type,
+    required this.content,
+    required this.timestamp,
+  });
 }
 
 class MessageProvider extends ChangeNotifier {
@@ -15,6 +40,8 @@ class MessageProvider extends ChangeNotifier {
   int _current = 10000;
   static int pageCount = 20;
   static int latesetTimeS = 1763955346;
+  static String defaultAvatarUrl =
+      "https://gips3.baidu.com/it/u=2776647388,3101487920&fm=3074&app=3074&f=PNG?w=2048&h=2048";
 
   static MessageProvider? instance;
 
@@ -22,9 +49,12 @@ class MessageProvider extends ChangeNotifier {
     instance = this;
     for (int i = 0; i < pageCount; i++) {
       var item = MessageItem(
-        text: _current.toString() + (i == pageCount - 1 ? "(page end)" : ""),
-        isMe: i % 8 == 0,
-        timeS: latesetTimeS - (_max - _current) * 60,
+        messageId: _current.toString(),
+        senderId: _current.toString(),
+        senderAvatarUrl: defaultAvatarUrl,
+        type: "text",
+        content: _current.toString() + (i == pageCount - 1 ? "(page end)" : ""),
+        timestamp: (latesetTimeS - (_max - _current) * 60) * 1000,
       );
       _messageItems.insert(0, item);
       _current--;
@@ -49,11 +79,14 @@ class MessageProvider extends ChangeNotifier {
       }
 
       var item = MessageItem(
-        text:
+        messageId: _current.toString(),
+        senderId: _current.toString(),
+        senderAvatarUrl: defaultAvatarUrl,
+        type: "text",
+        content:
             _current.toString() +
             (_current == 1 || i == pageCount - 1 ? "(page end)" : ""),
-        isMe: i % 8 == 0,
-        timeS: latesetTimeS - (_max - _current) * 60,
+        timestamp: (latesetTimeS - (_max - _current) * 60) * 1000,
       );
       _messageItems.insert(0, item);
       _current--;
@@ -75,9 +108,12 @@ class MessageProvider extends ChangeNotifier {
 
   void sendMessage(String text) {
     var item = MessageItem(
-      text: text,
-      isMe: true,
-      timeS: (DateTime.now().millisecondsSinceEpoch / 1000).toInt(),
+      messageId: "messageId",
+      senderId: Me.instance!.userId,
+      senderAvatarUrl: defaultAvatarUrl,
+      timestamp: DateTime.now().millisecondsSinceEpoch.toInt(),
+      type: "text",
+      content: text,
     );
     _messageItems.add(item);
     notifyListeners();

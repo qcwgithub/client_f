@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:scene_hub/me.dart';
 import 'package:scene_hub/providers/message_provider.dart';
 import 'package:scene_hub/providers/nav_provider.dart';
 
@@ -17,6 +18,10 @@ void main() {
 
     window_size.setWindowFrame(const Rect.fromLTWH(1500, 100, 200, 400));
   }
+
+  // create Me
+  Me(userId: "9999", userName: "Yaji");
+
   runApp(
     MultiProvider(providers: [
       ChangeNotifierProvider(create: (_) => NavProvider()),

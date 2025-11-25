@@ -1,3 +1,4 @@
+import 'package:scene_hub/me.dart';
 import 'package:scene_hub/providers/message_provider.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
 import 'package:scene_hub/widgets/chat_message_item.dart';
@@ -95,21 +96,16 @@ class _ChatPageState extends State<ChatPage> {
                 int L = messageProvider.messageItems.length;
                 int itemIndex = L - 1 - index;
                 var item = messageProvider.messageItems[itemIndex];
-                int timeS = item.timeS;
+                bool showTime = true;
                 if (itemIndex < L - 1) {
                   var prevItem = messageProvider.messageItems[itemIndex + 1];
-                  if (item.isMe == prevItem.isMe && timeS - prevItem.timeS < 300) {
-                    timeS = 0;
+                  if (Me.instance!.isMe(item.senderId) ==
+                          Me.instance!.isMe(prevItem.senderId) &&
+                      item.timestamp - prevItem.timestamp < 300000) {
+                    showTime = false;
                   }
                 }
-                return ChatMessageItem(
-                  text: item.text,
-                  isMe: item.isMe,
-                  avatarUrl:
-                      "https://gips3.baidu.com/it/u=2776647388,3101487920&fm=3074&app=3074&f=PNG?w=2048&h=2048",
-                  timeS: timeS,
-                  userName: "userName",
-                );
+                return ChatMessageItem(messageItem: item, showTime: showTime);
               },
             ),
           ),

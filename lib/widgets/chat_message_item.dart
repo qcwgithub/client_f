@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:scene_hub/me.dart';
 import 'package:scene_hub/pages/user_page.dart';
+import 'package:scene_hub/providers/message_provider.dart';
 
 class ChatMessageItem extends StatelessWidget {
-  final String text;
-  final bool isMe;
-  final String userName;
-  final String avatarUrl;
-  final int timeS; // 0 == not show
+  final MessageItem messageItem;
+  final bool showTime;
   const ChatMessageItem({
     super.key,
-    required this.text,
-    required this.isMe,
-    required this.userName,
-    required this.avatarUrl,
-    required this.timeS,
+    required this.messageItem,
+    required this.showTime,
   });
 
   void _onClickAvatar(BuildContext context) {
@@ -22,7 +18,11 @@ class ChatMessageItem extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (_) {
-          return UserPage(userName: userName, avatarUrl: avatarUrl);
+          return UserPage(
+            userId: messageItem.senderId,
+            userName: messageItem.senderName,
+            avatarUrl: messageItem.senderAvatarUrl,
+          );
         },
       ),
     );
@@ -31,7 +31,9 @@ class ChatMessageItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Radius radius = Radius.circular(12);
-    final timeString = _formatTimestamp(timeS);
+    final timeString = _formatTimestamp(messageItem.timestamp);
+
+    bool isMe = Me.instance!.isMe(messageItem.senderId);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 5),
@@ -41,7 +43,7 @@ class ChatMessageItem extends StatelessWidget {
             : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!isMe) _buildAvatar(context, _onClickAvatar),
+          if (!isMe) _buildAvatar(isMe, context, _onClickAvatar),
 
           // const SizedBox(width: 8),
           Flexible(
@@ -52,7 +54,7 @@ class ChatMessageItem extends StatelessWidget {
               children: [
                 if (!isMe)
                   Text(
-                    userName,
+                    messageItem.senderName ?? "(No name)",
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
 
@@ -77,15 +79,16 @@ class ChatMessageItem extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    text,
+                    messageItem.content,
                     style: TextStyle(
                       color: isMe ? Colors.white : Colors.black87,
                     ),
                   ),
                 ),
 
-                if (timeS != 0) const SizedBox(height: 4),
-                if (timeS != 0)
+                if (showTime) const SizedBox(height: 4),
+
+                if (showTime != 0)
                   Text(
                     timeString,
                     style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
@@ -94,13 +97,17 @@ class ChatMessageItem extends StatelessWidget {
             ),
           ),
 
-          if (isMe) _buildAvatar(context, _onClickAvatar),
+          if (isMe) _buildAvatar(isMe, context, _onClickAvatar),
         ],
       ),
     );
   }
 
-  Widget _buildAvatar(BuildContext context, Function(BuildContext) onClick) {
+  Widget _buildAvatar(
+    bool isMe,
+    BuildContext context,
+    Function(BuildContext) onClick,
+  ) {
     return GestureDetector(
       onTap: () => onClick(context),
 
@@ -113,14 +120,17 @@ class ChatMessageItem extends StatelessWidget {
             : const EdgeInsets.only(right: 6, left: 6, top: 12),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(6), // 圆角方形
-          child: Image.network(avatarUrl, fit: BoxFit.cover),
+          child: Image.network(
+            messageItem.senderAvatarUrl ?? "",
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );
   }
 
-  String _formatTimestamp(int timeS) {
-    final dt = DateTime.fromMillisecondsSinceEpoch(timeS * 1000);
+  String _formatTimestamp(int timestamp) {
+    final dt = DateTime.fromMillisecondsSinceEpoch(timestamp);
     return DateFormat('HH:mm').format(dt);
   }
 }
