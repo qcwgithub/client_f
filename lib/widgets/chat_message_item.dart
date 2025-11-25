@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:scene_hub/me.dart';
+import 'package:scene_hub/pages/fullscreen_image_page.dart';
 import 'package:scene_hub/pages/user_page.dart';
 import 'package:scene_hub/providers/message_provider.dart';
 
@@ -30,9 +31,6 @@ class ChatMessageItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Radius radius = Radius.circular(12);
-    final timeString = _formatTimestamp(messageItem.timestamp);
-
     bool isMe = Me.instance!.isMe(messageItem.senderId);
 
     return Padding(
@@ -46,59 +44,91 @@ class ChatMessageItem extends StatelessWidget {
           if (!isMe) _buildAvatar(isMe, context, _onClickAvatar),
 
           // const SizedBox(width: 8),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: isMe
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
-              children: [
-                if (!isMe)
-                  Text(
-                    messageItem.senderName ?? "(No name)",
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  ),
-
-                if (!isMe) const SizedBox(height: 4),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 14,
-                  ),
-                  // margin: EdgeInsets.only(
-                  //   left: isMe ? 50 : 8,
-                  //   right: isMe ? 8 : 50,
-                  // ),
-                  decoration: BoxDecoration(
-                    color: isMe ? Colors.blueAccent : Colors.grey.shade300,
-                    borderRadius: BorderRadius.only(
-                      topLeft: radius,
-                      topRight: radius,
-                      bottomLeft: isMe ? radius : Radius.zero,
-                      bottomRight: isMe ? Radius.zero : radius,
-                    ),
-                  ),
-                  child: Text(
-                    messageItem.content,
-                    style: TextStyle(
-                      color: isMe ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                ),
-
-                if (showTime) const SizedBox(height: 4),
-
-                if (showTime != 0)
-                  Text(
-                    timeString,
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                  ),
-              ],
-            ),
-          ),
+          _buildMessageBubble(context, isMe),
 
           if (isMe) _buildAvatar(isMe, context, _onClickAvatar),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMessageBubble(BuildContext context, isMe) {
+    final timeString = _formatTimestamp(messageItem.timestamp);
+
+    return Flexible(
+      child: Column(
+        crossAxisAlignment: isMe
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+
+        children: [
+          if (!isMe)
+            Text(
+              messageItem.senderName ?? "(No name)",
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            ),
+
+          if (!isMe) const SizedBox(height: 4),
+
+          if (messageItem.type == "text") _buildTextBubble(isMe),
+          if (messageItem.type == "image") _buildImageBubble(context, isMe),
+
+          if (showTime) const SizedBox(height: 4),
+
+          if (showTime)
+            Text(
+              timeString,
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextBubble(bool isMe) {
+    final Radius radius = Radius.circular(12);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+      // margin: EdgeInsets.only(
+      //   left: isMe ? 50 : 8,
+      //   right: isMe ? 8 : 50,
+      // ),
+      decoration: BoxDecoration(
+        color: isMe ? Colors.blueAccent : Colors.grey.shade300,
+        borderRadius: BorderRadius.only(
+          topLeft: radius,
+          topRight: radius,
+          bottomLeft: isMe ? radius : Radius.zero,
+          bottomRight: isMe ? Radius.zero : radius,
+        ),
+      ),
+      child: Text(
+        messageItem.content,
+        style: TextStyle(color: isMe ? Colors.white : Colors.black87),
+      ),
+    );
+  }
+
+  Widget _buildImageBubble(BuildContext context, bool isMe) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) {
+              return FullscreenImagePage(imageUrl: messageItem.imageUrl!);
+            },
+          ),
+        );
+      },
+
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          messageItem.imageUrl!,
+          width: 180,
+          height: 180,
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }

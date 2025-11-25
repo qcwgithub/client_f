@@ -17,6 +17,7 @@ class MessageItem {
   // leave
   String type;
   String content;
+  String? imageUrl;
 
   // millisecond
   int timestamp;
@@ -111,7 +112,7 @@ class MessageProvider extends ChangeNotifier {
       messageId: "messageId",
       senderId: Me.instance!.userId,
       senderAvatarUrl: defaultAvatarUrl,
-      timestamp: DateTime.now().millisecondsSinceEpoch.toInt(),
+      timestamp: DateTime.now().millisecondsSinceEpoch,
       type: "text",
       content: text,
     );
