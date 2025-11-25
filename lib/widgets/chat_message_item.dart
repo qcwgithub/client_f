@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:scene_hub/me.dart';
 import 'package:scene_hub/pages/fullscreen_image_page.dart';
@@ -70,7 +71,7 @@ class ChatMessageItem extends StatelessWidget {
 
           if (!isMe) const SizedBox(height: 4),
 
-          if (messageItem.type == "text") _buildTextBubble(isMe),
+          if (messageItem.type == "text") _buildTextBubble(context, isMe),
           if (messageItem.type == "image") _buildImageBubble(context, isMe),
 
           if (showTime) const SizedBox(height: 4),
@@ -85,26 +86,31 @@ class ChatMessageItem extends StatelessWidget {
     );
   }
 
-  Widget _buildTextBubble(bool isMe) {
+  Widget _buildTextBubble(BuildContext context, bool isMe) {
     final Radius radius = Radius.circular(12);
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-      // margin: EdgeInsets.only(
-      //   left: isMe ? 50 : 8,
-      //   right: isMe ? 8 : 50,
-      // ),
-      decoration: BoxDecoration(
-        color: isMe ? Colors.blueAccent : Colors.grey.shade300,
-        borderRadius: BorderRadius.only(
-          topLeft: radius,
-          topRight: radius,
-          bottomLeft: isMe ? radius : Radius.zero,
-          bottomRight: isMe ? Radius.zero : radius,
+    return GestureDetector(
+      onLongPressStart: (details) {
+        _showMessageMenu(context, details.globalPosition);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+        // margin: EdgeInsets.only(
+        //   left: isMe ? 50 : 8,
+        //   right: isMe ? 8 : 50,
+        // ),
+        decoration: BoxDecoration(
+          color: isMe ? Colors.blueAccent : Colors.grey.shade300,
+          borderRadius: BorderRadius.only(
+            topLeft: radius,
+            topRight: radius,
+            bottomLeft: isMe ? radius : Radius.zero,
+            bottomRight: isMe ? Radius.zero : radius,
+          ),
         ),
-      ),
-      child: Text(
-        messageItem.text!,
-        style: TextStyle(color: isMe ? Colors.white : Colors.black87),
+        child: Text(
+          messageItem.text!,
+          style: TextStyle(color: isMe ? Colors.white : Colors.black87),
+        ),
       ),
     );
   }
@@ -131,6 +137,41 @@ class ChatMessageItem extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _showMessageMenu(BuildContext context, Offset position) async {
+    final selected = await showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        position.dx,
+        position.dy,
+      ),
+      items: [
+        const PopupMenuItem(value: "copy", child: Text("Copy")),
+        const PopupMenuItem(value: "reply", child: Text("Reply")),
+      ],
+    );
+
+    if (selected == null) {
+      return;
+    }
+
+    switch (selected) {
+      case "copy":
+        if (messageItem.type == "text") {
+          Clipboard.setData(ClipboardData(text: messageItem.text!));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("Copied!")));
+        }
+        break;
+
+      case "reply":
+        print("todo: reply");
+        break;
+    }
   }
 
   Widget _buildAvatar(

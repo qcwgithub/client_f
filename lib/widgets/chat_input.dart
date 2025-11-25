@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ChatInput extends StatelessWidget {
@@ -59,6 +60,9 @@ class ChatInput extends StatelessWidget {
     if (file == null) {
       return null;
     }
+
+    // todo
+    // FlutterImageCompress.compressWithFile(file.path,)
 
     String imageUrl = await _uploadFile(file);
     return imageUrl;
