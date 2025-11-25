@@ -103,7 +103,7 @@ class ChatMessageItem extends StatelessWidget {
         ),
       ),
       child: Text(
-        messageItem.content,
+        messageItem.text!,
         style: TextStyle(color: isMe ? Colors.white : Colors.black87),
       ),
     );

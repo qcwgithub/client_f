@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ChatInput extends StatelessWidget {
   final controller = TextEditingController();
-  final void Function(String msg) callback;
+  final void Function(String type, String text) callback;
   ChatInput({super.key, required this.callback});
 
   @override
@@ -12,6 +13,16 @@ class ChatInput extends StatelessWidget {
       color: Colors.grey.shade200,
       child: Row(
         children: [
+          IconButton(
+            onPressed: () async {
+              String? imageUrl = await _pickAndUploadImage();
+              if (imageUrl != null) {
+                callback("image", imageUrl);
+              }
+            },
+            icon: const Icon(Icons.photo),
+          ),
+
           Expanded(
             child: TextField(
               controller: controller,
@@ -31,7 +42,7 @@ class ChatInput extends StatelessWidget {
                 return;
               }
 
-              callback(text);
+              callback("text", text);
               controller.clear();
             },
             icon: const Icon(Icons.send),
@@ -39,5 +50,22 @@ class ChatInput extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<String?> _pickAndUploadImage() async {
+    final picker = ImagePicker();
+    final XFile? file = await picker.pickImage(source: ImageSource.gallery);
+
+    if (file == null) {
+      return null;
+    }
+
+    String imageUrl = await _uploadFile(file);
+    return imageUrl;
+  }
+
+  Future<String> _uploadFile(XFile file) async {
+    await Future.delayed(Duration(seconds: 1));
+    return "https://img2.baidu.com/it/u=1593073498,3942986965&fm=253&app=138&f=JPEG?w=699&h=1181";
   }
 }

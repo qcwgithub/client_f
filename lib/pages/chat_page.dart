@@ -110,8 +110,8 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
           ChatInput(
-            callback: (msg) {
-              messageProvider.sendMessage(msg);
+            callback: (type, content) {
+              messageProvider.sendMessage(type, content);
 
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _scrollToBottom();

@@ -16,7 +16,7 @@ class MessageItem {
   // join
   // leave
   String type;
-  String content;
+  String? text;
   String? imageUrl;
 
   // millisecond
@@ -28,7 +28,8 @@ class MessageItem {
     this.senderName,
     this.senderAvatarUrl,
     required this.type,
-    required this.content,
+    this.text,
+    this.imageUrl,
     required this.timestamp,
   });
 }
@@ -54,7 +55,7 @@ class MessageProvider extends ChangeNotifier {
         senderId: _current.toString(),
         senderAvatarUrl: defaultAvatarUrl,
         type: "text",
-        content: _current.toString() + (i == pageCount - 1 ? "(page end)" : ""),
+        text: _current.toString() + (i == pageCount - 1 ? "(page end)" : ""),
         timestamp: (latesetTimeS - (_max - _current) * 60) * 1000,
       );
       _messageItems.insert(0, item);
@@ -84,7 +85,7 @@ class MessageProvider extends ChangeNotifier {
         senderId: _current.toString(),
         senderAvatarUrl: defaultAvatarUrl,
         type: "text",
-        content:
+        text:
             _current.toString() +
             (_current == 1 || i == pageCount - 1 ? "(page end)" : ""),
         timestamp: (latesetTimeS - (_max - _current) * 60) * 1000,
@@ -107,14 +108,15 @@ class MessageProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void sendMessage(String text) {
+  void sendMessage(String type, String content) {
     var item = MessageItem(
       messageId: "messageId",
       senderId: Me.instance!.userId,
       senderAvatarUrl: defaultAvatarUrl,
       timestamp: DateTime.now().millisecondsSinceEpoch,
-      type: "text",
-      content: text,
+      type: type,
+      text: type == "text" ? content : null,
+      imageUrl: type == "image" ? content : null,
     );
     _messageItems.add(item);
     notifyListeners();
