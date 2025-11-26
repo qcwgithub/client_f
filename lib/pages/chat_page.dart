@@ -1,4 +1,5 @@
 import 'package:scene_hub/me.dart';
+import 'package:scene_hub/pages/room_info_page.dart';
 import 'package:scene_hub/providers/message_provider.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
 import 'package:scene_hub/widgets/chat_message_item.dart';
@@ -79,36 +80,27 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    print("build");
     final messageProvider = Provider.of<MessageProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.sceneName)),
+      appBar: AppBar(
+        title: Text(widget.sceneName),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => RoomInfoPage(roomId: "999999",)),
+              );
+            },
+            icon: Icon(Icons.more_vert),
+          ),
+        ],
+      ),
 
       body: Column(
         children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              reverse: true, // !
-              itemCount: messageProvider.messageItems.length,
-              itemBuilder: (context, index) {
-                int L = messageProvider.messageItems.length;
-                int itemIndex = L - 1 - index;
-                var item = messageProvider.messageItems[itemIndex];
-                bool showTime = true;
-                if (itemIndex < L - 1) {
-                  var prevItem = messageProvider.messageItems[itemIndex + 1];
-                  if (Me.instance!.isMe(item.senderId) ==
-                          Me.instance!.isMe(prevItem.senderId) &&
-                      item.timestamp - prevItem.timestamp < 300000) {
-                    showTime = false;
-                  }
-                }
-                return ChatMessageItem(messageItem: item, showTime: showTime);
-              },
-            ),
-          ),
+          _buildChatList(messageProvider),
           ChatInput(
             callback: (type, content) {
               messageProvider.sendMessage(type, content);
@@ -119,6 +111,31 @@ class _ChatPageState extends State<ChatPage> {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildChatList(MessageProvider messageProvider) {
+    return Expanded(
+      child: ListView.builder(
+        controller: _scrollController,
+        reverse: true, // !
+        itemCount: messageProvider.messageItems.length,
+        itemBuilder: (context, index) {
+          int L = messageProvider.messageItems.length;
+          int itemIndex = L - 1 - index;
+          var item = messageProvider.messageItems[itemIndex];
+          bool showTime = true;
+          if (itemIndex < L - 1) {
+            var prevItem = messageProvider.messageItems[itemIndex + 1];
+            if (Me.instance!.isMe(item.senderId) ==
+                    Me.instance!.isMe(prevItem.senderId) &&
+                item.timestamp - prevItem.timestamp < 300000) {
+              showTime = false;
+            }
+          }
+          return ChatMessageItem(messageItem: item, showTime: showTime);
+        },
       ),
     );
   }
