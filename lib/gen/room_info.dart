@@ -32,5 +32,4 @@ class RoomInfo {
         messageId: list[4] as int,
       );
     }
-
 }

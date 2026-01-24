@@ -1,3 +1,5 @@
+import 'package:scene_hub/gen/user_info.dart';
+
 class AccountInfo {
     int isPlaceholder;
     String platform;
@@ -62,5 +64,4 @@ class AccountInfo {
           .toList(growable: true),
       );
     }
-
 }

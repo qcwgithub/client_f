@@ -40,5 +40,4 @@ class UserInfo {
         lastSetAvatarIndexTimeS: list[6] as int,
       );
     }
-
 }
