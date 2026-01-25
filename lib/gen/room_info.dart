@@ -25,11 +25,11 @@ class RoomInfo {
 
     factory RoomInfo.fromMsgPack(List list) {
       return RoomInfo(
-        roomId: list[0] as int,
-        createTimeS: list[1] as int,
-        title: list[2] as String,
-        desc: list[3] as String,
-        messageId: list[4] as int,
+        roomId: list[0] as int, // [0]
+        createTimeS: list[1] as int, // [1]
+        title: list[2] as String, // [2]
+        desc: list[3] as String, // [3]
+        messageId: list[4] as int, // [4]
       );
     }
 }

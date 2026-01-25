@@ -1,5 +1,3 @@
-import 'package:scene_hub/gen/user_info.dart';
-
 class AccountInfo {
     int isPlaceholder;
     String platform;
@@ -12,7 +10,6 @@ class AccountInfo {
     String blockPrompt;
     String blockOrUnblockReason;
     int lastLoginUserId;
-    List<UserInfo> testUserInfos;
 
     AccountInfo({
       required this.isPlaceholder,
@@ -26,7 +23,6 @@ class AccountInfo {
       required this.blockPrompt,
       required this.blockOrUnblockReason,
       required this.lastLoginUserId,
-      required this.testUserInfos,
     });
 
     List toMsgPack() {
@@ -42,26 +38,22 @@ class AccountInfo {
         blockPrompt, // [8]
         blockOrUnblockReason, // [9]
         lastLoginUserId, // [10]
-        testUserInfos, // [11]
       ];
     }
 
     factory AccountInfo.fromMsgPack(List list) {
       return AccountInfo(
-        isPlaceholder: list[0] as int,
-        platform: list[1] as String,
-        channel: list[2] as String,
-        channelUserId: list[3] as String,
-        userIds: List<int>.from(list[4], growable: true),
-        createTimeS: list[5] as int,
-        block: list[6] as bool,
-        unblockTime: list[7] as int,
-        blockPrompt: list[8] as String,
-        blockOrUnblockReason: list[9] as String,
-        lastLoginUserId: list[10] as int,
-        testUserInfos: (list[11] as List)
-          .map((e) => UserInfo.fromMsgPack(e as List))
-          .toList(growable: true),
+        isPlaceholder: list[0] as int, // [0]
+        platform: list[1] as String, // [1]
+        channel: list[2] as String, // [2]
+        channelUserId: list[3] as String, // [3]
+        userIds: List<int>.from(list[4], growable: true), // [4]
+        createTimeS: list[5] as int, // [5]
+        block: list[6] as bool, // [6]
+        unblockTime: list[7] as int, // [7]
+        blockPrompt: list[8] as String, // [8]
+        blockOrUnblockReason: list[9] as String, // [9]
+        lastLoginUserId: list[10] as int, // [10]
       );
     }
 }
