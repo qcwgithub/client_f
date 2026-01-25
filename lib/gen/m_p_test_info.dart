@@ -1,10 +1,17 @@
 class MPTestInfo {
+    // [0]
     int intValue;
+    // [1]
     bool boolValue;
+    // [2]
     int longValue;
+    // [3]
     String stringValue;
+    // [4]
     List<int> listOfInt;
+    // [5]
     List<int> listOfLong;
+    // [6]
     List<String> listOfString;
 
     MPTestInfo({
@@ -19,25 +26,25 @@ class MPTestInfo {
 
     List toMsgPack() {
       return [
-        intValue, // [0]
-        boolValue, // [1]
-        longValue, // [2]
-        stringValue, // [3]
-        listOfInt, // [4]
-        listOfLong, // [5]
-        listOfString, // [6]
+        intValue,
+        boolValue,
+        longValue,
+        stringValue,
+        listOfInt,
+        listOfLong,
+        listOfString,
       ];
     }
 
     factory MPTestInfo.fromMsgPack(List list) {
       return MPTestInfo(
-        intValue: list[0] as int, // [0]
-        boolValue: list[1] as bool, // [1]
-        longValue: list[2] as int, // [2]
-        stringValue: list[3] as String, // [3]
-        listOfInt: List<int>.from(list[4], growable: true), // [4]
-        listOfLong: List<int>.from(list[5], growable: true), // [5]
-        listOfString: List<String>.from(list[6], growable: true), // [6]
+        intValue: list[0] as int,
+        boolValue: list[1] as bool,
+        longValue: list[2] as int,
+        stringValue: list[3] as String,
+        listOfInt: List<int>.from(list[4], growable: true),
+        listOfLong: List<int>.from(list[5], growable: true),
+        listOfString: List<String>.from(list[6], growable: true),
       );
     }
 }

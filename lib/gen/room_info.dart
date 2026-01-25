@@ -1,8 +1,13 @@
 class RoomInfo {
+    // [0]
     int roomId;
+    // [1]
     int createTimeS;
+    // [2]
     String title;
+    // [3]
     String desc;
+    // [4]
     int messageId;
 
     RoomInfo({
@@ -15,21 +20,21 @@ class RoomInfo {
 
     List toMsgPack() {
       return [
-        roomId, // [0]
-        createTimeS, // [1]
-        title, // [2]
-        desc, // [3]
-        messageId, // [4]
+        roomId,
+        createTimeS,
+        title,
+        desc,
+        messageId,
       ];
     }
 
     factory RoomInfo.fromMsgPack(List list) {
       return RoomInfo(
-        roomId: list[0] as int, // [0]
-        createTimeS: list[1] as int, // [1]
-        title: list[2] as String, // [2]
-        desc: list[3] as String, // [3]
-        messageId: list[4] as int, // [4]
+        roomId: list[0] as int,
+        createTimeS: list[1] as int,
+        title: list[2] as String,
+        desc: list[3] as String,
+        messageId: list[4] as int,
       );
     }
 }

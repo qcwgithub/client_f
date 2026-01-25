@@ -1,14 +1,25 @@
 class AccountInfo {
+    // [0]
     int isPlaceholder;
+    // [1]
     String platform;
+    // [2]
     String channel;
+    // [3]
     String channelUserId;
+    // [4]
     List<int> userIds;
+    // [5]
     int createTimeS;
+    // [6]
     bool block;
+    // [7]
     int unblockTime;
+    // [8]
     String blockPrompt;
+    // [9]
     String blockOrUnblockReason;
+    // [10]
     int lastLoginUserId;
 
     AccountInfo({
@@ -27,33 +38,33 @@ class AccountInfo {
 
     List toMsgPack() {
       return [
-        isPlaceholder, // [0]
-        platform, // [1]
-        channel, // [2]
-        channelUserId, // [3]
-        userIds, // [4]
-        createTimeS, // [5]
-        block, // [6]
-        unblockTime, // [7]
-        blockPrompt, // [8]
-        blockOrUnblockReason, // [9]
-        lastLoginUserId, // [10]
+        isPlaceholder,
+        platform,
+        channel,
+        channelUserId,
+        userIds,
+        createTimeS,
+        block,
+        unblockTime,
+        blockPrompt,
+        blockOrUnblockReason,
+        lastLoginUserId,
       ];
     }
 
     factory AccountInfo.fromMsgPack(List list) {
       return AccountInfo(
-        isPlaceholder: list[0] as int, // [0]
-        platform: list[1] as String, // [1]
-        channel: list[2] as String, // [2]
-        channelUserId: list[3] as String, // [3]
-        userIds: List<int>.from(list[4], growable: true), // [4]
-        createTimeS: list[5] as int, // [5]
-        block: list[6] as bool, // [6]
-        unblockTime: list[7] as int, // [7]
-        blockPrompt: list[8] as String, // [8]
-        blockOrUnblockReason: list[9] as String, // [9]
-        lastLoginUserId: list[10] as int, // [10]
+        isPlaceholder: list[0] as int,
+        platform: list[1] as String,
+        channel: list[2] as String,
+        channelUserId: list[3] as String,
+        userIds: List<int>.from(list[4], growable: true),
+        createTimeS: list[5] as int,
+        block: list[6] as bool,
+        unblockTime: list[7] as int,
+        blockPrompt: list[8] as String,
+        blockOrUnblockReason: list[9] as String,
+        lastLoginUserId: list[10] as int,
       );
     }
 }

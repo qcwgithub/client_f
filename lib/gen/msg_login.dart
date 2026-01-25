@@ -1,12 +1,21 @@
 class MsgLogin {
+    // [0]
     String version;
+    // [1]
     String platform;
+    // [2]
     String channel;
+    // [3]
     String channelUserId;
+    // [4]
     String verifyData;
+    // [5]
     int userId;
+    // [6]
     String token;
+    // [7]
     String deviceUid;
+    // [8]
     Map<String, String> dict;
 
     MsgLogin({
@@ -23,30 +32,30 @@ class MsgLogin {
 
     List toMsgPack() {
       return [
-        version, // [0]
-        platform, // [1]
-        channel, // [2]
-        channelUserId, // [3]
-        verifyData, // [4]
-        userId, // [5]
-        token, // [6]
-        deviceUid, // [7]
-        dict, // [8]
+        version,
+        platform,
+        channel,
+        channelUserId,
+        verifyData,
+        userId,
+        token,
+        deviceUid,
+        dict,
       ];
     }
 
     factory MsgLogin.fromMsgPack(List list) {
       return MsgLogin(
-        version: list[0] as String, // [0]
-        platform: list[1] as String, // [1]
-        channel: list[2] as String, // [2]
-        channelUserId: list[3] as String, // [3]
-        verifyData: list[4] as String, // [4]
-        userId: list[5] as int, // [5]
-        token: list[6] as String, // [6]
-        deviceUid: list[7] as String, // [7]
+        version: list[0] as String,
+        platform: list[1] as String,
+        channel: list[2] as String,
+        channelUserId: list[3] as String,
+        verifyData: list[4] as String,
+        userId: list[5] as int,
+        token: list[6] as String,
+        deviceUid: list[7] as String,
         dict: (list[8] as Map)
-          .map((k, v) => MapEntry(k as String, v as String)), // [8]
+          .map((k, v) => MapEntry(k as String, v as String)),
       );
     }
 }

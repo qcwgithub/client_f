@@ -1,8 +1,11 @@
 import 'package:scene_hub/gen/user_info.dart';
 
 class ResLogin {
+    // [0]
     bool isNewUser;
+    // [1]
     UserInfo userInfo;
+    // [2]
     bool kickOther;
 
     ResLogin({
@@ -13,17 +16,17 @@ class ResLogin {
 
     List toMsgPack() {
       return [
-        isNewUser, // [0]
-        UserInfo.toMsgPack(), // [1]
-        kickOther, // [2]
+        isNewUser,
+        UserInfo.toMsgPack(),
+        kickOther,
       ];
     }
 
     factory ResLogin.fromMsgPack(List list) {
       return ResLogin(
-        isNewUser: list[0] as bool, // [0]
-        userInfo: UserInfo.fromMsgPack(list[1] as List), // [1]
-        kickOther: list[2] as bool, // [2]
+        isNewUser: list[0] as bool,
+        userInfo: UserInfo.fromMsgPack(list[1] as List),
+        kickOther: list[2] as bool,
       );
     }
 }

@@ -1,10 +1,17 @@
 class UserInfo {
+    // [0]
     int userId;
+    // [1]
     String userName;
+    // [2]
     int createTimeS;
+    // [3]
     int lastLoginTimeS;
+    // [4]
     int lastSetNameTimeS;
+    // [5]
     int avatarIndex;
+    // [6]
     int lastSetAvatarIndexTimeS;
 
     UserInfo({
@@ -19,25 +26,25 @@ class UserInfo {
 
     List toMsgPack() {
       return [
-        userId, // [0]
-        userName, // [1]
-        createTimeS, // [2]
-        lastLoginTimeS, // [3]
-        lastSetNameTimeS, // [4]
-        avatarIndex, // [5]
-        lastSetAvatarIndexTimeS, // [6]
+        userId,
+        userName,
+        createTimeS,
+        lastLoginTimeS,
+        lastSetNameTimeS,
+        avatarIndex,
+        lastSetAvatarIndexTimeS,
       ];
     }
 
     factory UserInfo.fromMsgPack(List list) {
       return UserInfo(
-        userId: list[0] as int, // [0]
-        userName: list[1] as String, // [1]
-        createTimeS: list[2] as int, // [2]
-        lastLoginTimeS: list[3] as int, // [3]
-        lastSetNameTimeS: list[4] as int, // [4]
-        avatarIndex: list[5] as int, // [5]
-        lastSetAvatarIndexTimeS: list[6] as int, // [6]
+        userId: list[0] as int,
+        userName: list[1] as String,
+        createTimeS: list[2] as int,
+        lastLoginTimeS: list[3] as int,
+        lastSetNameTimeS: list[4] as int,
+        avatarIndex: list[5] as int,
+        lastSetAvatarIndexTimeS: list[6] as int,
       );
     }
 }
