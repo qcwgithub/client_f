@@ -1,10 +1,7 @@
 import 'dart:io';
-import 'dart:nativewrappers/_internal/vm/lib/ffi_allocation_patch.dart';
-import 'dart:typed_data';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:scene_hub/network/i_message_packer.dart';
 import 'package:scene_hub/network/unpack_result.dart';
 
@@ -14,7 +11,6 @@ class TcpClient {
   final String host;
   final int port;
   final IMessagePacker packer;
-  int nextSeq;
 
   Socket? _socket;
 
@@ -24,12 +20,7 @@ class TcpClient {
   MessageHandler? onMessage;
   VoidCallback? onDisconnected;
 
-  TcpClient({
-    required this.host,
-    required this.port,
-    required this.packer,
-    required this.nextSeq,
-  });
+  TcpClient({required this.host, required this.port, required this.packer});
 
   Future<void> connect() async {
     _socket = await Socket.connect(host, port);
@@ -43,11 +34,9 @@ class TcpClient {
     );
   }
 
-  int send(int msgType, Uint8List? body, bool requireResponse) {
-    final seq = nextSeq++;
+  void send(int seq, int msgType, Uint8List? body, bool requireResponse) {
     final packet = packer.pack(msgType, body, seq, requireResponse);
     _socket?.add(packet);
-    return seq;
   }
 
   void close() {
