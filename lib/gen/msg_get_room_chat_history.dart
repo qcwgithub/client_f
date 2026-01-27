@@ -1,4 +1,6 @@
-class MsgGetRoomChatHistory {
+import 'package:scene_hub/i_to_msg_pack.dart';
+
+class MsgGetRoomChatHistory implements IToMsgPack {
     // [0]
     int roomId;
     // [1]
@@ -9,6 +11,7 @@ class MsgGetRoomChatHistory {
       required this.lastMessageId,
     });
 
+    @override
     List toMsgPack() {
       return [
         roomId,

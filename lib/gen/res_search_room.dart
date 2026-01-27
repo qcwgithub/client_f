@@ -1,6 +1,7 @@
+import 'package:scene_hub/i_to_msg_pack.dart';
 import 'package:scene_hub/gen/room_info.dart';
 
-class ResSearchRoom {
+class ResSearchRoom implements IToMsgPack {
     // [0]
     List<RoomInfo> roomInfos;
 
@@ -8,6 +9,7 @@ class ResSearchRoom {
       required this.roomInfos,
     });
 
+    @override
     List toMsgPack() {
       return [
         roomInfos.map((e) => e.toMsgPack()).toList(growable: false),

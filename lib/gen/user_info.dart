@@ -1,4 +1,6 @@
-class UserInfo {
+import 'package:scene_hub/i_to_msg_pack.dart';
+
+class UserInfo implements IToMsgPack {
     // [0]
     int userId;
     // [1]
@@ -24,6 +26,7 @@ class UserInfo {
       required this.lastSetAvatarIndexTimeS,
     });
 
+    @override
     List toMsgPack() {
       return [
         userId,

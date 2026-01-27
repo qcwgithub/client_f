@@ -1,4 +1,6 @@
-class MsgLogin {
+import 'package:scene_hub/i_to_msg_pack.dart';
+
+class MsgLogin implements IToMsgPack {
     // [0]
     String version;
     // [1]
@@ -30,6 +32,7 @@ class MsgLogin {
       required this.dict,
     });
 
+    @override
     List toMsgPack() {
       return [
         version,

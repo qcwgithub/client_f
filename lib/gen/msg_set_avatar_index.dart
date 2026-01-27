@@ -1,4 +1,6 @@
-class MsgSetAvatarIndex {
+import 'package:scene_hub/i_to_msg_pack.dart';
+
+class MsgSetAvatarIndex implements IToMsgPack {
     // [0]
     int avatarIndex;
 
@@ -6,6 +8,7 @@ class MsgSetAvatarIndex {
       required this.avatarIndex,
     });
 
+    @override
     List toMsgPack() {
       return [
         avatarIndex,

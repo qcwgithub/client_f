@@ -1,6 +1,7 @@
+import 'package:scene_hub/i_to_msg_pack.dart';
 import 'package:scene_hub/gen/user_report_reason.dart';
 
-class MsgReportUser {
+class MsgReportUser implements IToMsgPack {
     // [0]
     int targetUserId;
     // [1]
@@ -11,10 +12,11 @@ class MsgReportUser {
       required this.reason,
     });
 
+    @override
     List toMsgPack() {
       return [
         targetUserId,
-        reason,
+        reason.code,
       ];
     }
 

@@ -1,4 +1,6 @@
-class MsgSetName {
+import 'package:scene_hub/i_to_msg_pack.dart';
+
+class MsgSetName implements IToMsgPack {
     // [0]
     String userName;
 
@@ -6,6 +8,7 @@ class MsgSetName {
       required this.userName,
     });
 
+    @override
     List toMsgPack() {
       return [
         userName,

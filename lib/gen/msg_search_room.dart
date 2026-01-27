@@ -1,4 +1,6 @@
-class MsgSearchRoom {
+import 'package:scene_hub/i_to_msg_pack.dart';
+
+class MsgSearchRoom implements IToMsgPack {
     // [0]
     String keyword;
 
@@ -6,6 +8,7 @@ class MsgSearchRoom {
       required this.keyword,
     });
 
+    @override
     List toMsgPack() {
       return [
         keyword,

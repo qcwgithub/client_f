@@ -1,4 +1,6 @@
-class MPTestInfo {
+import 'package:scene_hub/i_to_msg_pack.dart';
+
+class MPTestInfo implements IToMsgPack {
     // [0]
     int intValue;
     // [1]
@@ -24,6 +26,7 @@ class MPTestInfo {
       required this.listOfString,
     });
 
+    @override
     List toMsgPack() {
       return [
         intValue,

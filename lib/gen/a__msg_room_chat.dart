@@ -1,6 +1,7 @@
+import 'package:scene_hub/i_to_msg_pack.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 
-class A_MsgRoomChat {
+class A_MsgRoomChat implements IToMsgPack {
     // [0]
     int roomId;
     // [1]
@@ -17,11 +18,12 @@ class A_MsgRoomChat {
       required this.content,
     });
 
+    @override
     List toMsgPack() {
       return [
         roomId,
         userId,
-        chatMessageType,
+        chatMessageType.code,
         content,
       ];
     }

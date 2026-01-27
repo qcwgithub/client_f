@@ -1,4 +1,6 @@
-class RoomInfo {
+import 'package:scene_hub/i_to_msg_pack.dart';
+
+class RoomInfo implements IToMsgPack {
     // [0]
     int roomId;
     // [1]
@@ -18,6 +20,7 @@ class RoomInfo {
       required this.messageId,
     });
 
+    @override
     List toMsgPack() {
       return [
         roomId,

@@ -1,4 +1,6 @@
-class AccountInfo {
+import 'package:scene_hub/i_to_msg_pack.dart';
+
+class AccountInfo implements IToMsgPack {
     // [0]
     int isPlaceholder;
     // [1]
@@ -36,6 +38,7 @@ class AccountInfo {
       required this.lastLoginUserId,
     });
 
+    @override
     List toMsgPack() {
       return [
         isPlaceholder,

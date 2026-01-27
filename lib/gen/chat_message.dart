@@ -1,6 +1,7 @@
+import 'package:scene_hub/i_to_msg_pack.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 
-class ChatMessage {
+class ChatMessage implements IToMsgPack {
     // [0]
     int messageId;
     // [1]
@@ -35,6 +36,7 @@ class ChatMessage {
       required this.senderAvatarIndex,
     });
 
+    @override
     List toMsgPack() {
       return [
         messageId,
@@ -42,7 +44,7 @@ class ChatMessage {
         senderId,
         senderName,
         senderAvatar,
-        type,
+        type.code,
         content,
         timestamp,
         replyTo,

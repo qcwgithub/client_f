@@ -1,6 +1,7 @@
+import 'package:scene_hub/i_to_msg_pack.dart';
 import 'package:scene_hub/gen/room_message_report_reason.dart';
 
-class MsgReportRoomMessage {
+class MsgReportRoomMessage implements IToMsgPack {
     // [0]
     int roomId;
     // [1]
@@ -14,11 +15,12 @@ class MsgReportRoomMessage {
       required this.reason,
     });
 
+    @override
     List toMsgPack() {
       return [
         roomId,
         messageId,
-        reason,
+        reason.code,
       ];
     }
 

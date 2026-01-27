@@ -1,4 +1,6 @@
-class MsgLeaveRoom {
+import 'package:scene_hub/i_to_msg_pack.dart';
+
+class MsgLeaveRoom implements IToMsgPack {
     // [0]
     int roomId;
 
@@ -6,6 +8,7 @@ class MsgLeaveRoom {
       required this.roomId,
     });
 
+    @override
     List toMsgPack() {
       return [
         roomId,
