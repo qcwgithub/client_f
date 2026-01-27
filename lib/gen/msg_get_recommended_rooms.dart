@@ -1,7 +1,5 @@
 class MsgGetRecommendedRooms {
-
-    MsgGetRecommendedRooms({
-    });
+    MsgGetRecommendedRooms();
 
     List toMsgPack() {
       return [

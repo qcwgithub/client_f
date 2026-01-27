@@ -1,3 +1,5 @@
+import 'package:scene_hub/gen/chat_message_type.dart';
+
 class MsgSendRoomChat {
     // [0]
     int roomId;
@@ -23,7 +25,7 @@ class MsgSendRoomChat {
     factory MsgSendRoomChat.fromMsgPack(List list) {
       return MsgSendRoomChat(
         roomId: list[0] as int,
-        chatMessageType: list[1] as ChatMessageType,
+        chatMessageType: ChatMessageType.fromCode(list[1] as int),
         content: list[2] as String,
       );
     }

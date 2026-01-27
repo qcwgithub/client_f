@@ -1,3 +1,5 @@
+import 'package:scene_hub/gen/user_report_reason.dart';
+
 class MsgReportUser {
     // [0]
     int targetUserId;
@@ -19,7 +21,7 @@ class MsgReportUser {
     factory MsgReportUser.fromMsgPack(List list) {
       return MsgReportUser(
         targetUserId: list[0] as int,
-        reason: list[1] as UserReportReason,
+        reason: UserReportReason.fromCode(list[1] as int),
       );
     }
 }

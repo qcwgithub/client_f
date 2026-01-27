@@ -17,7 +17,7 @@ class ResLogin {
     List toMsgPack() {
       return [
         isNewUser,
-        UserInfo.toMsgPack(),
+        userInfo.toMsgPack(),
         kickOther,
       ];
     }

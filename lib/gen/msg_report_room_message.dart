@@ -1,3 +1,5 @@
+import 'package:scene_hub/gen/room_message_report_reason.dart';
+
 class MsgReportRoomMessage {
     // [0]
     int roomId;
@@ -24,7 +26,7 @@ class MsgReportRoomMessage {
       return MsgReportRoomMessage(
         roomId: list[0] as int,
         messageId: list[1] as int,
-        reason: list[2] as RoomMessageReportReason,
+        reason: RoomMessageReportReason.fromCode(list[2] as int),
       );
     }
 }

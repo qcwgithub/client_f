@@ -1,7 +1,5 @@
 class ResReportUser {
-
-    ResReportUser({
-    });
+    ResReportUser();
 
     List toMsgPack() {
       return [

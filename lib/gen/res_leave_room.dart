@@ -1,7 +1,5 @@
 class ResLeaveRoom {
-
-    ResLeaveRoom({
-    });
+    ResLeaveRoom();
 
     List toMsgPack() {
       return [

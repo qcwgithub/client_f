@@ -1,7 +1,5 @@
 class ResSetAvatarIndex {
-
-    ResSetAvatarIndex({
-    });
+    ResSetAvatarIndex();
 
     List toMsgPack() {
       return [

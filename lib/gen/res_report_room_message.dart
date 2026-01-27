@@ -1,7 +1,5 @@
 class ResReportRoomMessage {
-
-    ResReportRoomMessage({
-    });
+    ResReportRoomMessage();
 
     List toMsgPack() {
       return [
