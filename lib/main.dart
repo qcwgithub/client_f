@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:scene_hub/me.dart';
+import 'package:scene_hub/network/server.dart';
 import 'package:scene_hub/providers/message_provider.dart';
 import 'package:scene_hub/providers/nav_provider.dart';
 
@@ -21,6 +22,8 @@ void main() {
 
   // create Me
   Me(userId: "9999", userName: "Yaji");
+
+  Server.instance.start();
 
   runApp(
     MultiProvider(providers: [

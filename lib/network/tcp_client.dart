@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:scene_hub/my_logger.dart';
 import 'package:scene_hub/network/i_message_packer.dart';
 import 'package:scene_hub/network/unpack_result.dart';
 
@@ -22,16 +24,34 @@ class TcpClient {
 
   TcpClient({required this.host, required this.port, required this.packer});
 
-  Future<void> connect() async {
-    _socket = await Socket.connect(host, port);
-    _socket!.setOption(SocketOption.tcpNoDelay, true);
+  Future<bool> connect() async {
+    try {
+      MyLogger.instance.d('connectint to $host $port...');
+      _socket = await Socket.connect(host, port, timeout: Duration(seconds: 5));
+      MyLogger.instance.d('OK');
 
-    _socket!.listen(
-      _onData,
-      onDone: _onDone,
-      onError: _onError,
-      cancelOnError: true,
-    );
+      _socket!.setOption(SocketOption.tcpNoDelay, true);
+
+      _socket!.listen(
+        _onData,
+        onDone: _onDone,
+        onError: _onError,
+        cancelOnError: true,
+      );
+
+      _socket!.add(utf8.encode("SceneHub"));
+
+      return true;
+    } on SocketException catch (e) {
+      MyLogger.instance.e('$e');
+      return false;
+    } on TimeoutException catch (e) {
+      MyLogger.instance.e('$e');
+      return false;
+    } catch (e) {
+      MyLogger.instance.e('$e');
+      return false;
+    }
   }
 
   void send(int seq, int msgType, Uint8List? body, bool requireResponse) {
