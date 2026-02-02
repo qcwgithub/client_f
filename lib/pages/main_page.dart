@@ -16,7 +16,7 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((Duration timeStamp) {
       RoomListState.instance?.getRecommendedRooms();
     });
   }

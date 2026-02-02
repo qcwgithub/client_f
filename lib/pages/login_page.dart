@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:scene_hub/network/network_status.dart';
 import 'package:scene_hub/network/server.dart';
 import 'package:scene_hub/providers/nav_state.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'home_page.dart';
 import 'package:flutter/material.dart';
@@ -13,11 +16,35 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginState extends State<LoginPage> {
+  @override
+  void initState() {
+    super.initState();
+
+    if (Platform.isWindows) {
+      _initChannelUserId();
+    }
+  }
+
+  void _initChannelUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? last = prefs.getString("channel_user_id");
+    if (last != null && mounted) {
+      setState(() {
+        emailController.text = last;
+      });
+    }
+  }
+
+  void _saveChannelUserId(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString("channel_user_id", id);
+  }
+
   final TextEditingController emailController = TextEditingController();
   bool _isLoggingIn = false;
   String? _errorText;
 
-  Future<void> _login(String inputText) async {
+  Future<void> _login(String channelUserId) async {
     Server server = Server.instance;
     if (server.state != NetworkStatus.init) {
       return;
@@ -29,9 +56,10 @@ class _LoginState extends State<LoginPage> {
     });
 
     server.setIpAndPort("localhost", 8020);
-    server.setChannelAndChannelUserId("uuid", inputText);
+    server.setChannelAndChannelUserId("uuid", channelUserId);
 
     if (await server.connectAndLoginOnce()) {
+      _saveChannelUserId(channelUserId);
       server.startLoop();
     } else {
       setState(() {
@@ -94,7 +122,9 @@ class _LoginState extends State<LoginPage> {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: _isLoggingIn ? null : () => _login(emailController.text),
+                onPressed: _isLoggingIn
+                    ? null
+                    : () => _login(emailController.text),
                 child: const Padding(
                   padding: EdgeInsets.symmetric(vertical: 14),
                   child: Text("Continue"),
