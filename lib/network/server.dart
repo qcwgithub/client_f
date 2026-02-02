@@ -15,6 +15,7 @@ import 'package:scene_hub/network/my_response.dart';
 import 'package:scene_hub/network/network_status.dart';
 import 'package:scene_hub/network/tcp_client.dart';
 import 'package:scene_hub/network/unpack_result.dart';
+import 'package:scene_hub/providers/nav_state.dart';
 
 class PendingRequest {
   final Completer<MyResponse> completer;
@@ -26,6 +27,10 @@ class Server {
   TcpClient? client;
   NetworkStatus _state = NetworkStatus.init;
   NetworkStatus get state => _state;
+  void _setState(NetworkStatus e) {
+    _state = e;
+    print("-> $e");
+  }
 
   String? _ip;
   int _port = 0;
@@ -49,7 +54,7 @@ class Server {
       client = null;
     }
 
-    _state = NetworkStatus.connecting;
+    _setState(NetworkStatus.connecting);
 
     client = TcpClient(host: _ip!, port: _port, packer: BinaryMessagePacker());
 
@@ -58,10 +63,10 @@ class Server {
     client!.onDisconnected = _onDisconnected;
 
     if (await client!.connect()) {
-      _state = NetworkStatus.connected;
+      _setState(NetworkStatus.connected);
       return true;
     } else {
-      _state = NetworkStatus.init;
+      _setState(NetworkStatus.init);
       return false;
     }
   }
@@ -72,13 +77,16 @@ class Server {
     }
     _pending.clear();
 
-    _state = NetworkStatus.init;
+    _setState(NetworkStatus.init);
+
+    // TEMP
+    NavState.instance!.setIndex(0);
   }
 
   Future<bool> _loginOnce() async {
     assert(_state == NetworkStatus.connected);
 
-    _state = NetworkStatus.logining;
+    _setState(NetworkStatus.logining);
     MyLogger.instance.d('login...');
 
     var msg = new MsgLogin(
@@ -96,7 +104,7 @@ class Server {
     MyResponse r = await request(MsgType.login, msg);
     MyLogger.instance.d('login result ${r.e}');
     if (r.e == ECode.success) {
-      _state = NetworkStatus.online;
+      _setState(NetworkStatus.online);
 
       var res = ResLogin.fromMsgPack(r.res!);
       MyLogger.instance.d('isNewUser? ${res.isNewUser}');
@@ -104,9 +112,12 @@ class Server {
       MyLogger.instance.d('userId = ${res.userInfo.userId}');
       MyLogger.instance.d('userName = ${res.userInfo.userName}');
 
+      // TEMP
+      NavState.instance!.setIndex(1);
+
       return true;
     } else {
-      _state = NetworkStatus.init;
+      _setState(NetworkStatus.init);
       return false;
     }
   }

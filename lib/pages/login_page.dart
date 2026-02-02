@@ -17,9 +17,9 @@ class _LoginState extends State<LoginPage> {
   bool _isLoggingIn = false;
   String? _errorText;
 
-  Future<void> _login() async {
-    if (Server.instance.state != NetworkStatus.init) {
-      print("${Server.instance.state}");
+  Future<void> _login(String inputText) async {
+    Server server = Server.instance;
+    if (server.state != NetworkStatus.init) {
       return;
     }
 
@@ -28,11 +28,11 @@ class _LoginState extends State<LoginPage> {
       _errorText = null;
     });
 
-    Server.instance.setIpAndPort("localhost", 8020);
-    Server.instance.setChannelAndChannelUserId("uuid", "1234");
+    server.setIpAndPort("localhost", 8020);
+    server.setChannelAndChannelUserId("uuid", inputText);
 
-    if (await Server.instance.connectAndLoginOnce()) {
-      NavState.instance!.setIndex(1);
+    if (await server.connectAndLoginOnce()) {
+      server.startLoop();
     } else {
       setState(() {
         _isLoggingIn = false;
@@ -94,7 +94,7 @@ class _LoginState extends State<LoginPage> {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: _isLoggingIn ? null : _login,
+                onPressed: _isLoggingIn ? null : () => _login(emailController.text),
                 child: const Padding(
                   padding: EdgeInsets.symmetric(vertical: 14),
                   child: Text("Continue"),
