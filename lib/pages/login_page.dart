@@ -1,3 +1,7 @@
+import 'package:scene_hub/network/network_status.dart';
+import 'package:scene_hub/network/server.dart';
+import 'package:scene_hub/providers/nav_state.dart';
+
 import 'home_page.dart';
 import 'package:flutter/material.dart';
 
@@ -8,8 +12,43 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginState();
 }
 
-class _LoginState extends State<LoginPage>{
+class _LoginState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
+  bool _isLoggingIn = false;
+  String? _errorText;
+
+  Future<void> _login() async {
+    if (Server.instance.state != NetworkStatus.init) {
+      print("${Server.instance.state}");
+      return;
+    }
+
+    setState(() {
+      _isLoggingIn = true;
+      _errorText = null;
+    });
+
+    Server.instance.setIpAndPort("localhost", 8020);
+    Server.instance.setChannelAndChannelUserId("uuid", "1234");
+
+    if (await Server.instance.connectAndLoginOnce()) {
+      NavState.instance!.setIndex(1);
+    } else {
+      setState(() {
+        _isLoggingIn = false;
+        _errorText = "Login Failed";
+      });
+    }
+
+    // Navigator.pushReplacement(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (_) {
+    //       return const HomePage();
+    //     },
+    //   ),
+    // );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,22 +60,22 @@ class _LoginState extends State<LoginPage>{
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // App Logo / Title
-            Text (
+            Text(
               "SceneHub",
               style: TextStyle(
                 fontSize: 36,
                 fontWeight: FontWeight.bold,
                 color: Colors.indigo.shade700,
-              )
+              ),
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             const Text(
               "Join with your email or continue as a guest",
-              style: TextStyle(fontSize: 16, color: Colors.black54)
+              style: TextStyle(fontSize: 16, color: Colors.black54),
             ),
-            
+
             const SizedBox(height: 40),
 
             // Email TextField
@@ -55,11 +94,7 @@ class _LoginState extends State<LoginPage>{
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () {
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) {
-                    return const HomePage();
-                  }));
-                }, 
+                onPressed: _isLoggingIn ? null : _login,
                 child: const Padding(
                   padding: EdgeInsets.symmetric(vertical: 14),
                   child: Text("Continue"),
@@ -67,17 +102,26 @@ class _LoginState extends State<LoginPage>{
               ),
             ),
 
+            if (_errorText != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _errorText!,
+                style: const TextStyle(color: Colors.red, fontSize: 14),
+              ),
+            ],
+
             // Guest Mode
             Center(
               child: TextButton(
                 onPressed: () {
-                  // 
+                  //
                 },
-                child: const Text("Continue as Guest")),
+                child: const Text("Continue as Guest"),
+              ),
             ),
           ],
         ),
-      )
+      ),
     );
   }
 }

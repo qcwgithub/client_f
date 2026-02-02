@@ -23,67 +23,138 @@ class PendingRequest {
 
 class Server {
   static final Server instance = Server();
-
   TcpClient? client;
-  final Map<int, PendingRequest> _pending = {};
+  NetworkStatus _state = NetworkStatus.init;
+  NetworkStatus get state => _state;
+
+  String? _ip;
+  int _port = 0;
+  void setIpAndPort(String ip, int port) {
+    _ip = ip;
+    _port = port;
+  }
+
+  String? _channel;
+  String? _channelUserId;
+  void setChannelAndChannelUserId(String ch, String chUserId) {
+    _channel = ch;
+    _channelUserId = chUserId;
+  }
+
+  Future<bool> _connectOnce() async {
+    assert(_state == NetworkStatus.init);
+
+    if (client != null) {
+      client!.close();
+      client = null;
+    }
+
+    _state = NetworkStatus.connecting;
+
+    client = TcpClient(host: _ip!, port: _port, packer: BinaryMessagePacker());
+
+    // listen
+    client!.onMessage = _onMessage;
+    client!.onDisconnected = _onDisconnected;
+
+    if (await client!.connect()) {
+      _state = NetworkStatus.connected;
+      return true;
+    } else {
+      _state = NetworkStatus.init;
+      return false;
+    }
+  }
+
+  void _onDisconnected() {
+    for (final c in _pending.values) {
+      c.completer.complete(MyResponse(e: ECode.timeout, res: null));
+    }
+    _pending.clear();
+
+    _state = NetworkStatus.init;
+  }
+
+  Future<bool> _loginOnce() async {
+    assert(_state == NetworkStatus.connected);
+
+    _state = NetworkStatus.logining;
+    MyLogger.instance.d('login...');
+
+    var msg = new MsgLogin(
+      version: "1.0",
+      platform: "android",
+      channel: _channel!,
+      channelUserId: _channelUserId!,
+      verifyData: "",
+      userId: 0,
+      token: "",
+      deviceUid: "",
+      dict: Map(),
+    );
+
+    MyResponse r = await request(MsgType.login, msg);
+    MyLogger.instance.d('login result ${r.e}');
+    if (r.e == ECode.success) {
+      _state = NetworkStatus.online;
+
+      var res = ResLogin.fromMsgPack(r.res!);
+      MyLogger.instance.d('isNewUser? ${res.isNewUser}');
+      MyLogger.instance.d('kickOther? ${res.kickOther}');
+      MyLogger.instance.d('userId = ${res.userInfo.userId}');
+      MyLogger.instance.d('userName = ${res.userInfo.userName}');
+
+      return true;
+    } else {
+      _state = NetworkStatus.init;
+      return false;
+    }
+  }
+
+  Future<bool> connectAndLoginOnce() async {
+    if (!await _connectOnce()) {
+      return false;
+    }
+    assert(_state == NetworkStatus.connected);
+
+    return await _loginOnce();
+  }
 
   bool _running = false;
-  NetworkStatus _state = NetworkStatus.init;
-  Future<void> start() async {
+  Future<void> startLoop() async {
     if (_running) {
       return;
     }
 
-    _running = true;
-
     while (_running) {
       switch (_state) {
         case NetworkStatus.init:
-          client = TcpClient(
-            host: "localhost",
-            port: 8020,
-            packer: BinaryMessagePacker(),
-          );
-          client!.onMessage = _onMessage;
-
-          bool ok = await client!.connect();
-          if (!ok) {
-            _state = NetworkStatus.init;
+          if (!await _connectOnce()) {
             await Future.delayed(const Duration(seconds: 1));
           } else {
-            _state = NetworkStatus.login;
+            assert(_state == NetworkStatus.connected);
           }
           break;
 
-        case NetworkStatus.login:
+        case NetworkStatus.connecting:
           {
-            MyLogger.instance.d('login...');
+            // nothing to do
+          }
+          break;
 
-            var msg = new MsgLogin(
-              version: "1.0",
-              platform: "android",
-              channel: "uuid",
-              channelUserId: "1",
-              verifyData: "",
-              userId: 0,
-              token: "",
-              deviceUid: "",
-              dict: Map(),
-            );
-
-            MyResponse r = await request(MsgType.login, msg);
-            MyLogger.instance.d('login result ${r.e}');
-            if (r.e == ECode.success) {
-              _state = NetworkStatus.online;
-
-              var res = ResLogin.fromMsgPack(r.res!);
-              MyLogger.instance.d('isNewUser? ${res.isNewUser}');
-              MyLogger.instance.d('kickOther? ${res.kickOther}');
-              MyLogger.instance.d('userId = ${res.userInfo.userId}');
-              MyLogger.instance.d('userName = ${res.userInfo.userName}');
+        case NetworkStatus.connected:
+          {
+            if (!await _loginOnce()) {
+              await Future.delayed(const Duration(seconds: 1));
             } else {
-              _state = NetworkStatus.init;
+              assert(_state == NetworkStatus.online);
             }
+          }
+          break;
+
+        case NetworkStatus.logining:
+          {
+            // nothing to do
           }
           break;
 
@@ -95,7 +166,12 @@ class Server {
     }
   }
 
+  void stopLoop() {
+    _running = false;
+  }
+
   static int nextSeq = 1;
+  final Map<int, PendingRequest> _pending = {};
 
   Future<MyResponse> request<T extends IToMsgPack>(
     MsgType msgType,
@@ -126,8 +202,7 @@ class Server {
       if (request != null) {
         request.completer.complete(MyResponse(e: e, res: res));
       }
-    }
-    else if (result.seq > 0) {
+    } else if (result.seq > 0) {
       MsgType msgType = MsgType.fromCode(result.code);
       List msg = result.msgBytes != null ? deserialize(result.msgBytes!) : null;
       _handlePush(msgType, msg);
@@ -136,12 +211,5 @@ class Server {
 
   void _handlePush(MsgType msgType, List msg) {
     MyLogger.instance.d("received $msgType");
-  }
-
-  void _onDisconnected() {
-    for (final c in _pending.values) {
-      c.completer.completeError(Exception('disconnected'));
-    }
-    _pending.clear();
   }
 }

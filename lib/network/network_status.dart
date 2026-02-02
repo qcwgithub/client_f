@@ -1,5 +1,7 @@
 enum NetworkStatus{
   init,
-  login,
+  connecting,
+  connected,
+  logining,
   online,
 }
