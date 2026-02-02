@@ -18,8 +18,9 @@ import 'package:scene_hub/network/unpack_result.dart';
 import 'package:scene_hub/providers/nav_state.dart';
 
 class PendingRequest {
+  final MsgType msgType;
   final Completer<MyResponse> completer;
-  PendingRequest({required this.completer});
+  PendingRequest({required this.msgType, required this.completer});
 }
 
 class Server {
@@ -195,12 +196,21 @@ class Server {
     int seq = nextSeq++;
     MyLogger.instance.d('request $msgType seq $seq');
     final completer = Completer<MyResponse>();
-    _pending[seq] = PendingRequest(completer: completer);
+    _pending[seq] = PendingRequest(msgType: msgType, completer: completer);
 
     List list = msg.toMsgPack();
     Uint8List msgBytes = serialize(list);
     client!.send(seq, msgType.code, msgBytes, true);
     return completer.future;
+  }
+
+  bool isPending(MsgType msgType) {
+    for (PendingRequest pr in _pending.values) {
+      if (pr.msgType == msgType) {
+        return true;
+      }
+    }
+    return false;
   }
 
   void _onMessage(UnpackResult result) {
