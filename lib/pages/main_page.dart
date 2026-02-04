@@ -35,7 +35,6 @@ class _MainPageState extends State<MainPage> {
     RoomListState state = context.watch<RoomListState>();
 
     return Scaffold(
-      // 我想在这里加入一个搜索栏
       appBar: AppBar(
         title: const Text("Scenes"),
         actions: [
