@@ -111,7 +111,7 @@ class MessageProvider extends ChangeNotifier {
   void sendMessage(String type, String content) {
     var item = MessageItem(
       messageId: "messageId",
-      senderId: Me.instance!.userId,
+      senderId: Me.instance!.userId.toString(),
       senderAvatarUrl: defaultAvatarUrl,
       timestamp: DateTime.now().millisecondsSinceEpoch,
       type: type,

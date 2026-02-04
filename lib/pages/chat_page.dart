@@ -128,8 +128,8 @@ class _ChatPageState extends State<ChatPage> {
           bool showTime = true;
           if (itemIndex < L - 1) {
             var prevItem = messageProvider.messageItems[itemIndex + 1];
-            if (Me.instance!.isMe(item.senderId) ==
-                    Me.instance!.isMe(prevItem.senderId) &&
+            if (Me.instance!.isMe2(item.senderId) ==
+                    Me.instance!.isMe2(prevItem.senderId) &&
                 item.timestamp - prevItem.timestamp < 300000) {
               showTime = false;
             }

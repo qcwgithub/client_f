@@ -32,7 +32,7 @@ class ChatMessageItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isMe = Me.instance!.isMe(messageItem.senderId);
+    bool isMe = Me.instance!.isMe2(messageItem.senderId);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 5),

@@ -1,28 +1,29 @@
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/gen/room_info.dart';
-import 'package:scene_hub/providers/room_list_state.dart';
+import 'package:scene_hub/models/room_list_model.dart';
+import 'package:scene_hub/providers/room_list_provider.dart';
 import 'package:scene_hub/widgets/scene_card.dart';
 import 'package:flutter/material.dart';
 
-class MainPage extends StatefulWidget {
+class MainPage extends ConsumerStatefulWidget {
   const MainPage({super.key});
 
   @override
-  State<MainPage> createState() => _MainPageState();
+  ConsumerState<MainPage> createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _MainPageState extends ConsumerState<MainPage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((Duration timeStamp) {
-      RoomListState.instance?.getRecommendedRooms();
+      ref.read(roomListProvider.notifier).getRecommendedRooms();
     });
   }
-
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
 
   @override
   void dispose() {
@@ -32,7 +33,7 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    RoomListState state = context.watch<RoomListState>();
+    final model = ref.watch(roomListProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -40,7 +41,7 @@ class _MainPageState extends State<MainPage> {
         actions: [
           IconButton(
             onPressed: () {
-              state.getRecommendedRooms();
+              ref.read(roomListProvider.notifier).getRecommendedRooms();
             },
             icon: Icon(Icons.refresh),
           ),
@@ -84,9 +85,9 @@ class _MainPageState extends State<MainPage> {
                 IconButton(
                   onPressed: () {
                     if (_searchQuery.isEmpty) {
-                      state.getRecommendedRooms();
+                      ref.read(roomListProvider.notifier).getRecommendedRooms();
                     } else {
-                      state.search(_searchQuery);
+                      ref.read(roomListProvider.notifier).search(_searchQuery);
                     }
                   },
                   icon: const Icon(Icons.search),
@@ -96,8 +97,8 @@ class _MainPageState extends State<MainPage> {
           ),
           Expanded(
             child: RefreshIndicator(
-              onRefresh: state.getRecommendedRooms,
-              child: _buildList(state),
+              onRefresh: ref.read(roomListProvider.notifier).getRecommendedRooms,
+              child: _buildList(model),
             ),
           ),
         ],
@@ -105,8 +106,8 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Widget _buildList(RoomListState state) {
-    if (state.status == RoomListStatus.refreshing && state.roomInfos.isEmpty) {
+  Widget _buildList(RoomListModel model) {
+    if (model.status == RoomListStatus.refreshing && model.roomInfos.isEmpty) {
       return ListView(
         children: const [
           SizedBox(height: 200),
@@ -115,8 +116,8 @@ class _MainPageState extends State<MainPage> {
       );
     }
 
-    if (state.status == RoomListStatus.empty ||
-        state.status == RoomListStatus.error) {
+    if (model.status == RoomListStatus.empty ||
+        model.status == RoomListStatus.error) {
       return ListView(
         children: const [
           SizedBox(height: 200),
@@ -128,10 +129,10 @@ class _MainPageState extends State<MainPage> {
     return ListView.builder(
       padding: const EdgeInsets.all(12),
       itemCount:
-          state.roomInfos.length +
-          (state.status == RoomListStatus.refreshing ? 1 : 0),
+          model.roomInfos.length +
+          (model.status == RoomListStatus.refreshing ? 1 : 0),
       itemBuilder: (BuildContext context, int index) {
-        if (state.status == RoomListStatus.refreshing && index == 0) {
+        if (model.status == RoomListStatus.refreshing && index == 0) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: Center(child: Text("刷新中...")),
@@ -139,8 +140,8 @@ class _MainPageState extends State<MainPage> {
         }
 
         RoomInfo roomInfo =
-            state.roomInfos[index -
-                (state.status == RoomListStatus.refreshing ? 1 : 0)];
+            model.roomInfos[index -
+                (model.status == RoomListStatus.refreshing ? 1 : 0)];
 
         return SceneCard(title: roomInfo.title, subtitle: roomInfo.desc);
       },

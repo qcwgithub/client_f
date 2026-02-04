@@ -3,8 +3,11 @@ import 'package:scene_hub/gen/user_info.dart';
 class Me {
   static Me? instance;
 
-  bool isMe(String userId) {
+  bool isMe(int userId) {
     return this.userId == userId;
+  }
+  bool isMe2(String userId) {
+    return this.userId.toString() == userId;
   }
 
   UserInfo? _userInfo;

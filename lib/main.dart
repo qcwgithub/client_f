@@ -1,12 +1,11 @@
 import 'dart:io';
 
-import 'package:scene_hub/me.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/providers/message_provider.dart';
 import 'package:scene_hub/providers/nav_state.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:scene_hub/providers/room_list_state.dart';
 import 'package:window_size/window_size.dart' as window_size;
 import 'app.dart';
 
@@ -20,15 +19,13 @@ void main() {
     window_size.setWindowFrame(const Rect.fromLTWH(1500, 100, 200, 400));
   }
 
-  // create Me
-  Me(userId: "9999", userName: "Yaji");
-
   runApp(
-    MultiProvider(providers: [
-      ChangeNotifierProvider(create: (_) => NavState()),
-      ChangeNotifierProvider(create: (_) => MessageProvider()),
-      ChangeNotifierProvider(create: (_) => RoomListState()),
-    ],
-    child: const MyApp(),
-  ));
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => NavState()),
+        ChangeNotifierProvider(create: (_) => MessageProvider()),
+      ],
+      child: ProviderScope(child: const MyApp()),
+    ),
+  );
 }
