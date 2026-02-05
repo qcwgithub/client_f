@@ -84,7 +84,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final RoomMessageListModel model = ref.watch(roomMessageListProvider(widget.roomInfo.roomId));
+    final RoomMessageListModel model = ref.watch(
+      roomMessageListProvider(widget.roomInfo.roomId),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -95,7 +97,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => RoomInfoPage(roomId: "999999"),
+                  builder: (_) => RoomInfoPage(roomInfo: widget.roomInfo),
                 ),
               );
             },
