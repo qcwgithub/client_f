@@ -4,7 +4,6 @@ import 'package:scene_hub/providers/message_provider.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
 import 'package:scene_hub/widgets/chat_message_item.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class ChatPage extends StatefulWidget {
   final String sceneName;

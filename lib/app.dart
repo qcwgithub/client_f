@@ -1,17 +1,17 @@
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/pages/home_page.dart';
 
 import 'package:flutter/material.dart';
 import 'package:scene_hub/pages/login_page.dart';
-import 'package:scene_hub/providers/nav_state.dart';
+import 'package:scene_hub/providers/nav_provider.dart';
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
-    NavState navState = context.watch<NavState>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    int navState = ref.watch(navProvider);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false, // 去掉 DEBUG 横幅
@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         // colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: navState.index == 0 ? const LoginPage() : const HomePage(),
+      home: navState == 0 ? const LoginPage() : const HomePage(),
     );
   }
 }

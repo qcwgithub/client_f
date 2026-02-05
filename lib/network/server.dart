@@ -9,13 +9,14 @@ import 'package:scene_hub/gen/msg_login.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/res_login.dart';
 import 'package:scene_hub/i_to_msg_pack.dart';
+import 'package:scene_hub/main.dart';
 import 'package:scene_hub/my_logger.dart';
 import 'package:scene_hub/network/binary_message_packer.dart';
 import 'package:scene_hub/network/my_response.dart';
 import 'package:scene_hub/network/network_status.dart';
 import 'package:scene_hub/network/tcp_client.dart';
 import 'package:scene_hub/network/unpack_result.dart';
-import 'package:scene_hub/providers/nav_state.dart';
+import 'package:scene_hub/providers/nav_provider.dart';
 
 class PendingRequest {
   final MsgType msgType;
@@ -81,7 +82,7 @@ class Server {
     _setState(NetworkStatus.init);
 
     // TEMP
-    NavState.instance!.setIndex(0);
+    globalContainer.read(navProvider.notifier).state = 0;
   }
 
   Future<bool> _loginOnce() async {
@@ -114,7 +115,7 @@ class Server {
       MyLogger.instance.d('userName = ${res.userInfo.userName}');
 
       // TEMP
-      NavState.instance!.setIndex(1);
+      globalContainer.read(navProvider.notifier).state = 1;
 
       return true;
     } else {

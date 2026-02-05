@@ -1,15 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:scene_hub/providers/message_provider.dart';
-import 'package:scene_hub/providers/nav_state.dart';
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:window_size/window_size.dart' as window_size;
 import 'app.dart';
 
+late final ProviderContainer globalContainer;
+
 void main() {
+  globalContainer = ProviderContainer();
+
   WidgetsFlutterBinding.ensureInitialized();
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
@@ -20,12 +20,6 @@ void main() {
   }
 
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => NavState()),
-        ChangeNotifierProvider(create: (_) => MessageProvider()),
-      ],
-      child: ProviderScope(child: const MyApp()),
-    ),
+    UncontrolledProviderScope(container: globalContainer, child: const MyApp()),
   );
 }

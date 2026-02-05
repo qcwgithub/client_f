@@ -31,7 +31,6 @@ dependencies:
   flutter:
     sdk: flutter
   window_size: ^0.1.0
-  provider:
   intl:
   image_picker: ^1.0.0
   flutter_image_compress: ^1.1.0

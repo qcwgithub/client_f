@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:scene_hub/network/network_status.dart';
 import 'package:scene_hub/network/server.dart';
-import 'package:scene_hub/providers/nav_state.dart';
+import 'package:scene_hub/providers/nav_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'home_page.dart';
