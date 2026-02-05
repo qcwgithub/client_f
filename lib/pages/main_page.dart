@@ -143,7 +143,7 @@ class _MainPageState extends ConsumerState<MainPage> {
             model.roomInfos[index -
                 (model.status == RoomListStatus.refreshing ? 1 : 0)];
 
-        return SceneCard(title: roomInfo.title, subtitle: roomInfo.desc);
+        return SceneCard(roomInfo: roomInfo);
       },
     );
   }

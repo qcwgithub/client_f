@@ -6,9 +6,6 @@ class Me {
   bool isMe(int userId) {
     return this.userId == userId;
   }
-  bool isMe2(String userId) {
-    return this.userId.toString() == userId;
-  }
 
   UserInfo? _userInfo;
   UserInfo get userInfo {

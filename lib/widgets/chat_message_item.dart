@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/me.dart';
 import 'package:scene_hub/pages/fullscreen_image_page.dart';
 import 'package:scene_hub/pages/user_page.dart';
-import 'package:scene_hub/providers/message_provider.dart';
 
 class ChatMessageItem extends StatelessWidget {
-  final MessageItem messageItem;
+  final ChatMessage messageItem;
   final bool showTime;
   const ChatMessageItem({
     super.key,
@@ -23,7 +23,6 @@ class ChatMessageItem extends StatelessWidget {
           return UserPage(
             userId: messageItem.senderId,
             userName: messageItem.senderName,
-            avatarUrl: messageItem.senderAvatarUrl,
           );
         },
       ),
@@ -32,7 +31,7 @@ class ChatMessageItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isMe = Me.instance!.isMe2(messageItem.senderId);
+    bool isMe = Me.instance!.isMe(messageItem.senderId);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 5),
@@ -72,7 +71,7 @@ class ChatMessageItem extends StatelessWidget {
           if (!isMe) const SizedBox(height: 4),
 
           if (messageItem.type == "text") _buildTextBubble(context, isMe),
-          if (messageItem.type == "image") _buildImageBubble(context, isMe),
+          // if (messageItem.type == "image") _buildImageBubble(context, isMe),
 
           if (showTime) const SizedBox(height: 4),
 
@@ -108,36 +107,36 @@ class ChatMessageItem extends StatelessWidget {
           ),
         ),
         child: Text(
-          messageItem.text!,
+          messageItem.content,
           style: TextStyle(color: isMe ? Colors.white : Colors.black87),
         ),
       ),
     );
   }
 
-  Widget _buildImageBubble(BuildContext context, bool isMe) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) {
-              return FullscreenImagePage(imageUrl: messageItem.imageUrl!);
-            },
-          ),
-        );
-      },
+  // Widget _buildImageBubble(BuildContext context, bool isMe) {
+  //   return GestureDetector(
+  //     onTap: () {
+  //       Navigator.of(context).push(
+  //         MaterialPageRoute(
+  //           builder: (_) {
+  //             return FullscreenImagePage(imageUrl: messageItem.imageUrl!);
+  //           },
+  //         ),
+  //       );
+  //     },
 
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.network(
-          messageItem.imageUrl!,
-          width: 180,
-          height: 180,
-          fit: BoxFit.cover,
-        ),
-      ),
-    );
-  }
+  //     child: ClipRRect(
+  //       borderRadius: BorderRadius.circular(12),
+  //       child: Image.network(
+  //         messageItem.imageUrl!,
+  //         width: 180,
+  //         height: 180,
+  //         fit: BoxFit.cover,
+  //       ),
+  //     ),
+  //   );
+  // }
 
   void _showMessageMenu(BuildContext context, Offset position) async {
     final selected = await showMenu(
@@ -161,7 +160,7 @@ class ChatMessageItem extends StatelessWidget {
     switch (selected) {
       case "copy":
         if (messageItem.type == "text") {
-          Clipboard.setData(ClipboardData(text: messageItem.text!));
+          Clipboard.setData(ClipboardData(text: messageItem.content));
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text("Copied!")));
@@ -191,10 +190,10 @@ class ChatMessageItem extends StatelessWidget {
             : const EdgeInsets.only(right: 6, left: 6, top: 12),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(6), // 圆角方形
-          child: Image.network(
-            messageItem.senderAvatarUrl ?? "",
-            fit: BoxFit.cover,
-          ),
+          // child: Image.network(
+          //   messageItem.senderAvatarUrl ?? "",
+          //   fit: BoxFit.cover,
+          // ),
         ),
       ),
     );

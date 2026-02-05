@@ -1,12 +1,6 @@
 import 'package:scene_hub/gen/room_info.dart';
 
-enum RoomListStatus {
-  idle, // 初始 & 空
-  refreshing, // 下拉刷新中
-  success, // 有数据
-  empty, // 请求成功但 0 条
-  error, // 请求失败
-}
+enum RoomListStatus { idle, refreshing, success, empty, error }
 
 class RoomListModel {
   final List<RoomInfo> roomInfos;

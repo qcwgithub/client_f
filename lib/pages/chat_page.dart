@@ -1,22 +1,27 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:scene_hub/gen/chat_message.dart';
+import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/me.dart';
+import 'package:scene_hub/models/room_message_list_model.dart';
 import 'package:scene_hub/pages/room_info_page.dart';
 import 'package:scene_hub/providers/message_provider.dart';
+import 'package:scene_hub/providers/room_message_list_provider.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
 import 'package:scene_hub/widgets/chat_message_item.dart';
 import 'package:flutter/material.dart';
 
-class ChatPage extends StatefulWidget {
-  final String sceneName;
+class ChatPage extends ConsumerStatefulWidget {
+  final RoomInfo roomInfo;
 
-  const ChatPage({super.key, required this.sceneName});
+  const ChatPage({super.key, required this.roomInfo});
 
   @override
-  State<StatefulWidget> createState() {
+  ConsumerState<ConsumerStatefulWidget> createState() {
     return _ChatPageState();
   }
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _ChatPageState extends ConsumerState<ChatPage> {
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -79,17 +84,19 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final messageProvider = Provider.of<MessageProvider>(context);
+    final RoomMessageListModel model = ref.watch(roomMessageListProvider(widget.roomInfo.roomId));
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.sceneName),
+        title: Text(widget.roomInfo.title),
         actions: [
           IconButton(
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => RoomInfoPage(roomId: "999999",)),
+                MaterialPageRoute(
+                  builder: (_) => RoomInfoPage(roomId: "999999"),
+                ),
               );
             },
             icon: Icon(Icons.more_vert),
@@ -99,14 +106,14 @@ class _ChatPageState extends State<ChatPage> {
 
       body: Column(
         children: [
-          _buildChatList(messageProvider),
+          _buildChatList(model),
           ChatInput(
             callback: (type, content) {
-              messageProvider.sendMessage(type, content);
+              // messageProvider.sendMessage(type, content);
 
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _scrollToBottom();
-              });
+              // WidgetsBinding.instance.addPostFrameCallback((_) {
+              //   _scrollToBottom();
+              // });
             },
           ),
         ],
@@ -114,21 +121,21 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  Widget _buildChatList(MessageProvider messageProvider) {
+  Widget _buildChatList(RoomMessageListModel model) {
     return Expanded(
       child: ListView.builder(
         controller: _scrollController,
         reverse: true, // !
-        itemCount: messageProvider.messageItems.length,
+        itemCount: model.messageList.length,
         itemBuilder: (context, index) {
-          int L = messageProvider.messageItems.length;
+          int L = model.messageList.length;
           int itemIndex = L - 1 - index;
-          var item = messageProvider.messageItems[itemIndex];
+          ChatMessage item = model.messageList[itemIndex];
           bool showTime = true;
           if (itemIndex < L - 1) {
-            var prevItem = messageProvider.messageItems[itemIndex + 1];
-            if (Me.instance!.isMe2(item.senderId) ==
-                    Me.instance!.isMe2(prevItem.senderId) &&
+            var prevItem = model.messageList[itemIndex + 1];
+            if (Me.instance!.isMe(item.senderId) ==
+                    Me.instance!.isMe(prevItem.senderId) &&
                 item.timestamp - prevItem.timestamp < 300000) {
               showTime = false;
             }

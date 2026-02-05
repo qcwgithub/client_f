@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 
 class UserPage extends StatelessWidget {
-  final String userId;
+  final int userId;
   final String? userName;
-  final String? avatarUrl;
   const UserPage({
     super.key,
     required this.userId,
     this.userName,
-    this.avatarUrl,
   });
 
   @override

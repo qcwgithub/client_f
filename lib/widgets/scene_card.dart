@@ -1,11 +1,11 @@
+import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/pages/chat_page.dart';
 import 'package:flutter/material.dart';
 
 class SceneCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
+  final RoomInfo roomInfo;
 
-  const SceneCard({super.key, required this.title, required this.subtitle});
+  const SceneCard({super.key, required this.roomInfo});
 
   @override
   Widget build(BuildContext context) {
@@ -16,9 +16,9 @@ class SceneCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            title: Text(title),
+            title: Text(roomInfo.title),
             subtitle: Text(
-              subtitle,
+              roomInfo.desc,
               style: TextStyle(fontSize: 14, color: Colors.green),
             ),
             trailing: const Icon(Icons.arrow_forward_ios),
@@ -27,7 +27,7 @@ class SceneCard extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) {
-                    return ChatPage(sceneName: title);
+                    return ChatPage(roomInfo: roomInfo);
                   },
                 ),
               );
