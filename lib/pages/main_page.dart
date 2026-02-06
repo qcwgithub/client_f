@@ -1,8 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/models/room_list_model.dart';
+import 'package:scene_hub/providers/room_enter_provider.dart';
 import 'package:scene_hub/providers/room_list_provider.dart';
-import 'package:scene_hub/widgets/scene_card.dart';
+import 'package:scene_hub/widgets/room_card.dart';
 import 'package:flutter/material.dart';
 
 class MainPage extends ConsumerStatefulWidget {
@@ -97,7 +98,9 @@ class _MainPageState extends ConsumerState<MainPage> {
           ),
           Expanded(
             child: RefreshIndicator(
-              onRefresh: ref.read(roomListProvider.notifier).getRecommendedRooms,
+              onRefresh: ref
+                  .read(roomListProvider.notifier)
+                  .getRecommendedRooms,
               child: _buildList(model),
             ),
           ),
@@ -126,25 +129,38 @@ class _MainPageState extends ConsumerState<MainPage> {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount:
-          model.roomInfos.length +
-          (model.status == RoomListStatus.refreshing ? 1 : 0),
-      itemBuilder: (BuildContext context, int index) {
-        if (model.status == RoomListStatus.refreshing && index == 0) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Center(child: Text("刷新中...")),
-          );
-        }
+    final bool entering = ref.watch(roomEnterProvider);
 
-        RoomInfo roomInfo =
-            model.roomInfos[index -
-                (model.status == RoomListStatus.refreshing ? 1 : 0)];
+    return Stack(
+      children: [
+        ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount:
+              model.roomInfos.length +
+              (model.status == RoomListStatus.refreshing ? 1 : 0),
+          itemBuilder: (BuildContext context, int index) {
+            if (model.status == RoomListStatus.refreshing && index == 0) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Center(child: Text("刷新中...")),
+              );
+            }
 
-        return SceneCard(roomInfo: roomInfo);
-      },
+            RoomInfo roomInfo =
+                model.roomInfos[index -
+                    (model.status == RoomListStatus.refreshing ? 1 : 0)];
+
+            return RoomCard(roomInfo: roomInfo);
+          },
+        ),
+
+        if (entering)
+          Container(
+            color: Colors.black26,
+            alignment: Alignment.center,
+            child: const CircularProgressIndicator(),
+          ),
+      ],
     );
   }
 }
