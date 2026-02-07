@@ -3,6 +3,7 @@ import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/pages/chat_page.dart';
 import 'package:flutter/material.dart';
 import 'package:scene_hub/providers/enter_room_provider.dart';
+import 'package:scene_hub/providers/room_message_list_provider.dart';
 
 class RoomCard extends ConsumerWidget {
   final RoomInfo roomInfo;
@@ -40,6 +41,10 @@ class RoomCard extends ConsumerWidget {
                 );
                 return;
               }
+
+              ref
+                  .read(roomMessageListProvider(roomInfo.roomId).notifier)
+                  .setInitialMessages(result!.initialMessages);
 
               Navigator.push(
                 context,

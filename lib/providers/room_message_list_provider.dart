@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/models/room_message_list_model.dart';
 
 class RoomMessageListNotifier extends StateNotifier<RoomMessageListModel> {
@@ -11,6 +12,15 @@ class RoomMessageListNotifier extends StateNotifier<RoomMessageListModel> {
   //   state = state.copyWith(status: RoomMessageListStatus.refreshing);
 
   // }
+
+  void setInitialMessages(List<ChatMessage> messages) {
+    state = state.copyWith(
+      messageList: messages,
+      status: messages.isEmpty
+          ? RoomMessageListStatus.empty
+          : RoomMessageListStatus.success,
+    );
+  }
 }
 
 final roomMessageListProvider =
