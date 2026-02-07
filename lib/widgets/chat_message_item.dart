@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:scene_hub/gen/chat_message.dart';
-import 'package:scene_hub/me.dart';
-import 'package:scene_hub/pages/fullscreen_image_page.dart';
 import 'package:scene_hub/pages/user_page.dart';
+import 'package:scene_hub/sc.dart';
 
 class ChatMessageItem extends StatelessWidget {
   final ChatMessage messageItem;
@@ -31,7 +30,7 @@ class ChatMessageItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isMe = Me.instance!.isMe(messageItem.senderId);
+    bool isMe = sc.me.isMe(messageItem.senderId);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 5),

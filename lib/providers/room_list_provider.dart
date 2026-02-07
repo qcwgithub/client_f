@@ -7,7 +7,7 @@ import 'package:scene_hub/gen/res_get_recommended_rooms.dart';
 import 'package:scene_hub/gen/res_search_room.dart';
 import 'package:scene_hub/models/room_list_model.dart';
 import 'package:scene_hub/network/my_response.dart';
-import 'package:scene_hub/network/server.dart';
+import 'package:scene_hub/sc.dart';
 
 class RoomListNotifier extends StateNotifier<RoomListModel> {
   RoomListNotifier() : super(RoomListModel.initial());
@@ -17,7 +17,7 @@ class RoomListNotifier extends StateNotifier<RoomListModel> {
 
     state = state.copyWith(status: RoomListStatus.refreshing);
 
-    MyResponse r = await Server.instance.request(
+    MyResponse r = await sc.server.request(
       MsgType.getRecommendedRooms,
       MsgGetRecommendedRooms(),
     );
@@ -51,7 +51,7 @@ class RoomListNotifier extends StateNotifier<RoomListModel> {
 
     state = state.copyWith(status: RoomListStatus.refreshing);
 
-    MyResponse r = await Server.instance.request(
+    MyResponse r = await sc.server.request(
       MsgType.searchRoom,
       MsgSearchRoom(keyword: keyword),
     );

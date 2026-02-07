@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:logger/logger.dart';
 import 'package:msgpack_dart/msgpack_dart.dart';
 import 'package:scene_hub/gen/e_code.dart';
 import 'package:scene_hub/gen/msg_login.dart';
@@ -17,6 +15,7 @@ import 'package:scene_hub/network/network_status.dart';
 import 'package:scene_hub/network/tcp_client.dart';
 import 'package:scene_hub/network/unpack_result.dart';
 import 'package:scene_hub/providers/nav_provider.dart';
+import 'package:scene_hub/sc.dart';
 
 class PendingRequest {
   final MsgType msgType;
@@ -25,7 +24,6 @@ class PendingRequest {
 }
 
 class Server {
-  static final Server instance = Server();
   TcpClient? client;
   NetworkStatus _state = NetworkStatus.init;
   NetworkStatus get state => _state;
@@ -105,23 +103,25 @@ class Server {
 
     MyResponse r = await request(MsgType.login, msg);
     MyLogger.instance.d('login result ${r.e}');
-    if (r.e == ECode.success) {
-      _setState(NetworkStatus.online);
 
-      var res = ResLogin.fromMsgPack(r.res!);
-      MyLogger.instance.d('isNewUser? ${res.isNewUser}');
-      MyLogger.instance.d('kickOther? ${res.kickOther}');
-      MyLogger.instance.d('userId = ${res.userInfo.userId}');
-      MyLogger.instance.d('userName = ${res.userInfo.userName}');
-
-      // TEMP
-      globalContainer.read(navProvider.notifier).state = 1;
-
-      return true;
-    } else {
+    if (r.e != ECode.success) {
       _setState(NetworkStatus.init);
       return false;
     }
+
+    _setState(NetworkStatus.online);
+
+    var res = ResLogin.fromMsgPack(r.res!);
+    sc.me.isNewUser = res.isNewUser;
+    sc.me.userInfo = res.userInfo;
+    MyLogger.instance.d('isNewUser? ${res.isNewUser}');
+    MyLogger.instance.d('kickOther? ${res.kickOther}');
+    MyLogger.instance.d('userId = ${res.userInfo.userId}');
+    MyLogger.instance.d('userName = ${res.userInfo.userName}');
+
+    // TEMP
+    globalContainer.read(navProvider.notifier).state = 1;
+    return true;
   }
 
   Future<bool> connectAndLoginOnce() async {

@@ -1,5 +1,6 @@
+/*
 import 'package:flutter/material.dart';
-import 'package:scene_hub/me.dart';
+import 'package:scene_hub/sc.dart';
 
 class MessageItem {
   String messageId;
@@ -111,7 +112,7 @@ class MessageProvider extends ChangeNotifier {
   void sendMessage(String type, String content) {
     var item = MessageItem(
       messageId: "messageId",
-      senderId: Me.instance!.userId.toString(),
+      senderId: sc.me.userId.toString(),
       senderAvatarUrl: defaultAvatarUrl,
       timestamp: DateTime.now().millisecondsSinceEpoch,
       type: type,
@@ -122,3 +123,4 @@ class MessageProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
+*/

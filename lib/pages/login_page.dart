@@ -1,11 +1,8 @@
 import 'dart:io';
 
 import 'package:scene_hub/network/network_status.dart';
-import 'package:scene_hub/network/server.dart';
-import 'package:scene_hub/providers/nav_provider.dart';
+import 'package:scene_hub/sc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'home_page.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -45,10 +42,8 @@ class _LoginState extends State<LoginPage> {
   String? _errorText;
 
   Future<void> _login(String channelUserId) async {
-    Server server = Server.instance;
-    if (server.state != NetworkStatus.init) {
-      return;
-    }
+    final server = sc.server;
+    if (server.state != NetworkStatus.init) return;
 
     setState(() {
       _isLoggingIn = true;

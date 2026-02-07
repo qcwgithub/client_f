@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/room_info.dart';
-import 'package:scene_hub/me.dart';
 import 'package:scene_hub/models/room_message_list_model.dart';
 import 'package:scene_hub/pages/room_info_page.dart';
-import 'package:scene_hub/providers/message_provider.dart';
+// import 'package:scene_hub/providers/message_provider.dart';
 import 'package:scene_hub/providers/room_message_list_provider.dart';
+import 'package:scene_hub/sc.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
 import 'package:scene_hub/widgets/chat_message_item.dart';
 import 'package:flutter/material.dart';
@@ -42,9 +42,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         // double beforePixels = _scrollController.position.pixels;
         // double beforeExtent = 0;
         // bool loaded =
-        await MessageProvider.instance!.loadOlderMessages(() {
+        // await MessageProvider.instance!.loadOlderMessages(() {
           // beforeExtent = _scrollController.position.maxScrollExtent;
-        });
+        // });
 
         // if (loaded) {
         //   WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -136,8 +136,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           bool showTime = true;
           if (itemIndex < L - 1) {
             var prevItem = model.messageList[itemIndex + 1];
-            if (Me.instance!.isMe(item.senderId) ==
-                    Me.instance!.isMe(prevItem.senderId) &&
+            if (sc.me.isMe(item.senderId) ==
+                    sc.me.isMe(prevItem.senderId) &&
                 item.timestamp - prevItem.timestamp < 300000) {
               showTime = false;
             }

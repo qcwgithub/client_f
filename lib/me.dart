@@ -1,8 +1,6 @@
 import 'package:scene_hub/gen/user_info.dart';
 
 class Me {
-  static Me? instance;
-
   bool isMe(int userId) {
     return this.userId == userId;
   }
@@ -12,9 +10,11 @@ class Me {
     return _userInfo!;
   }
 
-  void setUserInfo(UserInfo userInfo) {
-    _userInfo = userInfo;
+  set userInfo(UserInfo value) {
+    _userInfo = value;
   }
+
+  bool isNewUser = false;
 
   int get userId {
     return _userInfo!.userId;
