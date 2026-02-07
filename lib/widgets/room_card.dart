@@ -30,12 +30,10 @@ class RoomCard extends ConsumerWidget {
                 enterRoomProvider.notifier,
               );
 
-              final EnterRoomResult? result = await notifier.enterRoom(
-                roomInfo.roomId,
-              );
+              final success = await notifier.enterRoom(roomInfo);
               if (!context.mounted) return;
 
-              if (ref.read(enterRoomProvider) == EnterRoomStatus.error) {
+              if (!success) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("enter room failed")),
                 );

@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/gen/room_info.dart';
-import 'package:scene_hub/models/room_list_model.dart';
 import 'package:scene_hub/providers/enter_room_provider.dart';
 import 'package:scene_hub/providers/room_list_provider.dart';
 import 'package:scene_hub/widgets/room_card.dart';
@@ -129,7 +128,7 @@ class _MainPageState extends ConsumerState<MainPage> {
       );
     }
 
-    final EnterRoomStatus status = ref.watch(enterRoomProvider);
+    final EnterRoomStatus enterRoomStatus = ref.watch(enterRoomProvider);
 
     return Stack(
       children: [
@@ -154,7 +153,7 @@ class _MainPageState extends ConsumerState<MainPage> {
           },
         ),
 
-        if (status == EnterRoomStatus.loading)
+        if (enterRoomStatus == EnterRoomStatus.loading)
           Container(
             color: Colors.black26,
             alignment: Alignment.center,
