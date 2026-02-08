@@ -20,16 +20,16 @@ class EnterRoomModel {
 class EnterRoomNotifier extends StateNotifier<EnterRoomModel> {
   EnterRoomNotifier() : super(EnterRoomModel.initial());
 
-  Future<bool> enterRoom(RoomInfo roomInfo) async {
+  Future<bool> enterRoom(int roomId) async {
     if (state.status == EnterRoomStatus.loading) {
       return false;
     }
 
     state = EnterRoomModel([], EnterRoomStatus.loading);
 
-    bool success = await sc.roomManager.enterRoom(roomInfo);
+    bool success = await sc.roomManager.enterRoom(roomId);
     if (success) {
-      Room? room = sc.roomManager.getRoom(roomInfo.roomId);
+      Room? room = sc.roomManager.getRoom(roomId);
       if (room != null) {
         state = EnterRoomModel(room.messages, EnterRoomStatus.idle);
         return true;

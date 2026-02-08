@@ -1,17 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:scene_hub/gen/room_info.dart';
-import 'package:scene_hub/pages/chat_page.dart';
+import 'package:scene_hub/pages/room_chat_page.dart';
 import 'package:flutter/material.dart';
 import 'package:scene_hub/providers/enter_room_provider.dart';
 import 'package:scene_hub/providers/room_message_list_provider.dart';
+import 'package:scene_hub/sc.dart';
 
 class RoomCard extends ConsumerWidget {
-  final RoomInfo roomInfo;
+  final int roomId;
 
-  const RoomCard({super.key, required this.roomInfo});
+  const RoomCard({super.key, required this.roomId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final room = sc.roomManager.getRoom(roomId)!;
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
       elevation: 2,
@@ -19,9 +20,9 @@ class RoomCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            title: Text(roomInfo.title),
+            title: Text(room.roomInfo.title),
             subtitle: Text(
-              roomInfo.desc,
+              room.roomInfo.desc,
               style: TextStyle(fontSize: 14, color: Colors.green),
             ),
             trailing: const Icon(Icons.arrow_forward_ios),
@@ -30,7 +31,7 @@ class RoomCard extends ConsumerWidget {
                 enterRoomProvider.notifier,
               );
 
-              final success = await notifier.enterRoom(roomInfo);
+              final success = await notifier.enterRoom(roomId);
               if (!context.mounted) return;
 
               if (!success) {
@@ -41,7 +42,7 @@ class RoomCard extends ConsumerWidget {
               }
 
               ref
-                  .read(roomMessageListProvider(roomInfo.roomId).notifier)
+                  .read(roomMessageListProvider(roomId).notifier)
                   .setInitialMessages(
                     ref.read(enterRoomProvider).recentMessages,
                   );
@@ -50,7 +51,7 @@ class RoomCard extends ConsumerWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) {
-                    return ChatPage(roomInfo: roomInfo);
+                    return RoomChatPage(roomId: roomId);
                   },
                 ),
               );

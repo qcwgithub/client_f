@@ -149,7 +149,7 @@ class _MainPageState extends ConsumerState<MainPage> {
                 model.roomInfos[index -
                     (model.status == RoomListStatus.refreshing ? 1 : 0)];
 
-            return RoomCard(roomInfo: roomInfo);
+            return RoomCard(roomId: roomInfo.roomId);
           },
         ),
 
