@@ -8,11 +8,14 @@ class MsgSendRoomChat implements IToMsgPack {
     ChatMessageType chatMessageType;
     // [2]
     String content;
+    // [3]
+    int clientMessageId;
 
     MsgSendRoomChat({
       required this.roomId,
       required this.chatMessageType,
       required this.content,
+      required this.clientMessageId,
     });
 
     @override
@@ -21,6 +24,7 @@ class MsgSendRoomChat implements IToMsgPack {
         roomId,
         chatMessageType.code,
         content,
+        clientMessageId,
       ];
     }
 
@@ -29,6 +33,7 @@ class MsgSendRoomChat implements IToMsgPack {
         roomId: list[0] as int,
         chatMessageType: ChatMessageType.fromCode(list[1] as int),
         content: list[2] as String,
+        clientMessageId: list[3] as int,
       );
     }
 }

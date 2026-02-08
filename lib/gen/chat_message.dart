@@ -22,6 +22,8 @@ class ChatMessage implements IToMsgPack {
     int replyTo;
     // [9]
     int senderAvatarIndex;
+    // [10]
+    int clientMessageId;
 
     ChatMessage({
       required this.messageId,
@@ -34,6 +36,7 @@ class ChatMessage implements IToMsgPack {
       required this.timestamp,
       required this.replyTo,
       required this.senderAvatarIndex,
+      required this.clientMessageId,
     });
 
     @override
@@ -49,6 +52,7 @@ class ChatMessage implements IToMsgPack {
         timestamp,
         replyTo,
         senderAvatarIndex,
+        clientMessageId,
       ];
     }
 
@@ -64,6 +68,7 @@ class ChatMessage implements IToMsgPack {
         timestamp: list[7] as int,
         replyTo: list[8] as int,
         senderAvatarIndex: list[9] as int,
+        clientMessageId: list[10] as int,
       );
     }
 }

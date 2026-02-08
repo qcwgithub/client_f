@@ -13,7 +13,8 @@ enum MsgType {
   setAvatarIndex(10011),
   getRoomChatHistory(10012),
   reportRoomMessage(10013),
-  reportUser(10014);
+  reportUser(10014),
+  count(10015);
 
   static MsgType fromCode(int code) {
     switch (code) {
@@ -47,6 +48,8 @@ enum MsgType {
         return MsgType.reportRoomMessage;
       case 10014:
         return MsgType.reportUser;
+      case 10015:
+        return MsgType.count;
       default:
         return MsgType.clientStart;
     }
