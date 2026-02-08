@@ -128,7 +128,7 @@ class _MainPageState extends ConsumerState<MainPage> {
       );
     }
 
-    final EnterRoomStatus enterRoomStatus = ref.watch(enterRoomProvider);
+    final EnterRoomModel enterRoomModel = ref.watch(enterRoomProvider);
 
     return Stack(
       children: [
@@ -153,7 +153,7 @@ class _MainPageState extends ConsumerState<MainPage> {
           },
         ),
 
-        if (enterRoomStatus == EnterRoomStatus.loading)
+        if (enterRoomModel.status == EnterRoomStatus.loading)
           Container(
             color: Colors.black26,
             alignment: Alignment.center,

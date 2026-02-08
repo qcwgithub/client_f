@@ -59,7 +59,7 @@ class RoomListNotifier extends StateNotifier<RoomListModel> {
     );
 
     if (r.e != ECode.success) {
-      state = state.copyWith(status: RoomListStatus.error, roomInfos: []);
+      state = RoomListModel([], RoomListStatus.error);
       return;
     }
 
@@ -67,9 +67,9 @@ class RoomListNotifier extends StateNotifier<RoomListModel> {
     final rooms = res.roomInfos;
 
     if (res.roomInfos.isEmpty) {
-      state = state.copyWith(status: RoomListStatus.empty, roomInfos: []);
+      state = RoomListModel([], RoomListStatus.empty);
     } else {
-      state = state.copyWith(status: RoomListStatus.idle, roomInfos: rooms);
+      state = RoomListModel(rooms, RoomListStatus.idle);
     }
   }
 }

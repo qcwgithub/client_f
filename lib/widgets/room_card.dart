@@ -42,7 +42,9 @@ class RoomCard extends ConsumerWidget {
 
               ref
                   .read(roomMessageListProvider(roomInfo.roomId).notifier)
-                  .setInitialMessages(result!.initialMessages);
+                  .setInitialMessages(
+                    ref.read(enterRoomProvider).recentMessages,
+                  );
 
               Navigator.push(
                 context,
