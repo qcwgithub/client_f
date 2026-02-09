@@ -23,4 +23,12 @@ class ClientChatMessage {
   int get timestamp => inner.timestamp;
   int get clientMessageId => inner.clientMessageId;
   ChatMessageStatus get status => inner.status;
+
+  ClientChatMessage modifyClientStatus(ClientChatMessageStatus clientStatus) {
+    return ClientChatMessage(
+      inner: inner,
+      clientStatus: clientStatus,
+      useClientId: useClientId,
+    );
+  }
 }

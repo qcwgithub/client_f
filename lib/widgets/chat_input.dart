@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:scene_hub/gen/chat_message_type.dart';
 
 class ChatInput extends StatelessWidget {
   final controller = TextEditingController();
-  final void Function(String type, String text) callback;
+  final void Function(ChatMessageType type, String text) callback;
   ChatInput({super.key, required this.callback});
 
   @override
@@ -18,7 +19,7 @@ class ChatInput extends StatelessWidget {
             onPressed: () async {
               String? imageUrl = await _pickAndUploadImage();
               if (imageUrl != null) {
-                callback("image", imageUrl);
+                callback(ChatMessageType.image, imageUrl);
               }
             },
             icon: const Icon(Icons.photo),
@@ -43,7 +44,7 @@ class ChatInput extends StatelessWidget {
                 return;
               }
 
-              callback("text", text);
+              callback(ChatMessageType.text, text);
               controller.clear();
             },
             icon: const Icon(Icons.send),

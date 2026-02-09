@@ -1,6 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:scene_hub/gen/chat_message.dart';
-import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/pages/room_info_page.dart';
 import 'package:scene_hub/providers/room_message_list_provider.dart';
@@ -112,6 +110,9 @@ class _ChatPageState extends ConsumerState<RoomChatPage> {
           _buildChatList(model),
           ChatInput(
             callback: (type, content) {
+              ref
+                  .read(roomMessageListProvider(widget.roomId).notifier)
+                  .sendChat(type, content, 0);
               // messageProvider.sendMessage(type, content);
 
               // WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -145,6 +146,9 @@ class _ChatPageState extends ConsumerState<RoomChatPage> {
           }
 
           return RoomChatMessageItem(
+            key: ValueKey(
+              message.useClientId ? message.clientMessageId : message.messageId,
+            ),
             roomId: widget.roomId,
             useClientId: message.useClientId,
             messageId: message.useClientId
