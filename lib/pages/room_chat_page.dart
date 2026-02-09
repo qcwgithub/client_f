@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/room_info.dart';
+import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/pages/room_info_page.dart';
 import 'package:scene_hub/providers/room_message_list_provider.dart';
 import 'package:scene_hub/sc.dart';
@@ -128,20 +129,29 @@ class _ChatPageState extends ConsumerState<RoomChatPage> {
       child: ListView.builder(
         controller: _scrollController,
         reverse: true, // !
-        itemCount: model.messageList.length,
+        itemCount: model.messages.length,
         itemBuilder: (context, index) {
-          int L = model.messageList.length;
+          int L = model.messages.length;
           int itemIndex = L - 1 - index;
-          ChatMessage item = model.messageList[itemIndex];
+          ClientChatMessage message = model.messages[itemIndex];
           bool showTime = true;
+
           if (itemIndex < L - 1) {
-            var prevItem = model.messageList[itemIndex + 1];
-            if (sc.me.isMe(item.senderId) == sc.me.isMe(prevItem.senderId) &&
-                item.timestamp - prevItem.timestamp < 300000) {
+            var prev = model.messages[itemIndex + 1];
+            if (sc.me.isMe(message.senderId) == sc.me.isMe(prev.senderId) &&
+                message.timestamp - prev.timestamp < 300000) {
               showTime = false;
             }
           }
-          return RoomChatMessageItem(messageItem: item, showTime: showTime);
+
+          return RoomChatMessageItem(
+            roomId: widget.roomId,
+            useClientId: message.useClientId,
+            messageId: message.useClientId
+                ? message.clientMessageId
+                : message.messageId,
+            showTime: showTime,
+          );
         },
       ),
     );

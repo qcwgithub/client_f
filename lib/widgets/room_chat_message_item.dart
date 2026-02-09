@@ -1,28 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:scene_hub/gen/chat_message.dart';
+// import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
+import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/pages/user_page.dart';
+import 'package:scene_hub/providers/room_message_provider.dart';
 import 'package:scene_hub/sc.dart';
 
-class RoomChatMessageItem extends StatelessWidget {
-  final ChatMessage messageItem;
+class RoomChatMessageItem extends ConsumerWidget {
+  final int roomId;
+  final bool useClientId;
+  final int messageId;
   final bool showTime;
   const RoomChatMessageItem({
     super.key,
-    required this.messageItem,
+    required this.roomId,
+    required this.useClientId,
+    required this.messageId,
     required this.showTime,
   });
 
-  void _onClickAvatar(BuildContext context) {
+  void _onClickAvatar(BuildContext context, ClientChatMessage message) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) {
           return UserPage(
-            userId: messageItem.senderId,
-            userName: messageItem.senderName,
+            userId: message.senderId,
+            userName: message.senderName,
           );
         },
       ),
@@ -30,8 +37,11 @@ class RoomChatMessageItem extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    bool isMe = sc.me.isMe(messageItem.senderId);
+  Widget build(BuildContext context, WidgetRef ref) {
+    ClientChatMessage message = ref.watch(
+      roomMessageProvider((roomId, useClientId, messageId)),
+    );
+    bool isMe = sc.me.isMe(message.senderId);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 5),
@@ -41,19 +51,23 @@ class RoomChatMessageItem extends StatelessWidget {
             : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!isMe) _buildAvatar(isMe, context, _onClickAvatar),
+          if (!isMe) _buildAvatar(isMe, context, message, _onClickAvatar),
 
           // const SizedBox(width: 8),
-          _buildMessageBubble(context, isMe),
+          _buildMessageBubble(context, message, isMe),
 
-          if (isMe) _buildAvatar(isMe, context, _onClickAvatar),
+          if (isMe) _buildAvatar(isMe, context, message, _onClickAvatar),
         ],
       ),
     );
   }
 
-  Widget _buildMessageBubble(BuildContext context, isMe) {
-    final timeString = _formatTimestamp(messageItem.timestamp);
+  Widget _buildMessageBubble(
+    BuildContext context,
+    ClientChatMessage message,
+    isMe,
+  ) {
+    final timeString = _formatTimestamp(message.timestamp);
 
     return Flexible(
       child: Column(
@@ -64,14 +78,14 @@ class RoomChatMessageItem extends StatelessWidget {
         children: [
           if (!isMe)
             Text(
-              messageItem.senderName,
+              message.senderName,
               style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
 
           if (!isMe) const SizedBox(height: 4),
 
-          if (messageItem.type == ChatMessageType.text)
-            _buildTextBubble(context, isMe),
+          if (message.type == ChatMessageType.text)
+            _buildTextBubble(context, message, isMe),
 
           // if (messageItem.type == "image") _buildImageBubble(context, isMe),
           if (showTime) const SizedBox(height: 4),
@@ -86,11 +100,15 @@ class RoomChatMessageItem extends StatelessWidget {
     );
   }
 
-  Widget _buildTextBubble(BuildContext context, bool isMe) {
+  Widget _buildTextBubble(
+    BuildContext context,
+    ClientChatMessage message,
+    bool isMe,
+  ) {
     final Radius radius = Radius.circular(12);
     return GestureDetector(
       onLongPressStart: (details) {
-        _showMessageMenu(context, details.globalPosition);
+        _showMessageMenu(context, message, details.globalPosition);
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
@@ -108,7 +126,7 @@ class RoomChatMessageItem extends StatelessWidget {
           ),
         ),
         child: Text(
-          messageItem.content,
+          message.content,
           style: TextStyle(color: isMe ? Colors.white : Colors.black87),
         ),
       ),
@@ -139,7 +157,11 @@ class RoomChatMessageItem extends StatelessWidget {
   //   );
   // }
 
-  void _showMessageMenu(BuildContext context, Offset position) async {
+  void _showMessageMenu(
+    BuildContext context,
+    ClientChatMessage message,
+    Offset position,
+  ) async {
     final selected = await showMenu(
       context: context,
       position: RelativeRect.fromLTRB(
@@ -160,11 +182,13 @@ class RoomChatMessageItem extends StatelessWidget {
 
     switch (selected) {
       case "copy":
-        if (messageItem.type == ChatMessageType.text) {
-          Clipboard.setData(ClipboardData(text: messageItem.content));
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text("Copied!")));
+        if (context.mounted) {
+          if (message.type == ChatMessageType.text) {
+            Clipboard.setData(ClipboardData(text: message.content));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text("Copied!")));
+          }
         }
         break;
 
@@ -177,10 +201,11 @@ class RoomChatMessageItem extends StatelessWidget {
   Widget _buildAvatar(
     bool isMe,
     BuildContext context,
-    Function(BuildContext) onClick,
+    ClientChatMessage message,
+    Function(BuildContext, ClientChatMessage) onClick,
   ) {
     return GestureDetector(
-      onTap: () => onClick(context),
+      onTap: () => onClick(context, message),
 
       child: Container(
         // padding: isMe ? EdgeInsets.only() : EdgeInsets.only(top: 5),

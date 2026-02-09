@@ -59,7 +59,7 @@ class RoomManager {
     }
 
     var res = ResEnterRoom.fromMsgPack(r.res!);
-    final room = Room(roomInfo, res.recentMessages);
+    final room = Room(roomInfo: roomInfo, recentMessages: res.recentMessages);
     roomMap[roomInfo.roomId] = room;
 
     return true;

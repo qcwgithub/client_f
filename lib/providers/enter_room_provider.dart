@@ -1,13 +1,14 @@
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:scene_hub/gen/chat_message.dart';
-import 'package:scene_hub/gen/room_info.dart';
+// import 'package:scene_hub/gen/chat_message.dart';
+// import 'package:scene_hub/gen/room_info.dart';
+import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/logic/room.dart';
 import 'package:scene_hub/sc.dart';
 
 enum EnterRoomStatus { idle, loading }
 
 class EnterRoomModel {
-  final List<ChatMessage> recentMessages;
+  final List<ClientChatMessage> recentMessages;
   final EnterRoomStatus status;
 
   const EnterRoomModel(this.recentMessages, this.status);

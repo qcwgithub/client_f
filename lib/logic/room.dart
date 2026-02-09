@@ -1,5 +1,6 @@
 import 'package:scene_hub/gen/a__msg_room_chat.dart';
 import 'package:scene_hub/gen/chat_message.dart';
+import 'package:scene_hub/gen/chat_message_status.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/gen/e_code.dart';
 import 'package:scene_hub/gen/msg_get_room_chat_history.dart';
@@ -7,67 +8,84 @@ import 'package:scene_hub/gen/msg_report_room_message.dart';
 import 'package:scene_hub/gen/msg_send_room_chat.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/res_get_room_chat_history.dart';
+// import 'package:scene_hub/gen/res_send_room_chat.dart';
 // import 'package:scene_hub/gen/res_report_room_message.dart';
 import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/gen/room_message_report_reason.dart';
+import 'package:scene_hub/logic/client_chat_message.dart';
+import 'package:scene_hub/logic/client_message_id_generator.dart';
 import 'package:scene_hub/logic/time_utils.dart';
 import 'package:scene_hub/sc.dart';
 
-enum SendingRoomChatStatus { sending, failed }
-
-class SendingRoomChat {
-  final ChatMessage message;
-  final SendingRoomChatStatus status;
-  SendingRoomChat(this.message, this.status);
-}
-
 class Room {
   final RoomInfo roomInfo;
-  final List<ChatMessage> messages;
-  final List<SendingRoomChat> sendings = [];
-  Room(this.roomInfo, this.messages);
+  final List<ClientChatMessage> messages = [];
+  final List<ClientChatMessage> sendings = [];
+  Room({required this.roomInfo, required List<ChatMessage> recentMessages}) {
+    for (int i = 0; i < recentMessages.length; i++) {
+      messages.add(
+        ClientChatMessage(
+          inner: recentMessages[i],
+          clientStatus: ClientChatMessageStatus.normal,
+          useClientId: false,
+        ),
+      );
+    }
+  }
 
   int get roomId {
     return roomInfo.roomId;
   }
 
-  Future<bool> sendChat(
-    ChatMessageType chatMessageType,
+  ClientChatMessage createSending(
+    ChatMessageType type,
     String content,
     int replyTo,
-    int clientMessageId,
-  ) async {
-    final message = ChatMessage(
+  ) {
+    int clientMessageId = clientMessageIdGenerator.nextId();
+    final inner = ChatMessage(
       messageId: 0,
       roomId: roomId,
       senderId: sc.me.userId,
       senderName: sc.me.userName,
       senderAvatar: "",
-      type: chatMessageType,
+      type: type,
       content: content,
       timestamp: TimeUtils.now(),
       replyTo: replyTo,
       senderAvatarIndex: sc.me.userInfo.avatarIndex,
       clientMessageId: clientMessageId,
+      status: ChatMessageStatus.normal,
     );
-    final sending = SendingRoomChat(message, SendingRoomChatStatus.sending);
-    sendings.add(sending);
+    final message = ClientChatMessage(
+      inner: inner,
+      clientStatus: ClientChatMessageStatus.sending,
+      useClientId: true,
+    );
+
+    return message;
+  }
+
+  Future<bool> sendChat(ClientChatMessage message) async {
+    assert(message.clientStatus == ClientChatMessageStatus.sending);
+    sendings.add(message);
 
     var msg = MsgSendRoomChat(
       roomId: roomId,
-      chatMessageType: chatMessageType,
-      content: content,
-      clientMessageId: clientMessageId,
+      chatMessageType: message.type,
+      content: message.content,
+      clientMessageId: message.clientMessageId,
     );
 
     final r = await sc.server.request(MsgType.sendRoomChat, msg);
-    sendings.remove(sending);
+    sendings.remove(message);
 
     if (r.e != ECode.success) {
+      message.clientStatus = ClientChatMessageStatus.failed;
       return false;
     }
 
-    // final res =
+    // final res = ResSendRoomChat.fromMsgPack(r.res!);
     return true;
   }
 
@@ -84,7 +102,14 @@ class Room {
     }
 
     var res = ResGetRoomChatHistory.fromMsgPack(r.res!);
-    messages.insertAll(0, res.history);
+    for (int i = 0; i < res.history.length; i++) {
+      final message = ClientChatMessage(
+        inner: res.history[i],
+        clientStatus: ClientChatMessageStatus.normal,
+        useClientId: false,
+      );
+      messages.insert(0, message);
+    }
 
     return true;
   }
