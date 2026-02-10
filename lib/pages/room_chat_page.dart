@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:scene_hub/gen/msg_leave_room.dart';
+import 'package:scene_hub/gen/msg_type.dart';
+import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/pages/room_info_page.dart';
 import 'package:scene_hub/providers/room_message_list_provider.dart';
@@ -8,9 +11,10 @@ import 'package:scene_hub/widgets/room_chat_message_item.dart';
 import 'package:flutter/material.dart';
 
 class RoomChatPage extends ConsumerStatefulWidget {
-  final int roomId;
+  final RoomInfo roomInfo;
+  int get roomId => roomInfo.roomId;
 
-  const RoomChatPage({super.key, required this.roomId});
+  const RoomChatPage({super.key, required this.roomInfo});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() {
@@ -85,18 +89,16 @@ class _ChatPageState extends ConsumerState<RoomChatPage> {
       roomMessageListProvider(widget.roomId),
     );
 
-    final room = sc.roomManager.getRoom(widget.roomId)!;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(room.roomInfo.title),
+        title: Text(widget.roomInfo.title),
         actions: [
           IconButton(
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => RoomInfoPage(roomId: widget.roomId),
+                  builder: (_) => RoomInfoPage(roomInfo: widget.roomInfo),
                 ),
               );
             },
@@ -159,5 +161,12 @@ class _ChatPageState extends ConsumerState<RoomChatPage> {
         },
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    // TODO retry!
+    sc.server.request(MsgType.leaveRoom, MsgLeaveRoom(roomId: widget.roomId));
+    super.dispose();
   }
 }

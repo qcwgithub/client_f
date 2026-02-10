@@ -87,7 +87,7 @@ class Server {
     assert(_state == NetworkStatus.connected);
 
     _setState(NetworkStatus.logining);
-    MyLogger.instance.d('login...');
+    logger.d('login...');
 
     var msg = new MsgLogin(
       version: "1.0",
@@ -102,7 +102,7 @@ class Server {
     );
 
     MyResponse r = await request(MsgType.login, msg);
-    MyLogger.instance.d('login result ${r.e}');
+    logger.d('login result ${r.e}');
 
     if (r.e != ECode.success) {
       _setState(NetworkStatus.init);
@@ -114,10 +114,10 @@ class Server {
     var res = ResLogin.fromMsgPack(r.res!);
     sc.me.isNewUser = res.isNewUser;
     sc.me.userInfo = res.userInfo;
-    MyLogger.instance.d('isNewUser? ${res.isNewUser}');
-    MyLogger.instance.d('kickOther? ${res.kickOther}');
-    MyLogger.instance.d('userId = ${res.userInfo.userId}');
-    MyLogger.instance.d('userName = ${res.userInfo.userName}');
+    logger.d('isNewUser? ${res.isNewUser}');
+    logger.d('kickOther? ${res.kickOther}');
+    logger.d('userId = ${res.userInfo.userId}');
+    logger.d('userName = ${res.userInfo.userName}');
 
     // TEMP
     globalContainer.read(navProvider.notifier).state = 1;
@@ -195,7 +195,7 @@ class Server {
     }
 
     int seq = nextSeq++;
-    MyLogger.instance.d('request $msgType seq $seq');
+    logger.d('request $msgType seq $seq');
     final completer = Completer<MyResponse>();
     _pending[seq] = PendingRequest(msgType: msgType, completer: completer);
 
@@ -215,7 +215,7 @@ class Server {
   }
 
   void _onMessage(UnpackResult result) {
-    MyLogger.instance.d('_onMessage seq ${result.seq}');
+    logger.d('_onMessage seq ${result.seq}');
     if (result.seq < 0) {
       ECode e = ECode.fromCode(result.code);
       List res = result.msgBytes != null ? deserialize(result.msgBytes!) : null;
@@ -232,6 +232,6 @@ class Server {
   }
 
   void _handlePush(MsgType msgType, List msg) {
-    MyLogger.instance.d("received $msgType");
+    logger.d("received $msgType");
   }
 }

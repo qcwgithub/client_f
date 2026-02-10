@@ -1,6 +1,13 @@
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:scene_hub/gen/chat_message.dart';
+import 'package:scene_hub/gen/chat_message_status.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
+import 'package:scene_hub/gen/e_code.dart';
+import 'package:scene_hub/gen/msg_send_room_chat.dart';
+import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
+import 'package:scene_hub/logic/client_message_id_generator.dart';
+import 'package:scene_hub/logic/time_utils.dart';
 import 'package:scene_hub/sc.dart';
 
 enum RoomMessageListStatus { idle, refreshing, success, empty, error }
@@ -77,16 +84,70 @@ class RoomMessageListNotifier extends StateNotifier<RoomMessageListModel> {
     return newMessage;
   }
 
+  static ClientChatMessage _createSending(
+    int roomId,
+    ChatMessageType type,
+    String content,
+    int replyTo,
+  ) {
+    int clientMessageId = clientMessageIdGenerator.nextId();
+    final inner = ChatMessage(
+      messageId: 0,
+      roomId: roomId,
+      senderId: sc.me.userId,
+      senderName: sc.me.userName,
+      senderAvatar: "",
+      type: type,
+      content: content,
+      timestamp: TimeUtils.now(),
+      replyTo: replyTo,
+      senderAvatarIndex: sc.me.userInfo.avatarIndex,
+      clientMessageId: clientMessageId,
+      status: ChatMessageStatus.normal,
+    );
+    final message = ClientChatMessage(
+      inner: inner,
+      clientStatus: ClientChatMessageStatus.sending,
+      useClientId: true,
+    );
+
+    return message;
+  }
+
+  static Future<bool> _requestSendChat(
+    int roomId,
+    ClientChatMessage message,
+  ) async {
+    assert(message.clientStatus == ClientChatMessageStatus.sending);
+
+    final r = await sc.server.request(
+      MsgType.sendRoomChat,
+      MsgSendRoomChat(
+        roomId: roomId,
+        chatMessageType: message.type,
+        content: message.content,
+        clientMessageId: message.clientMessageId,
+      ),
+    );
+
+    if (r.e != ECode.success) {
+      message.clientStatus = ClientChatMessageStatus.failed;
+      return false;
+    }
+
+    // final res = ResSendRoomChat.fromMsgPack(r.res!);
+    return true;
+  }
+
   Future<void> sendChat(
     ChatMessageType type,
     String content,
     int replyTo,
   ) async {
-    final room = sc.roomManager.getRoom(roomId)!;
-    ClientChatMessage message = room.createSending(type, content, replyTo);
+    ClientChatMessage message = _createSending(roomId, type, content, replyTo);
     _addMessage(message);
 
-    bool success = await room.sendChat(message);
+    bool success = await _requestSendChat(roomId, message);
     if (success) {
       _updateMessage(
         message,
@@ -106,8 +167,7 @@ class RoomMessageListNotifier extends StateNotifier<RoomMessageListModel> {
       (m) => m.copyWith(clientStatus: ClientChatMessageStatus.sending),
     );
 
-    final room = sc.roomManager.getRoom(roomId)!;
-    bool success = await room.sendChat(message);
+    bool success = await _requestSendChat(roomId, message);
     if (success) {
       _updateMessage(
         message,

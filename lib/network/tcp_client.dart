@@ -26,9 +26,9 @@ class TcpClient {
 
   Future<bool> connect() async {
     try {
-      MyLogger.instance.d('connectint to $host $port...');
+      logger.d('connectint to $host $port...');
       _socket = await Socket.connect(host, port, timeout: Duration(seconds: 5));
-      MyLogger.instance.d('OK');
+      logger.d('OK');
 
       _socket!.setOption(SocketOption.tcpNoDelay, true);
 
@@ -43,13 +43,13 @@ class TcpClient {
 
       return true;
     } on SocketException catch (e) {
-      MyLogger.instance.e('$e');
+      logger.e('$e');
       return false;
     } on TimeoutException catch (e) {
-      MyLogger.instance.e('$e');
+      logger.e('$e');
       return false;
     } catch (e) {
-      MyLogger.instance.e('$e');
+      logger.e('$e');
       return false;
     }
   }

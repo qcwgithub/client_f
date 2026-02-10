@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:scene_hub/gen/room_info.dart';
 
 class RoomInfoPage extends StatelessWidget {
-  final int roomId;
-  const RoomInfoPage({super.key, required this.roomId});
+  final RoomInfo roomInfo;
+  const RoomInfoPage({super.key, required this.roomInfo});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +14,7 @@ class RoomInfoPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Room ID: $roomId", style: TextStyle(fontSize: 16)),
+            Text("Room ID: ${roomInfo.roomId}", style: TextStyle(fontSize: 16)),
             const SizedBox(height: 20),
             Divider(),
 
