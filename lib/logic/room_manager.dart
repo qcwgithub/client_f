@@ -1,10 +1,8 @@
 import 'package:scene_hub/gen/e_code.dart';
 import 'package:scene_hub/gen/msg_enter_room.dart';
-import 'package:scene_hub/gen/msg_get_recommended_rooms.dart';
 import 'package:scene_hub/gen/msg_search_room.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/res_enter_room.dart';
-import 'package:scene_hub/gen/res_get_recommended_rooms.dart';
 import 'package:scene_hub/gen/res_search_room.dart';
 import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/logic/room.dart';
@@ -12,33 +10,8 @@ import 'package:scene_hub/my_logger.dart';
 import 'package:scene_hub/sc.dart';
 
 class RoomManager {
-  final List<RoomInfo> recommendedRoomInfos = [];
   final roomInfoMap = <int, RoomInfo>{};
   final roomMap = <int, Room>{};
-
-  Future<bool> getRecommendedRooms() async {
-    if (sc.server.isPending(MsgType.getRecommendedRooms)) {
-      return false;
-    }
-
-    final r = await sc.server.request(
-      MsgType.getRecommendedRooms,
-      MsgGetRecommendedRooms(),
-    );
-
-    if (r.e != ECode.success) {
-      return false;
-    }
-
-    final res = ResGetRecommendedRooms.fromMsgPack(r.res!);
-    recommendedRoomInfos.clear();
-    recommendedRoomInfos.addAll(res.roomInfos);
-
-    for (final roomInfo in res.roomInfos) {
-      roomInfoMap[roomInfo.roomId] = roomInfo;
-    }
-    return true;
-  }
 
   Future<bool> enterRoom(int roomId) async {
     if (sc.server.isPending(MsgType.enterRoom)) {

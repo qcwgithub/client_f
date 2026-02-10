@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:scene_hub/gen/e_code.dart';
+import 'package:scene_hub/gen/msg_get_recommended_rooms.dart';
 import 'package:scene_hub/gen/msg_search_room.dart';
 import 'package:scene_hub/gen/msg_type.dart';
+import 'package:scene_hub/gen/res_get_recommended_rooms.dart';
 import 'package:scene_hub/gen/res_search_room.dart';
 import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/network/my_response.dart';
@@ -13,10 +15,17 @@ class RoomListModel {
   final List<RoomInfo> roomInfos;
   final RoomListStatus status;
 
-  const RoomListModel(this.roomInfos, this.status);
+  const RoomListModel({required this.roomInfos, required this.status});
 
   factory RoomListModel.initial() {
-    return const RoomListModel([], RoomListStatus.idle);
+    return RoomListModel(roomInfos: [], status: RoomListStatus.idle);
+  }
+
+  RoomListModel copyWith({List<RoomInfo>? roomInfos, RoomListStatus? status}) {
+    return RoomListModel(
+      roomInfos: roomInfos ?? this.roomInfos,
+      status: status ?? this.status,
+    );
   }
 }
 
@@ -24,34 +33,37 @@ class RoomListNotifier extends StateNotifier<RoomListModel> {
   RoomListNotifier() : super(RoomListModel.initial());
 
   Future<bool> getRecommendedRooms() async {
-    if (state.status == RoomListStatus.refreshing) {
+    if (state.status == RoomListStatus.refreshing) return false;
+
+    state = state.copyWith(status: RoomListStatus.refreshing);
+
+    final r = await sc.server.request(
+      MsgType.getRecommendedRooms,
+      MsgGetRecommendedRooms(),
+    );
+
+    if (r.e != ECode.success) {
+      state = state.copyWith(status: RoomListStatus.error);
       return false;
     }
 
-    state = RoomListModel([], RoomListStatus.refreshing);
+    final res = ResGetRecommendedRooms.fromMsgPack(r.res!);
 
-    bool success = await sc.roomManager.getRecommendedRooms();
-
-    if (!success) {
-      state = RoomListModel([], RoomListStatus.error);
-      return false;
-    }
-
-    final rooms = sc.roomManager.recommendedRoomInfos;
-    if (rooms.isEmpty) {
-      state = RoomListModel([], RoomListStatus.empty);
+    if (res.roomInfos.isEmpty) {
+      state = state.copyWith(roomInfos: [], status: RoomListStatus.empty);
     } else {
-      state = RoomListModel(rooms, RoomListStatus.idle);
+      state = state.copyWith(
+        roomInfos: res.roomInfos,
+        status: RoomListStatus.idle,
+      );
     }
     return true;
   }
 
   Future<void> search(String keyword) async {
-    if (state.status == RoomListStatus.refreshing) {
-      return;
-    }
+    if (state.status == RoomListStatus.refreshing) return;
 
-    state = RoomListModel([], RoomListStatus.refreshing);
+    state = state.copyWith(status: RoomListStatus.refreshing);
 
     MyResponse r = await sc.server.request(
       MsgType.searchRoom,
@@ -59,7 +71,7 @@ class RoomListNotifier extends StateNotifier<RoomListModel> {
     );
 
     if (r.e != ECode.success) {
-      state = RoomListModel([], RoomListStatus.error);
+      state = state.copyWith(status: RoomListStatus.error);
       return;
     }
 
@@ -67,9 +79,9 @@ class RoomListNotifier extends StateNotifier<RoomListModel> {
     final rooms = res.roomInfos;
 
     if (res.roomInfos.isEmpty) {
-      state = RoomListModel([], RoomListStatus.empty);
+      state = state.copyWith(roomInfos: [], status: RoomListStatus.empty);
     } else {
-      state = RoomListModel(rooms, RoomListStatus.idle);
+      state = state.copyWith(roomInfos: rooms, status: RoomListStatus.idle);
     }
   }
 }

@@ -11,14 +11,20 @@ class RoomMessageListModel {
   RoomMessageListModel({required this.messages, required this.status});
 
   factory RoomMessageListModel.initial() {
-    return RoomMessageListModel.create([], RoomMessageListStatus.idle);
+    return RoomMessageListModel(
+      messages: [],
+      status: RoomMessageListStatus.idle,
+    );
   }
 
-  factory RoomMessageListModel.create(
-    List<ClientChatMessage> messages,
-    RoomMessageListStatus status,
-  ) {
-    return RoomMessageListModel(messages: messages, status: status);
+  RoomMessageListModel copyWith({
+    List<ClientChatMessage>? messages,
+    RoomMessageListStatus? status,
+  }) {
+    return RoomMessageListModel(
+      messages: messages ?? this.messages,
+      status: status ?? this.status,
+    );
   }
 
   // TODO
@@ -38,16 +44,16 @@ class RoomMessageListNotifier extends StateNotifier<RoomMessageListModel> {
   RoomMessageListNotifier(this.roomId) : super(RoomMessageListModel.initial());
 
   void setInitialMessages(List<ClientChatMessage> messages) {
-    state = RoomMessageListModel.create(
-      messages,
-      messages.isEmpty
+    state = RoomMessageListModel(
+      messages: messages,
+      status: messages.isEmpty
           ? RoomMessageListStatus.empty
           : RoomMessageListStatus.success,
     );
   }
 
   void _addMessage(ClientChatMessage message) {
-    state = RoomMessageListModel(
+    state = state.copyWith(
       messages: [...state.messages, message],
       status: state.status == RoomMessageListStatus.empty
           ? RoomMessageListStatus.success
@@ -66,10 +72,7 @@ class RoomMessageListNotifier extends StateNotifier<RoomMessageListModel> {
     }
 
     final newMessage = newMessageFunc(message);
-    state = RoomMessageListModel(
-      messages: [...state.messages]..[index] = newMessage,
-      status: state.status,
-    );
+    state = state.copyWith(messages: [...state.messages]..[index] = newMessage);
 
     return newMessage;
   }
