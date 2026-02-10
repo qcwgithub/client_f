@@ -12,7 +12,7 @@ class RoomCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final room = sc.roomManager.getRoom(roomId)!;
+    final roomInfo = sc.roomManager.getRoomInfo(roomId)!;
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
       elevation: 2,
@@ -20,9 +20,9 @@ class RoomCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            title: Text(room.roomInfo.title),
+            title: Text(roomInfo.title),
             subtitle: Text(
-              room.roomInfo.desc,
+              roomInfo.desc,
               style: TextStyle(fontSize: 14, color: Colors.green),
             ),
             trailing: const Icon(Icons.arrow_forward_ios),

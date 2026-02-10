@@ -69,6 +69,10 @@ class RoomManager {
     return roomMap[roomId];
   }
 
+  RoomInfo? getRoomInfo(int roomId) {
+    return roomInfoMap[roomId];
+  }
+
   List<RoomInfo> searchResult = [];
   Future<bool> search(String keyword) async {
     if (sc.server.isPending(MsgType.searchRoom)) {

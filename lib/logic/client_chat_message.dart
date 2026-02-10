@@ -24,10 +24,10 @@ class ClientChatMessage {
   int get clientMessageId => inner.clientMessageId;
   ChatMessageStatus get status => inner.status;
 
-  ClientChatMessage modifyClientStatus(ClientChatMessageStatus clientStatus) {
+  ClientChatMessage copyWith({ClientChatMessageStatus? clientStatus}) {
     return ClientChatMessage(
       inner: inner,
-      clientStatus: clientStatus,
+      clientStatus: clientStatus ?? this.clientStatus,
       useClientId: useClientId,
     );
   }

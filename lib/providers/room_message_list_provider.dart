@@ -55,20 +55,23 @@ class RoomMessageListNotifier extends StateNotifier<RoomMessageListModel> {
     );
   }
 
-  void _updateMessage(
-    ClientChatMessage oldMessage,
-    ClientChatMessage newMessage,
+  ClientChatMessage _updateMessage(
+    ClientChatMessage message,
+    ClientChatMessage Function(ClientChatMessage) newMessageFunc,
   ) {
-    int index = state.messages.indexOf(oldMessage);
+    int index = state.messages.indexOf(message);
     if (index == -1) {
       assert(false, "_updateMessage() index == -1");
-      return;
+      return message;
     }
 
+    final newMessage = newMessageFunc(message);
     state = RoomMessageListModel(
       messages: [...state.messages]..[index] = newMessage,
       status: state.status,
     );
+
+    return newMessage;
   }
 
   Future<void> sendChat(
@@ -82,15 +85,36 @@ class RoomMessageListNotifier extends StateNotifier<RoomMessageListModel> {
 
     bool success = await room.sendChat(message);
     if (success) {
-      ClientChatMessage newMessage = message.modifyClientStatus(
-        ClientChatMessageStatus.normal,
+      _updateMessage(
+        message,
+        (m) => m.copyWith(clientStatus: ClientChatMessageStatus.normal),
       );
-      _updateMessage(message, newMessage);
     } else {
-      ClientChatMessage newMessage = message.modifyClientStatus(
-        ClientChatMessageStatus.failed,
+      _updateMessage(
+        message,
+        (m) => m.copyWith(clientStatus: ClientChatMessageStatus.failed),
       );
-      _updateMessage(message, newMessage);
+    }
+  }
+
+  Future<void> resendChat(ClientChatMessage message) async {
+    message = _updateMessage(
+      message,
+      (m) => m.copyWith(clientStatus: ClientChatMessageStatus.sending),
+    );
+
+    final room = sc.roomManager.getRoom(roomId)!;
+    bool success = await room.sendChat(message);
+    if (success) {
+      _updateMessage(
+        message,
+        (m) => m.copyWith(clientStatus: ClientChatMessageStatus.normal),
+      );
+    } else {
+      _updateMessage(
+        message,
+        (m) => m.copyWith(clientStatus: ClientChatMessageStatus.failed),
+      );
     }
   }
 }

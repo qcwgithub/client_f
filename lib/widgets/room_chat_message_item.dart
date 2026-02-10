@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/pages/user_page.dart';
+import 'package:scene_hub/providers/room_message_list_provider.dart';
 import 'package:scene_hub/providers/room_message_provider.dart';
 import 'package:scene_hub/sc.dart';
 
@@ -55,6 +56,21 @@ class RoomChatMessageItem extends ConsumerWidget {
 
           // const SizedBox(width: 8),
           _buildMessageBubble(context, message, isMe),
+
+          if (isMe)
+            Padding(
+              padding: const EdgeInsets.only(left: 6, top: 6),
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: _buildClientStatus(
+                  message,
+                  () => ref
+                      .read(roomMessageListProvider(roomId).notifier)
+                      .resendChat(message),
+                ),
+              ),
+            ),
 
           if (isMe) _buildAvatar(isMe, context, message, _onClickAvatar),
         ],
@@ -195,6 +211,25 @@ class RoomChatMessageItem extends ConsumerWidget {
       case "reply":
         print("todo: reply");
         break;
+    }
+  }
+
+  Widget _buildClientStatus(ClientChatMessage message, VoidCallback resend) {
+    switch (message.clientStatus) {
+      case ClientChatMessageStatus.normal:
+        return const Icon(Icons.check, color: Colors.green, size: 16);
+
+      case ClientChatMessageStatus.sending:
+        return CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        );
+
+      case ClientChatMessageStatus.failed:
+        return GestureDetector(
+          onTap: resend,
+          child: const Icon(Icons.error, color: Colors.red, size: 16),
+        );
     }
   }
 
