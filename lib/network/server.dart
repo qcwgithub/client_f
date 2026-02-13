@@ -2,11 +2,14 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:msgpack_dart/msgpack_dart.dart';
+import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/e_code.dart';
+import 'package:scene_hub/gen/msg_a_room_chat.dart';
 import 'package:scene_hub/gen/msg_login.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/res_login.dart';
 import 'package:scene_hub/i_to_msg_pack.dart';
+import 'package:scene_hub/logic/event_bus.dart';
 import 'package:scene_hub/main.dart';
 import 'package:scene_hub/my_logger.dart';
 import 'package:scene_hub/network/binary_message_packer.dart';
@@ -78,6 +81,8 @@ class Server {
     _pending.clear();
 
     _setState(NetworkStatus.init);
+
+    stopLoop();
 
     // TEMP
     globalContainer.read(navProvider.notifier).state = 0;
@@ -215,7 +220,7 @@ class Server {
   }
 
   void _onMessage(UnpackResult result) {
-    logger.d('_onMessage seq ${result.seq}');
+    // logger.d('_onMessage seq ${result.seq}');
     if (result.seq < 0) {
       ECode e = ECode.fromCode(result.code);
       List res = result.msgBytes != null ? deserialize(result.msgBytes!) : null;
@@ -233,5 +238,16 @@ class Server {
 
   void _handlePush(MsgType msgType, List msg) {
     logger.d("received $msgType");
+
+    if (msgType == MsgType.aRoomChat) {
+      final aRoomChat = MsgARoomChat.fromMsgPack(msg);
+      eventBus.emit(aRoomChat);
+    }
+  }
+
+  void close() {
+    if (client != null) {
+      client!.close();
+    }
   }
 }

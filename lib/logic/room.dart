@@ -133,6 +133,4 @@ class Room {
 
     return true;
   }
-
-  void onChatMessage(A_MsgRoomChat msg) {}
 }

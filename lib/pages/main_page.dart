@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/providers/enter_room_provider.dart';
 import 'package:scene_hub/providers/room_list_provider.dart';
+import 'package:scene_hub/sc.dart';
 import 'package:scene_hub/widgets/room_card.dart';
 import 'package:flutter/material.dart';
 
@@ -44,6 +45,12 @@ class _MainPageState extends ConsumerState<MainPage> {
               ref.read(roomListProvider.notifier).getRecommendedRooms();
             },
             icon: Icon(Icons.refresh),
+          ),
+          IconButton(
+            onPressed: () {
+              sc.server.close();
+            },
+            icon: Icon(Icons.exit_to_app),
           ),
         ],
       ),

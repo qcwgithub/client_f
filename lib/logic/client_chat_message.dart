@@ -14,6 +14,25 @@ class ClientChatMessage {
     required this.useClientId,
   });
 
+  factory ClientChatMessage.server({required ChatMessage inner}) {
+    return ClientChatMessage(
+      inner: inner,
+      clientStatus: ClientChatMessageStatus.normal,
+      useClientId: false,
+    );
+  }
+
+  factory ClientChatMessage.client({
+    required ChatMessage inner,
+    required ClientChatMessageStatus clientStatus,
+  }) {
+    return ClientChatMessage(
+      inner: inner,
+      clientStatus: clientStatus,
+      useClientId: true,
+    );
+  }
+
   int get messageId => inner.messageId;
   int get roomId => inner.roomId;
   int get senderId => inner.senderId;

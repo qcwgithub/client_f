@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/e_code.dart';
 import 'package:scene_hub/gen/msg_enter_room.dart';
 import 'package:scene_hub/gen/msg_type.dart';
@@ -7,6 +8,7 @@ import 'package:scene_hub/gen/res_enter_room.dart';
 // import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/logic/room.dart';
+import 'package:scene_hub/my_logger.dart';
 import 'package:scene_hub/sc.dart';
 
 enum EnterRoomStatus { idle, loading }
@@ -57,16 +59,27 @@ class EnterRoomNotifier extends StateNotifier<EnterRoomModel> {
 
     var res = ResEnterRoom.fromMsgPack(r.res!);
 
+    int min = -1;
+    int max = -1;
+
     var recentMessages = <ClientChatMessage>[];
     for (int i = 0; i < res.recentMessages.length; i++) {
+      ChatMessage m = res.recentMessages[i];
+      if (min == -1 || m.messageId < min) {
+        min = m.messageId;
+      }
+      if (max == -1 || m.messageId > max) {
+        max = m.messageId;
+      }
       recentMessages.add(
         ClientChatMessage(
-          inner: res.recentMessages[i],
+          inner: m,
           clientStatus: ClientChatMessageStatus.normal,
           useClientId: false,
         ),
       );
     }
+    logger.d("enterRoom ok, recentMessages messageId range [$min, $max]");
 
     state = state.copyWith(
       recentMessages: recentMessages,

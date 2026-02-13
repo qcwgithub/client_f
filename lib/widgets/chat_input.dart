@@ -4,9 +4,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 
 class ChatInput extends StatelessWidget {
-  final controller = TextEditingController();
+  final TextEditingController controller; // 新增可选参数
   final void Function(ChatMessageType type, String text) callback;
-  ChatInput({super.key, required this.callback});
+  ChatInput({super.key, required this.controller, required this.callback});
 
   @override
   Widget build(BuildContext context) {

@@ -6,7 +6,7 @@ enum MsgType {
   enterRoom(10004),
   leaveRoom(10005),
   sendRoomChat(10006),
-  a_RoomChat(10007),
+  aRoomChat(10007),
   searchRoom(10008),
   getRecommendedRooms(10009),
   setName(10010),
@@ -33,7 +33,7 @@ enum MsgType {
       case 10006:
         return MsgType.sendRoomChat;
       case 10007:
-        return MsgType.a_RoomChat;
+        return MsgType.aRoomChat;
       case 10008:
         return MsgType.searchRoom;
       case 10009:

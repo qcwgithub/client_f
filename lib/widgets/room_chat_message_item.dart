@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/pages/user_page.dart';
-import 'package:scene_hub/providers/room_message_list_provider.dart';
+import 'package:scene_hub/providers/room_messages_provider.dart';
 import 'package:scene_hub/providers/room_message_provider.dart';
 import 'package:scene_hub/sc.dart';
 
@@ -66,7 +66,7 @@ class RoomChatMessageItem extends ConsumerWidget {
                 child: _buildClientStatus(
                   message,
                   () => ref
-                      .read(roomMessageListProvider(roomId).notifier)
+                      .read(roomMessagesProvider(roomId).notifier)
                       .resendChat(message),
                 ),
               ),
@@ -142,7 +142,7 @@ class RoomChatMessageItem extends ConsumerWidget {
           ),
         ),
         child: Text(
-          message.content,
+          "[${message.messageId}] ${message.content}",
           style: TextStyle(color: isMe ? Colors.white : Colors.black87),
         ),
       ),
