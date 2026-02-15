@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 // import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
+import 'package:scene_hub/pages/fullscreen_image_page.dart';
 import 'package:scene_hub/pages/user_page.dart';
 import 'package:scene_hub/providers/room_messages_provider.dart';
 import 'package:scene_hub/providers/room_message_provider.dart';
@@ -149,29 +150,55 @@ class RoomChatMessageItem extends ConsumerWidget {
     );
   }
 
-  // Widget _buildImageBubble(BuildContext context, bool isMe) {
-  //   return GestureDetector(
-  //     onTap: () {
-  //       Navigator.of(context).push(
-  //         MaterialPageRoute(
-  //           builder: (_) {
-  //             return FullscreenImagePage(imageUrl: messageItem.imageUrl!);
-  //           },
-  //         ),
-  //       );
-  //     },
+  Widget _buildImageBubble(
+    BuildContext context,
+    ClientChatMessage message,
+    bool isMe,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) {
+              return FullscreenImagePage(
+                imageUrl: message.inner.imageContent!.url,
+              );
+            },
+          ),
+        );
+      },
 
-  //     child: ClipRRect(
-  //       borderRadius: BorderRadius.circular(12),
-  //       child: Image.network(
-  //         messageItem.imageUrl!,
-  //         width: 180,
-  //         height: 180,
-  //         fit: BoxFit.cover,
-  //       ),
-  //     ),
-  //   );
-  // }
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: 180,
+          height: 180,
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            fit: BoxFit.cover,
+
+            /// 加载中
+            placeholder: (context, url) => Container(
+              color: Colors.grey.shade200,
+              child: const Center(
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+
+            /// 加载失败
+            errorWidget: (context, url, error) => Container(
+              color: Colors.grey.shade200,
+              child: const Center(child: Icon(Icons.broken_image, size: 40)),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   void _showMessageMenu(
     BuildContext context,

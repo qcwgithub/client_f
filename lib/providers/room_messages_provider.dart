@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:scene_hub/gen/chat_message.dart';
+import 'package:scene_hub/gen/chat_message_image_content.dart';
 import 'package:scene_hub/gen/chat_message_status.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/gen/e_code.dart';
@@ -141,6 +143,7 @@ class RoomMessagesNotifier extends StateNotifier<RoomMessagesModel> {
     ChatMessageType type,
     String content,
     int replyTo,
+    ChatMessageImageContent? imageContent,
   ) {
     int clientMessageId = clientMessageIdGenerator.nextId();
     final inner = ChatMessage(
@@ -156,6 +159,7 @@ class RoomMessagesNotifier extends StateNotifier<RoomMessagesModel> {
       senderAvatarIndex: sc.me.userInfo.avatarIndex,
       clientMessageId: clientMessageId,
       status: ChatMessageStatus.normal,
+      imageContent: imageContent,
     );
     final message = ClientChatMessage.client(
       inner: inner,
@@ -178,6 +182,7 @@ class RoomMessagesNotifier extends StateNotifier<RoomMessagesModel> {
         chatMessageType: message.type,
         content: message.content,
         clientMessageId: message.clientMessageId,
+        imageContent: message.inner.imageContent,
       ),
     );
 
@@ -194,8 +199,15 @@ class RoomMessagesNotifier extends StateNotifier<RoomMessagesModel> {
     ChatMessageType type,
     String content,
     int replyTo,
+    ChatMessageImageContent? imageContent,
   ) async {
-    ClientChatMessage message = _createSending(roomId, type, content, replyTo);
+    ClientChatMessage message = _createSending(
+      roomId,
+      type,
+      content,
+      replyTo,
+      imageContent,
+    );
     _clientMessageIds.add(message.clientMessageId);
     _addMessage(message);
 

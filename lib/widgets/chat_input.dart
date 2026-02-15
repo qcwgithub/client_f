@@ -1,12 +1,24 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:scene_hub/gen/chat_message_image_content.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
+import 'package:scene_hub/sc.dart';
 
 class ChatInput extends StatelessWidget {
   final TextEditingController controller; // 新增可选参数
-  final void Function(ChatMessageType type, String text) callback;
-  ChatInput({super.key, required this.controller, required this.callback});
+  final void Function(
+    ChatMessageType type,
+    String content,
+    ChatMessageImageContent? imageContent,
+  )
+  callback;
+  const ChatInput({
+    super.key,
+    required this.controller,
+    required this.callback,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,9 +29,10 @@ class ChatInput extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () async {
-              String? imageUrl = await _pickAndUploadImage();
-              if (imageUrl != null) {
-                callback(ChatMessageType.image, imageUrl);
+              ChatMessageImageContent? imageContent =
+                  await _pickAndUploadImage();
+              if (imageContent != null) {
+                callback(ChatMessageType.image, "", imageContent);
               }
             },
             icon: const Icon(Icons.photo),
@@ -44,7 +57,7 @@ class ChatInput extends StatelessWidget {
                 return;
               }
 
-              callback(ChatMessageType.text, text);
+              callback(ChatMessageType.text, text, null);
               controller.clear();
             },
             icon: const Icon(Icons.send),
@@ -54,23 +67,16 @@ class ChatInput extends StatelessWidget {
     );
   }
 
-  Future<String?> _pickAndUploadImage() async {
-    final picker = ImagePicker();
-    final XFile? file = await picker.pickImage(source: ImageSource.gallery);
-
+  Future<ChatMessageImageContent?> _pickAndUploadImage() async {
+    final File? file = await sc.imageSelector.pickFromGallery();
     if (file == null) {
       return null;
     }
 
-    // todo
-    // FlutterImageCompress.compressWithFile(file.path,)
+    ChatMessageImageContent? imageContent = await sc.imageUploader.uploadImage(
+      file,
+    );
 
-    String imageUrl = await _uploadFile(file);
-    return imageUrl;
-  }
-
-  Future<String> _uploadFile(XFile file) async {
-    await Future.delayed(Duration(seconds: 1));
-    return "https://img2.baidu.com/it/u=1593073498,3942986965&fm=253&app=138&f=JPEG?w=699&h=1181";
+    return imageContent;
   }
 }

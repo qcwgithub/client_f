@@ -1,6 +1,7 @@
 import 'package:scene_hub/i_to_msg_pack.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/gen/chat_message_status.dart';
+import 'package:scene_hub/gen/chat_message_image_content.dart';
 
 class ChatMessage implements IToMsgPack {
     // [0]
@@ -27,6 +28,8 @@ class ChatMessage implements IToMsgPack {
     int clientMessageId;
     // [11]
     ChatMessageStatus status;
+    // [12]
+    ChatMessageImageContent? imageContent;
 
     ChatMessage({
       required this.messageId,
@@ -41,6 +44,7 @@ class ChatMessage implements IToMsgPack {
       required this.senderAvatarIndex,
       required this.clientMessageId,
       required this.status,
+      required this.imageContent,
     });
 
     @override
@@ -58,6 +62,7 @@ class ChatMessage implements IToMsgPack {
         senderAvatarIndex,
         clientMessageId,
         status.code,
+        imageContent?.toMsgPack(),
       ];
     }
 
@@ -75,6 +80,7 @@ class ChatMessage implements IToMsgPack {
         senderAvatarIndex: list[9] as int,
         clientMessageId: list[10] as int,
         status: ChatMessageStatus.fromCode(list[11] as int),
+        imageContent: list[12] == null ? null : ChatMessageImageContent.fromMsgPack(list[12] as List),
       );
     }
 }

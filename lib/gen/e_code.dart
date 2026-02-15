@@ -36,21 +36,22 @@ enum ECode {
   fileNotExist(100),
   chat_TooFast(101),
   notSupported(102),
-  name_TooShort(103),
-  name_TooLong(104),
-  name_Reserved(105),
-  name_Empty(106),
-  name_InvalidChar(107),
-  name_TooFrequent(108),
-  chat_InvalidType(109),
-  chat_Empty(110),
-  chat_TooShort(111),
-  chat_TooLong(112),
-  chat_AllSpace(113),
-  search_TooShort(114),
-  search_TooLong(115),
+  nameTooShort(103),
+  nameTooLong(104),
+  nameReserved(105),
+  nameEmpty(106),
+  nameInvalidChar(107),
+  nameTooFrequent(108),
+  chatInvalidType(109),
+  chatEmpty(110),
+  chatTooShort(111),
+  chatTooLong(112),
+  chatAllSpace(113),
+  searchTooShort(114),
+  searchTooLong(115),
   avatarIndex_TooFrequent(116),
-  avatarIndex_OutOfRange(117);
+  avatarIndex_OutOfRange(117),
+  chatMissingImageContent(118);
 
   static ECode fromCode(int code) {
     switch (code) {
@@ -129,35 +130,37 @@ enum ECode {
       case 102:
         return ECode.notSupported;
       case 103:
-        return ECode.name_TooShort;
+        return ECode.nameTooShort;
       case 104:
-        return ECode.name_TooLong;
+        return ECode.nameTooLong;
       case 105:
-        return ECode.name_Reserved;
+        return ECode.nameReserved;
       case 106:
-        return ECode.name_Empty;
+        return ECode.nameEmpty;
       case 107:
-        return ECode.name_InvalidChar;
+        return ECode.nameInvalidChar;
       case 108:
-        return ECode.name_TooFrequent;
+        return ECode.nameTooFrequent;
       case 109:
-        return ECode.chat_InvalidType;
+        return ECode.chatInvalidType;
       case 110:
-        return ECode.chat_Empty;
+        return ECode.chatEmpty;
       case 111:
-        return ECode.chat_TooShort;
+        return ECode.chatTooShort;
       case 112:
-        return ECode.chat_TooLong;
+        return ECode.chatTooLong;
       case 113:
-        return ECode.chat_AllSpace;
+        return ECode.chatAllSpace;
       case 114:
-        return ECode.search_TooShort;
+        return ECode.searchTooShort;
       case 115:
-        return ECode.search_TooLong;
+        return ECode.searchTooLong;
       case 116:
         return ECode.avatarIndex_TooFrequent;
       case 117:
         return ECode.avatarIndex_OutOfRange;
+      case 118:
+        return ECode.chatMissingImageContent;
       default:
         return ECode.error;
     }

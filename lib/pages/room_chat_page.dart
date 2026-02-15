@@ -116,10 +116,10 @@ class _ChatPageState extends ConsumerState<RoomChatPage> {
           _buildChatList(model),
           ChatInput(
             controller: _inputController,
-            callback: (type, content) {
+            callback: (type, content, imageContent) {
               ref
                   .read(roomMessagesProvider(widget.roomId).notifier)
-                  .sendChat(type, content, 0);
+                  .sendChat(type, content, 0, imageContent);
               // messageProvider.sendMessage(type, content);
 
               // WidgetsBinding.instance.addPostFrameCallback((_) {
