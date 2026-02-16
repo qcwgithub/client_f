@@ -19,7 +19,8 @@ enum MsgType {
   acceptFriendRequest(10017),
   blockUser(10018),
   unblockUser(10019),
-  count(10020);
+  removeFriend(10020),
+  count(10021);
 
   static MsgType fromCode(int code) {
     switch (code) {
@@ -64,6 +65,8 @@ enum MsgType {
       case 10019:
         return MsgType.unblockUser;
       case 10020:
+        return MsgType.removeFriend;
+      case 10021:
         return MsgType.count;
       default:
         return MsgType.clientStart;

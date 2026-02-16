@@ -57,7 +57,8 @@ enum ECode {
   outgoingFriendRequestNotExist(121),
   friendRequestResultNotWait(122),
   incomingFriendRequestNotExist(123),
-  outgoingFriendRequestAlreadyExist(124);
+  outgoingFriendRequestAlreadyExist(124),
+  notFriends(125);
 
   static ECode fromCode(int code) {
     switch (code) {
@@ -179,6 +180,8 @@ enum ECode {
         return ECode.incomingFriendRequestNotExist;
       case 124:
         return ECode.outgoingFriendRequestAlreadyExist;
+      case 125:
+        return ECode.notFriends;
       default:
         return ECode.error;
     }
