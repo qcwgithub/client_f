@@ -51,7 +51,13 @@ enum ECode {
   searchTooLong(115),
   avatarIndex_TooFrequent(116),
   avatarIndex_OutOfRange(117),
-  chatMissingImageContent(118);
+  chatMissingImageContent(118),
+  alreadyFriends(119),
+  invalidUserId(120),
+  outgoingFriendRequestNotExist(121),
+  friendRequestResultNotWait(122),
+  incomingFriendRequestNotExist(123),
+  outgoingFriendRequestAlreadyExist(124);
 
   static ECode fromCode(int code) {
     switch (code) {
@@ -161,6 +167,18 @@ enum ECode {
         return ECode.avatarIndex_OutOfRange;
       case 118:
         return ECode.chatMissingImageContent;
+      case 119:
+        return ECode.alreadyFriends;
+      case 120:
+        return ECode.invalidUserId;
+      case 121:
+        return ECode.outgoingFriendRequestNotExist;
+      case 122:
+        return ECode.friendRequestResultNotWait;
+      case 123:
+        return ECode.incomingFriendRequestNotExist;
+      case 124:
+        return ECode.outgoingFriendRequestAlreadyExist;
       default:
         return ECode.error;
     }

@@ -14,7 +14,12 @@ enum MsgType {
   getRoomChatHistory(10012),
   reportRoomMessage(10013),
   reportUser(10014),
-  count(10015);
+  sendFriendRequest(10015),
+  rejectFriendRequest(10016),
+  acceptFriendRequest(10017),
+  blockUser(10018),
+  unblockUser(10019),
+  count(10020);
 
   static MsgType fromCode(int code) {
     switch (code) {
@@ -49,6 +54,16 @@ enum MsgType {
       case 10014:
         return MsgType.reportUser;
       case 10015:
+        return MsgType.sendFriendRequest;
+      case 10016:
+        return MsgType.rejectFriendRequest;
+      case 10017:
+        return MsgType.acceptFriendRequest;
+      case 10018:
+        return MsgType.blockUser;
+      case 10019:
+        return MsgType.unblockUser;
+      case 10020:
         return MsgType.count;
       default:
         return MsgType.clientStart;
