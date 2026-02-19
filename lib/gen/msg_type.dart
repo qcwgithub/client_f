@@ -24,7 +24,8 @@ enum MsgType {
   aOtherAcceptFriendRequest(10022),
   aOtherRejectFriendRequest(10023),
   aRemoveFriend(10024),
-  count(10025);
+  getUserBriefInfos(10025),
+  count(10026);
 
   static MsgType fromCode(int code) {
     switch (code) {
@@ -79,6 +80,8 @@ enum MsgType {
       case 10024:
         return MsgType.aRemoveFriend;
       case 10025:
+        return MsgType.getUserBriefInfos;
+      case 10026:
         return MsgType.count;
       default:
         return MsgType.clientStart;
