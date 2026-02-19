@@ -1,0 +1,18 @@
+enum RoomType {
+  public(0), // default for dart
+  private(1);
+
+  static RoomType fromCode(int code) {
+    switch (code) {
+      case 0:
+        return RoomType.public;
+      case 1:
+        return RoomType.private;
+      default:
+        return RoomType.public;
+    }
+  }
+
+  final int code;
+  const RoomType(this.code);
+}

@@ -27,6 +27,8 @@ class UserInfo implements IToMsgPack {
     List<IncomingFriendRequest> incomingFriendRequests;
     // [10]
     List<BlockedUser> blockedUsers;
+    // [11]
+    List<FriendInfo> removedFriends;
 
     UserInfo({
       required this.userId,
@@ -40,6 +42,7 @@ class UserInfo implements IToMsgPack {
       required this.outgoingFriendRequests,
       required this.incomingFriendRequests,
       required this.blockedUsers,
+      required this.removedFriends,
     });
 
     @override
@@ -56,6 +59,7 @@ class UserInfo implements IToMsgPack {
         outgoingFriendRequests.map((e) => e.toMsgPack()).toList(growable: false),
         incomingFriendRequests.map((e) => e.toMsgPack()).toList(growable: false),
         blockedUsers.map((e) => e.toMsgPack()).toList(growable: false),
+        removedFriends.map((e) => e.toMsgPack()).toList(growable: false),
       ];
     }
 
@@ -79,6 +83,9 @@ class UserInfo implements IToMsgPack {
           .toList(growable: true),
         blockedUsers: (list[10] as List)
           .map((e) => BlockedUser.fromMsgPack(e as List))
+          .toList(growable: true),
+        removedFriends: (list[11] as List)
+          .map((e) => FriendInfo.fromMsgPack(e as List))
           .toList(growable: true),
       );
     }
