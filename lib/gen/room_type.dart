@@ -1,6 +1,7 @@
 enum RoomType {
   public(0), // default for dart
-  private(1);
+  private(1),
+  count(2);
 
   static RoomType fromCode(int code) {
     switch (code) {
@@ -8,6 +9,8 @@ enum RoomType {
         return RoomType.public;
       case 1:
         return RoomType.private;
+      case 2:
+        return RoomType.count;
       default:
         return RoomType.public;
     }

@@ -1,6 +1,7 @@
 import 'package:scene_hub/i_to_msg_pack.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/gen/chat_message_image_content.dart';
+import 'package:scene_hub/gen/room_type.dart';
 
 class MsgSendRoomChat implements IToMsgPack {
     // [0]
@@ -13,6 +14,8 @@ class MsgSendRoomChat implements IToMsgPack {
     int clientMessageId;
     // [4]
     ChatMessageImageContent? imageContent;
+    // [5]
+    RoomType roomType;
 
     MsgSendRoomChat({
       required this.roomId,
@@ -20,6 +23,7 @@ class MsgSendRoomChat implements IToMsgPack {
       required this.content,
       required this.clientMessageId,
       required this.imageContent,
+      required this.roomType,
     });
 
     @override
@@ -30,6 +34,7 @@ class MsgSendRoomChat implements IToMsgPack {
         content,
         clientMessageId,
         imageContent?.toMsgPack(),
+        roomType.code,
       ];
     }
 
@@ -40,6 +45,7 @@ class MsgSendRoomChat implements IToMsgPack {
         content: list[2] as String,
         clientMessageId: list[3] as int,
         imageContent: list[4] == null ? null : ChatMessageImageContent.fromMsgPack(list[4] as List),
+        roomType: RoomType.fromCode(list[5] as int),
       );
     }
 }

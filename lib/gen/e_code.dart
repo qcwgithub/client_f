@@ -25,7 +25,7 @@ enum ECode {
   msgProcessing(88),
   monitorRunLoop(89),
   notEnoughCount(90),
-  roomLocationNotFound(91),
+  roomLocationNotExist(91),
   alreadyIs(92),
   noAvailableRoomService(93),
   retryFailed(95),
@@ -59,7 +59,8 @@ enum ECode {
   incomingFriendRequestNotExist(123),
   outgoingFriendRequestAlreadyExist(124),
   notFriends(125),
-  duplicate(126);
+  duplicate(126),
+  invalidRoomType(127);
 
   static ECode fromCode(int code) {
     switch (code) {
@@ -116,7 +117,7 @@ enum ECode {
       case 90:
         return ECode.notEnoughCount;
       case 91:
-        return ECode.roomLocationNotFound;
+        return ECode.roomLocationNotExist;
       case 92:
         return ECode.alreadyIs;
       case 93:
@@ -185,6 +186,8 @@ enum ECode {
         return ECode.notFriends;
       case 126:
         return ECode.duplicate;
+      case 127:
+        return ECode.invalidRoomType;
       default:
         return ECode.error;
     }
