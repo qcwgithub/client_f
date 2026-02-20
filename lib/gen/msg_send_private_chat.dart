@@ -2,9 +2,9 @@ import 'package:scene_hub/i_to_msg_pack.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/gen/chat_message_image_content.dart';
 
-class MsgSendRoomChat implements IToMsgPack {
+class MsgSendPrivateChat implements IToMsgPack {
     // [0]
-    int roomId;
+    int friendUserId;
     // [1]
     ChatMessageType chatMessageType;
     // [2]
@@ -14,8 +14,8 @@ class MsgSendRoomChat implements IToMsgPack {
     // [4]
     ChatMessageImageContent? imageContent;
 
-    MsgSendRoomChat({
-      required this.roomId,
+    MsgSendPrivateChat({
+      required this.friendUserId,
       required this.chatMessageType,
       required this.content,
       required this.clientMessageId,
@@ -25,7 +25,7 @@ class MsgSendRoomChat implements IToMsgPack {
     @override
     List toMsgPack() {
       return [
-        roomId,
+        friendUserId,
         chatMessageType.code,
         content,
         clientMessageId,
@@ -33,9 +33,9 @@ class MsgSendRoomChat implements IToMsgPack {
       ];
     }
 
-    factory MsgSendRoomChat.fromMsgPack(List list) {
-      return MsgSendRoomChat(
-        roomId: list[0] as int,
+    factory MsgSendPrivateChat.fromMsgPack(List list) {
+      return MsgSendPrivateChat(
+        friendUserId: list[0] as int,
         chatMessageType: ChatMessageType.fromCode(list[1] as int),
         content: list[2] as String,
         clientMessageId: list[3] as int,

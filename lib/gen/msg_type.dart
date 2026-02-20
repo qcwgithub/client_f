@@ -3,16 +3,16 @@ enum MsgType {
   forward(10001),
   login(10002),
   kick(10003),
-  enterRoom(10004),
-  leaveRoom(10005),
-  sendRoomChat(10006),
+  enterScene(10004),
+  leaveScene(10005),
+  sendSceneChat(10006),
   aRoomChat(10007),
-  searchRoom(10008),
-  getRecommendedRooms(10009),
+  searchScene(10008),
+  getRecommendedScenes(10009),
   setName(10010),
   setAvatarIndex(10011),
-  getRoomChatHistory(10012),
-  reportRoomMessage(10013),
+  getSceneChatHistory(10012),
+  reportMessage(10013),
   reportUser(10014),
   sendFriendRequest(10015),
   rejectFriendRequest(10016),
@@ -25,7 +25,8 @@ enum MsgType {
   aOtherRejectFriendRequest(10023),
   aRemoveFriend(10024),
   getUserBriefInfos(10025),
-  count(10026);
+  sendPrivateChat(10026),
+  count(10027);
 
   static MsgType fromCode(int code) {
     switch (code) {
@@ -38,25 +39,25 @@ enum MsgType {
       case 10003:
         return MsgType.kick;
       case 10004:
-        return MsgType.enterRoom;
+        return MsgType.enterScene;
       case 10005:
-        return MsgType.leaveRoom;
+        return MsgType.leaveScene;
       case 10006:
-        return MsgType.sendRoomChat;
+        return MsgType.sendSceneChat;
       case 10007:
         return MsgType.aRoomChat;
       case 10008:
-        return MsgType.searchRoom;
+        return MsgType.searchScene;
       case 10009:
-        return MsgType.getRecommendedRooms;
+        return MsgType.getRecommendedScenes;
       case 10010:
         return MsgType.setName;
       case 10011:
         return MsgType.setAvatarIndex;
       case 10012:
-        return MsgType.getRoomChatHistory;
+        return MsgType.getSceneChatHistory;
       case 10013:
-        return MsgType.reportRoomMessage;
+        return MsgType.reportMessage;
       case 10014:
         return MsgType.reportUser;
       case 10015:
@@ -82,6 +83,8 @@ enum MsgType {
       case 10025:
         return MsgType.getUserBriefInfos;
       case 10026:
+        return MsgType.sendPrivateChat;
+      case 10027:
         return MsgType.count;
       default:
         return MsgType.clientStart;
