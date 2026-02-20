@@ -6,7 +6,7 @@ enum MsgType {
   enterScene(10004),
   leaveScene(10005),
   sendSceneChat(10006),
-  aRoomChat(10007),
+  aChatMessage(10007),
   searchScene(10008),
   getRecommendedScenes(10009),
   setName(10010),
@@ -45,7 +45,7 @@ enum MsgType {
       case 10006:
         return MsgType.sendSceneChat;
       case 10007:
-        return MsgType.aRoomChat;
+        return MsgType.aChatMessage;
       case 10008:
         return MsgType.searchScene;
       case 10009:
