@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:scene_hub/gen/msg_leave_room.dart';
+import 'package:scene_hub/gen/msg_leave_scene.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
@@ -171,7 +171,7 @@ class _ChatPageState extends ConsumerState<RoomChatPage> {
   @override
   void dispose() {
     // TODO retry!
-    sc.server.request(MsgType.leaveRoom, MsgLeaveRoom(roomId: widget.roomId));
+    sc.server.request(MsgType.leaveScene, MsgLeaveScene(roomId: widget.roomId));
     super.dispose();
   }
 }

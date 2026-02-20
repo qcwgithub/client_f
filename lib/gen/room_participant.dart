@@ -1,28 +1,28 @@
 import 'package:scene_hub/i_to_msg_pack.dart';
 
-class UserFriendInfo implements IToMsgPack {
+class RoomParticipant implements IToMsgPack {
     // [0]
     int userId;
     // [1]
-    int timeS;
+    int joinTimeS;
 
-    UserFriendInfo({
+    RoomParticipant({
       required this.userId,
-      required this.timeS,
+      required this.joinTimeS,
     });
 
     @override
     List toMsgPack() {
       return [
         userId,
-        timeS,
+        joinTimeS,
       ];
     }
 
-    factory UserFriendInfo.fromMsgPack(List list) {
-      return UserFriendInfo(
+    factory RoomParticipant.fromMsgPack(List list) {
+      return RoomParticipant(
         userId: list[0] as int,
-        timeS: list[1] as int,
+        joinTimeS: list[1] as int,
       );
     }
 }

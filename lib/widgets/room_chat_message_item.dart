@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -174,7 +175,7 @@ class RoomChatMessageItem extends ConsumerWidget {
           width: 180,
           height: 180,
           child: CachedNetworkImage(
-            imageUrl: imageUrl,
+            imageUrl: message.inner.imageContent!.url,
             fit: BoxFit.cover,
 
             /// 加载中

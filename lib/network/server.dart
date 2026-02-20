@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:msgpack_dart/msgpack_dart.dart';
 import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/e_code.dart';
-import 'package:scene_hub/gen/msg_a_room_chat.dart';
+import 'package:scene_hub/gen/msg_a_chat_message.dart';
 import 'package:scene_hub/gen/msg_login.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/res_login.dart';
@@ -239,8 +239,8 @@ class Server {
   void _handlePush(MsgType msgType, List msg) {
     logger.d("received $msgType");
 
-    if (msgType == MsgType.aRoomChat) {
-      final aRoomChat = MsgARoomChat.fromMsgPack(msg);
+    if (msgType == MsgType.aChatMessage) {
+      final aRoomChat = MsgAChatMessage.fromMsgPack(msg);
       eventBus.emit(aRoomChat);
     }
   }

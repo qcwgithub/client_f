@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:scene_hub/gen/e_code.dart';
-import 'package:scene_hub/gen/msg_get_recommended_rooms.dart';
-import 'package:scene_hub/gen/msg_search_room.dart';
+import 'package:scene_hub/gen/msg_get_recommended_scenes.dart';
+import 'package:scene_hub/gen/msg_search_scene.dart';
 import 'package:scene_hub/gen/msg_type.dart';
-import 'package:scene_hub/gen/res_get_recommended_rooms.dart';
-import 'package:scene_hub/gen/res_search_room.dart';
+import 'package:scene_hub/gen/res_get_recommended_scenes.dart';
+import 'package:scene_hub/gen/res_search_scene.dart';
 import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/network/my_response.dart';
 import 'package:scene_hub/sc.dart';
@@ -38,8 +38,8 @@ class RoomListNotifier extends StateNotifier<RoomListModel> {
     state = state.copyWith(status: RoomListStatus.refreshing);
 
     final r = await sc.server.request(
-      MsgType.getRecommendedRooms,
-      MsgGetRecommendedRooms(),
+      MsgType.getRecommendedScenes,
+      MsgGetRecommendedScenes(),
     );
 
     if (r.e != ECode.success) {
@@ -47,7 +47,7 @@ class RoomListNotifier extends StateNotifier<RoomListModel> {
       return false;
     }
 
-    final res = ResGetRecommendedRooms.fromMsgPack(r.res!);
+    final res = ResGetRecommendedScenes.fromMsgPack(r.res!);
 
     if (res.roomInfos.isEmpty) {
       state = state.copyWith(roomInfos: [], status: RoomListStatus.empty);
@@ -66,8 +66,8 @@ class RoomListNotifier extends StateNotifier<RoomListModel> {
     state = state.copyWith(status: RoomListStatus.refreshing);
 
     MyResponse r = await sc.server.request(
-      MsgType.searchRoom,
-      MsgSearchRoom(keyword: keyword),
+      MsgType.searchScene,
+      MsgSearchScene(keyword: keyword),
     );
 
     if (r.e != ECode.success) {
@@ -75,7 +75,7 @@ class RoomListNotifier extends StateNotifier<RoomListModel> {
       return;
     }
 
-    var res = ResSearchRoom.fromMsgPack(r.res!);
+    var res = ResSearchScene.fromMsgPack(r.res!);
     final rooms = res.roomInfos;
 
     if (res.roomInfos.isEmpty) {

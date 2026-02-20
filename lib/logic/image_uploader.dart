@@ -23,6 +23,7 @@ class ImageUploader {
       width: resized.width,
       height: resized.height,
       size: compressed.length,
+      thumbnailUrl: imageUrl, // TODO
     );
   }
 

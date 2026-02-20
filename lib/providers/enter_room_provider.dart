@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/e_code.dart';
-import 'package:scene_hub/gen/msg_enter_room.dart';
+import 'package:scene_hub/gen/msg_enter_scene.dart';
 import 'package:scene_hub/gen/msg_type.dart';
-import 'package:scene_hub/gen/res_enter_room.dart';
+import 'package:scene_hub/gen/res_enter_scene.dart';
 // import 'package:scene_hub/gen/chat_message.dart';
 // import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
@@ -47,8 +47,8 @@ class EnterRoomNotifier extends StateNotifier<EnterRoomModel> {
     state = state.copyWith(status: EnterRoomStatus.loading);
 
     final r = await sc.server.request(
-      MsgType.enterRoom,
-      MsgEnterRoom(roomId: roomId, lastMessageId: 0),
+      MsgType.enterScene,
+      MsgEnterScene(roomId: roomId, lastMessageId: 0),
     );
 
     if (r.e != ECode.success) {
@@ -56,7 +56,7 @@ class EnterRoomNotifier extends StateNotifier<EnterRoomModel> {
       return false;
     }
 
-    var res = ResEnterRoom.fromMsgPack(r.res!);
+    var res = ResEnterScene.fromMsgPack(r.res!);
 
     int min = -1;
     int max = -1;

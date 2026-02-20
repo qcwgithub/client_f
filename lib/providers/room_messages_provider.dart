@@ -8,11 +8,11 @@ import 'package:scene_hub/gen/chat_message_image_content.dart';
 import 'package:scene_hub/gen/chat_message_status.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/gen/e_code.dart';
-import 'package:scene_hub/gen/msg_a_room_chat.dart';
-import 'package:scene_hub/gen/msg_get_room_chat_history.dart';
-import 'package:scene_hub/gen/msg_send_room_chat.dart';
+import 'package:scene_hub/gen/msg_a_chat_message.dart';
+import 'package:scene_hub/gen/msg_get_scene_chat_history.dart';
+import 'package:scene_hub/gen/msg_send_scene_chat.dart';
 import 'package:scene_hub/gen/msg_type.dart';
-import 'package:scene_hub/gen/res_get_room_chat_history.dart';
+import 'package:scene_hub/gen/res_get_scene_chat_history.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/logic/client_message_id_generator.dart';
 import 'package:scene_hub/logic/event_bus.dart';
@@ -76,10 +76,12 @@ class RoomMessagesModel {
 
 class RoomMessagesNotifier extends StateNotifier<RoomMessagesModel> {
   final int roomId;
-  StreamSubscription<MsgARoomChat>? _aRoomChatSubscription;
+  StreamSubscription<MsgAChatMessage>? _aRoomChatSubscription;
   final List<int> _clientMessageIds = [];
   RoomMessagesNotifier(this.roomId) : super(RoomMessagesModel.initial()) {
-    _aRoomChatSubscription = eventBus.on<MsgARoomChat>().listen(_onARoomChat);
+    _aRoomChatSubscription = eventBus.on<MsgAChatMessage>().listen(
+      _onARoomChat,
+    );
   }
 
   @override
@@ -88,7 +90,7 @@ class RoomMessagesNotifier extends StateNotifier<RoomMessagesModel> {
     super.dispose();
   }
 
-  void _onARoomChat(MsgARoomChat aRoomChat) {
+  void _onARoomChat(MsgAChatMessage aRoomChat) {
     final inner = aRoomChat.message;
     if (inner.roomId != roomId) return;
 
@@ -176,8 +178,8 @@ class RoomMessagesNotifier extends StateNotifier<RoomMessagesModel> {
     assert(message.clientStatus == ClientChatMessageStatus.sending);
 
     final r = await sc.server.request(
-      MsgType.sendRoomChat,
-      MsgSendRoomChat(
+      MsgType.sendSceneChat,
+      MsgSendSceneChat(
         roomId: roomId,
         chatMessageType: message.type,
         content: message.content,
@@ -266,15 +268,15 @@ class RoomMessagesNotifier extends StateNotifier<RoomMessagesModel> {
     }
 
     final r = await sc.server.request(
-      MsgType.getRoomChatHistory,
-      MsgGetRoomChatHistory(roomId: roomId, lastMessageId: lastMessageId),
+      MsgType.getSceneChatHistory,
+      MsgGetSceneChatHistory(roomId: roomId, lastMessageId: lastMessageId),
     );
 
     if (r.e != ECode.success) {
       return false;
     }
 
-    final res = ResGetRoomChatHistory.fromMsgPack(r.res!);
+    final res = ResGetSceneChatHistory.fromMsgPack(r.res!);
     if (res.history.isEmpty) {
       state.hasMore = false;
       return false;
