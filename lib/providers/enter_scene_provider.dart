@@ -4,47 +4,45 @@ import 'package:scene_hub/gen/e_code.dart';
 import 'package:scene_hub/gen/msg_enter_scene.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/res_enter_scene.dart';
-// import 'package:scene_hub/gen/chat_message.dart';
-// import 'package:scene_hub/gen/room_info.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/my_logger.dart';
 import 'package:scene_hub/sc.dart';
 
-enum EnterRoomStatus { idle, loading }
+enum EnterSceneStatus { idle, loading }
 
-class EnterRoomModel {
+class EnterSceneModel {
   final List<ClientChatMessage> recentMessages;
-  final EnterRoomStatus status;
+  final EnterSceneStatus status;
 
-  const EnterRoomModel({required this.recentMessages, required this.status});
+  const EnterSceneModel({required this.recentMessages, required this.status});
 
-  factory EnterRoomModel.initial() {
-    return const EnterRoomModel(
+  factory EnterSceneModel.initial() {
+    return const EnterSceneModel(
       recentMessages: [],
-      status: EnterRoomStatus.idle,
+      status: EnterSceneStatus.idle,
     );
   }
 
-  EnterRoomModel copyWith({
+  EnterSceneModel copyWith({
     List<ClientChatMessage>? recentMessages,
-    EnterRoomStatus? status,
+    EnterSceneStatus? status,
   }) {
-    return EnterRoomModel(
+    return EnterSceneModel(
       recentMessages: recentMessages ?? this.recentMessages,
       status: status ?? this.status,
     );
   }
 }
 
-class EnterRoomNotifier extends StateNotifier<EnterRoomModel> {
-  EnterRoomNotifier() : super(EnterRoomModel.initial());
+class EnterSceneNotifier extends StateNotifier<EnterSceneModel> {
+  EnterSceneNotifier() : super(EnterSceneModel.initial());
 
-  Future<bool> enterRoom(int roomId) async {
-    if (state.status == EnterRoomStatus.loading) {
+  Future<bool> enterScene(int roomId) async {
+    if (state.status == EnterSceneStatus.loading) {
       return false;
     }
 
-    state = state.copyWith(status: EnterRoomStatus.loading);
+    state = state.copyWith(status: EnterSceneStatus.loading);
 
     final r = await sc.server.request(
       MsgType.enterScene,
@@ -52,7 +50,7 @@ class EnterRoomNotifier extends StateNotifier<EnterRoomModel> {
     );
 
     if (r.e != ECode.success) {
-      state = state.copyWith(status: EnterRoomStatus.idle);
+      state = state.copyWith(status: EnterSceneStatus.idle);
       return false;
     }
 
@@ -78,18 +76,18 @@ class EnterRoomNotifier extends StateNotifier<EnterRoomModel> {
         ),
       );
     }
-    logger.d("enterRoom ok, recentMessages messageId range [$min, $max]");
+    logger.d("enterScene ok, recentMessages messageId range [$min, $max]");
 
     state = state.copyWith(
       recentMessages: recentMessages,
-      status: EnterRoomStatus.idle,
+      status: EnterSceneStatus.idle,
     );
 
     return true;
   }
 }
 
-final enterRoomProvider =
-    StateNotifierProvider<EnterRoomNotifier, EnterRoomModel>(
-      (ref) => EnterRoomNotifier(),
+final enterSceneProvider =
+    StateNotifierProvider<EnterSceneNotifier, EnterSceneModel>(
+      (ref) => EnterSceneNotifier(),
     );

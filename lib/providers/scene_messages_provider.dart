@@ -20,24 +20,24 @@ import 'package:scene_hub/logic/time_utils.dart';
 import 'package:scene_hub/my_logger.dart';
 import 'package:scene_hub/sc.dart';
 
-enum RoomMessagesStatus { idle, refreshing, success, empty, error }
+enum SceneMessagesStatus { idle, refreshing, success, empty, error }
 
-class RoomMessagesModel {
+class SceneMessagesModel {
   final List<ClientChatMessage> messages;
-  final RoomMessagesStatus status;
-  RoomMessagesModel({required this.messages, required this.status});
+  final SceneMessagesStatus status;
+  SceneMessagesModel({required this.messages, required this.status});
 
   bool hasMore = true;
 
-  factory RoomMessagesModel.initial() {
-    return RoomMessagesModel(messages: [], status: RoomMessagesStatus.idle);
+  factory SceneMessagesModel.initial() {
+    return SceneMessagesModel(messages: [], status: SceneMessagesStatus.idle);
   }
 
-  RoomMessagesModel copyWith({
+  SceneMessagesModel copyWith({
     List<ClientChatMessage>? messages,
-    RoomMessagesStatus? status,
+    SceneMessagesStatus? status,
   }) {
-    return RoomMessagesModel(
+    return SceneMessagesModel(
       messages: messages ?? this.messages,
       status: status ?? this.status,
     );
@@ -74,24 +74,22 @@ class RoomMessagesModel {
   }
 }
 
-class RoomMessagesNotifier extends StateNotifier<RoomMessagesModel> {
+class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
   final int roomId;
-  StreamSubscription<MsgAChatMessage>? _aRoomChatSubscription;
+  StreamSubscription<MsgAChatMessage>? _aChatSubscription;
   final List<int> _clientMessageIds = [];
-  RoomMessagesNotifier(this.roomId) : super(RoomMessagesModel.initial()) {
-    _aRoomChatSubscription = eventBus.on<MsgAChatMessage>().listen(
-      _onARoomChat,
-    );
+  SceneMessagesNotifier(this.roomId) : super(SceneMessagesModel.initial()) {
+    _aChatSubscription = eventBus.on<MsgAChatMessage>().listen(_onAChatMessage);
   }
 
   @override
   void dispose() {
-    _aRoomChatSubscription?.cancel();
+    _aChatSubscription?.cancel();
     super.dispose();
   }
 
-  void _onARoomChat(MsgAChatMessage aRoomChat) {
-    final inner = aRoomChat.message;
+  void _onAChatMessage(MsgAChatMessage aChatMessage) {
+    final inner = aChatMessage.message;
     if (inner.roomId != roomId) return;
 
     if (sc.me.isMe(inner.senderId) &&
@@ -113,19 +111,19 @@ class RoomMessagesNotifier extends StateNotifier<RoomMessagesModel> {
   }
 
   void setInitialMessages(List<ClientChatMessage> messages) {
-    state = RoomMessagesModel(
+    state = SceneMessagesModel(
       messages: messages,
       status: messages.isEmpty
-          ? RoomMessagesStatus.empty
-          : RoomMessagesStatus.success,
+          ? SceneMessagesStatus.empty
+          : SceneMessagesStatus.success,
     );
   }
 
   void _addMessage(ClientChatMessage message) {
     state = state.copyWith(
       messages: [...state.messages, message],
-      status: state.status == RoomMessagesStatus.empty
-          ? RoomMessagesStatus.success
+      status: state.status == SceneMessagesStatus.empty
+          ? SceneMessagesStatus.success
           : state.status,
     );
   }
@@ -294,18 +292,19 @@ class RoomMessagesNotifier extends StateNotifier<RoomMessagesModel> {
 
     state = state.copyWith(
       messages: [...history, ...state.messages],
-      status: RoomMessagesStatus.idle,
+      status: SceneMessagesStatus.idle,
     );
 
     return true;
   }
 }
 
-final roomMessagesProvider =
-    StateNotifierProvider.family<RoomMessagesNotifier, RoomMessagesModel, int>((
-      ref,
-      roomId,
-    ) {
-      final notifier = RoomMessagesNotifier(roomId);
+final sceneMessagesProvider =
+    StateNotifierProvider.family<
+      SceneMessagesNotifier,
+      SceneMessagesModel,
+      int
+    >((ref, roomId) {
+      final notifier = SceneMessagesNotifier(roomId);
       return notifier;
     });

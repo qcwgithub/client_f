@@ -1,20 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/gen/msg_leave_scene.dart';
 import 'package:scene_hub/gen/msg_type.dart';
-import 'package:scene_hub/gen/room_info.dart';
+import 'package:scene_hub/gen/scene_info.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
-import 'package:scene_hub/pages/room_info_page.dart';
-import 'package:scene_hub/providers/room_messages_provider.dart';
+import 'package:scene_hub/pages/scene_info_page.dart';
+import 'package:scene_hub/providers/scene_messages_provider.dart';
 import 'package:scene_hub/sc.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
-import 'package:scene_hub/widgets/room_chat_message_item.dart';
+import 'package:scene_hub/widgets/scene_chat_message_item.dart';
 import 'package:flutter/material.dart';
 
-class RoomChatPage extends ConsumerStatefulWidget {
-  final RoomInfo roomInfo;
-  int get roomId => roomInfo.roomId;
+class SceneChatPage extends ConsumerStatefulWidget {
+  final SceneInfo sceneInfo;
+  int get roomId => sceneInfo.roomId;
 
-  const RoomChatPage({super.key, required this.roomInfo});
+  const SceneChatPage({super.key, required this.sceneInfo});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() {
@@ -22,7 +22,7 @@ class RoomChatPage extends ConsumerStatefulWidget {
   }
 }
 
-class _ChatPageState extends ConsumerState<RoomChatPage> {
+class _ChatPageState extends ConsumerState<SceneChatPage> {
   final ScrollController _scrollController = ScrollController();
   final _inputController = TextEditingController();
 
@@ -44,7 +44,7 @@ class _ChatPageState extends ConsumerState<RoomChatPage> {
         // double beforePixels = _scrollController.position.pixels;
         // double beforeExtent = 0;
         bool loaded = await ref
-            .read(roomMessagesProvider(widget.roomId).notifier)
+            .read(sceneMessagesProvider(widget.roomId).notifier)
             .requestHistory(() {
               // beforeExtent = _scrollController.position.maxScrollExtent;
             });
@@ -89,20 +89,20 @@ class _ChatPageState extends ConsumerState<RoomChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final RoomMessagesModel model = ref.watch(
-      roomMessagesProvider(widget.roomId),
+    final SceneMessagesModel model = ref.watch(
+      sceneMessagesProvider(widget.roomId),
     );
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.roomInfo.title),
+        title: Text(widget.sceneInfo.title),
         actions: [
           IconButton(
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => RoomInfoPage(roomInfo: widget.roomInfo),
+                  builder: (_) => SceneInfoPage(sceneInfo: widget.sceneInfo),
                 ),
               );
             },
@@ -118,7 +118,7 @@ class _ChatPageState extends ConsumerState<RoomChatPage> {
             controller: _inputController,
             callback: (type, content, imageContent) {
               ref
-                  .read(roomMessagesProvider(widget.roomId).notifier)
+                  .read(sceneMessagesProvider(widget.roomId).notifier)
                   .sendChat(type, content, 0, imageContent);
               // messageProvider.sendMessage(type, content);
 
@@ -132,7 +132,7 @@ class _ChatPageState extends ConsumerState<RoomChatPage> {
     );
   }
 
-  Widget _buildChatList(RoomMessagesModel model) {
+  Widget _buildChatList(SceneMessagesModel model) {
     return Expanded(
       child: ListView.builder(
         controller: _scrollController,
@@ -152,7 +152,7 @@ class _ChatPageState extends ConsumerState<RoomChatPage> {
             }
           }
 
-          return RoomChatMessageItem(
+          return SceneChatMessageItem(
             key: ValueKey(
               message.useClientId ? message.clientMessageId : message.messageId,
             ),

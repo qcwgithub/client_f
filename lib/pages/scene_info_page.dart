@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:scene_hub/gen/room_info.dart';
+import 'package:scene_hub/gen/scene_info.dart';
 
-class RoomInfoPage extends StatelessWidget {
-  final RoomInfo roomInfo;
-  const RoomInfoPage({super.key, required this.roomInfo});
+class SceneInfoPage extends StatelessWidget {
+  final SceneInfo sceneInfo;
+  const SceneInfoPage({super.key, required this.sceneInfo});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Room Info")),
+      appBar: AppBar(title: Text("Scene Info")),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Room ID: ${roomInfo.roomId}", style: TextStyle(fontSize: 16)),
+            Text(
+              "Scene ID: ${sceneInfo.roomId}",
+              style: TextStyle(fontSize: 16),
+            ),
             const SizedBox(height: 20),
             Divider(),
 

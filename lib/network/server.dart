@@ -240,8 +240,8 @@ class Server {
     logger.d("received $msgType");
 
     if (msgType == MsgType.aChatMessage) {
-      final aRoomChat = MsgAChatMessage.fromMsgPack(msg);
-      eventBus.emit(aRoomChat);
+      final aChatMessage = MsgAChatMessage.fromMsgPack(msg);
+      eventBus.emit(aChatMessage);
     }
   }
 

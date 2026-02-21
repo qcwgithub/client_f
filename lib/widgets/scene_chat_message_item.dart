@@ -8,16 +8,16 @@ import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/pages/fullscreen_image_page.dart';
 import 'package:scene_hub/pages/user_page.dart';
-import 'package:scene_hub/providers/room_messages_provider.dart';
-import 'package:scene_hub/providers/room_message_provider.dart';
+import 'package:scene_hub/providers/scene_messages_provider.dart';
+import 'package:scene_hub/providers/scene_message_provider.dart';
 import 'package:scene_hub/sc.dart';
 
-class RoomChatMessageItem extends ConsumerWidget {
+class SceneChatMessageItem extends ConsumerWidget {
   final int roomId;
   final bool useClientId;
   final int messageId;
   final bool showTime;
-  const RoomChatMessageItem({
+  const SceneChatMessageItem({
     super.key,
     required this.roomId,
     required this.useClientId,
@@ -42,7 +42,7 @@ class RoomChatMessageItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ClientChatMessage message = ref.watch(
-      roomMessageProvider((roomId, useClientId, messageId)),
+      sceneMessageProvider((roomId, useClientId, messageId)),
     );
     bool isMe = sc.me.isMe(message.senderId);
 
@@ -68,7 +68,7 @@ class RoomChatMessageItem extends ConsumerWidget {
                 child: _buildClientStatus(
                   message,
                   () => ref
-                      .read(roomMessagesProvider(roomId).notifier)
+                      .read(sceneMessagesProvider(roomId).notifier)
                       .resendChat(message),
                 ),
               ),

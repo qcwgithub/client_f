@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:scene_hub/gen/room_info.dart';
-import 'package:scene_hub/providers/enter_room_provider.dart';
-import 'package:scene_hub/providers/room_list_provider.dart';
+import 'package:scene_hub/gen/scene_info.dart';
+import 'package:scene_hub/providers/enter_scene_provider.dart';
+import 'package:scene_hub/providers/scene_list_provider.dart';
 import 'package:scene_hub/sc.dart';
-import 'package:scene_hub/widgets/room_card.dart';
+import 'package:scene_hub/widgets/scene_card.dart';
 import 'package:flutter/material.dart';
 
 class MainPage extends ConsumerStatefulWidget {
@@ -22,7 +22,7 @@ class _MainPageState extends ConsumerState<MainPage> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((Duration timeStamp) {
-      ref.read(roomListProvider.notifier).getRecommendedRooms();
+      ref.read(sceneListProvider.notifier).getRecommendedScenes();
     });
   }
 
@@ -34,7 +34,7 @@ class _MainPageState extends ConsumerState<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    final model = ref.watch(roomListProvider);
+    final model = ref.watch(sceneListProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -42,7 +42,7 @@ class _MainPageState extends ConsumerState<MainPage> {
         actions: [
           IconButton(
             onPressed: () {
-              ref.read(roomListProvider.notifier).getRecommendedRooms();
+              ref.read(sceneListProvider.notifier).getRecommendedScenes();
             },
             icon: Icon(Icons.refresh),
           ),
@@ -92,9 +92,11 @@ class _MainPageState extends ConsumerState<MainPage> {
                 IconButton(
                   onPressed: () {
                     if (_searchQuery.isEmpty) {
-                      ref.read(roomListProvider.notifier).getRecommendedRooms();
+                      ref
+                          .read(sceneListProvider.notifier)
+                          .getRecommendedScenes();
                     } else {
-                      ref.read(roomListProvider.notifier).search(_searchQuery);
+                      ref.read(sceneListProvider.notifier).search(_searchQuery);
                     }
                   },
                   icon: const Icon(Icons.search),
@@ -105,8 +107,8 @@ class _MainPageState extends ConsumerState<MainPage> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: ref
-                  .read(roomListProvider.notifier)
-                  .getRecommendedRooms,
+                  .read(sceneListProvider.notifier)
+                  .getRecommendedScenes,
               child: _buildList(model),
             ),
           ),
@@ -115,8 +117,9 @@ class _MainPageState extends ConsumerState<MainPage> {
     );
   }
 
-  Widget _buildList(RoomListModel model) {
-    if (model.status == RoomListStatus.refreshing && model.roomInfos.isEmpty) {
+  Widget _buildList(SceneListModel model) {
+    if (model.status == SceneListStatus.refreshing &&
+        model.sceneInfos.isEmpty) {
       return ListView(
         children: const [
           SizedBox(height: 200),
@@ -125,8 +128,8 @@ class _MainPageState extends ConsumerState<MainPage> {
       );
     }
 
-    if (model.status == RoomListStatus.empty ||
-        model.status == RoomListStatus.error) {
+    if (model.status == SceneListStatus.empty ||
+        model.status == SceneListStatus.error) {
       return ListView(
         children: const [
           SizedBox(height: 200),
@@ -135,32 +138,32 @@ class _MainPageState extends ConsumerState<MainPage> {
       );
     }
 
-    final EnterRoomModel enterRoomModel = ref.watch(enterRoomProvider);
+    final EnterSceneModel enterSceneModel = ref.watch(enterSceneProvider);
 
     return Stack(
       children: [
         ListView.builder(
           padding: const EdgeInsets.all(12),
           itemCount:
-              model.roomInfos.length +
-              (model.status == RoomListStatus.refreshing ? 1 : 0),
+              model.sceneInfos.length +
+              (model.status == SceneListStatus.refreshing ? 1 : 0),
           itemBuilder: (BuildContext context, int index) {
-            if (model.status == RoomListStatus.refreshing && index == 0) {
+            if (model.status == SceneListStatus.refreshing && index == 0) {
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8),
                 child: Center(child: Text("刷新中...")),
               );
             }
 
-            RoomInfo roomInfo =
-                model.roomInfos[index -
-                    (model.status == RoomListStatus.refreshing ? 1 : 0)];
+            SceneInfo sceneInfo =
+                model.sceneInfos[index -
+                    (model.status == SceneListStatus.refreshing ? 1 : 0)];
 
-            return RoomCard(roomInfo: roomInfo);
+            return SceneCard(sceneInfo: sceneInfo);
           },
         ),
 
-        if (enterRoomModel.status == EnterRoomStatus.loading)
+        if (enterSceneModel.status == EnterSceneStatus.loading)
           Container(
             color: Colors.black26,
             alignment: Alignment.center,
