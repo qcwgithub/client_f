@@ -1,7 +1,6 @@
 import 'package:scene_hub/i_to_msg_pack.dart';
-import 'package:scene_hub/gen/room_participant.dart';
 
-class SceneInfo implements IToMsgPack {
+class SceneRoomInfo implements IToMsgPack {
     // [0]
     int roomId;
     // [1]
@@ -12,16 +11,13 @@ class SceneInfo implements IToMsgPack {
     String desc;
     // [4]
     int messageId;
-    // [5]
-    List<RoomParticipant> participants;
 
-    SceneInfo({
+    SceneRoomInfo({
       required this.roomId,
       required this.createTimeS,
       required this.title,
       required this.desc,
       required this.messageId,
-      required this.participants,
     });
 
     @override
@@ -32,20 +28,16 @@ class SceneInfo implements IToMsgPack {
         title,
         desc,
         messageId,
-        participants.map((e) => e.toMsgPack()).toList(growable: false),
       ];
     }
 
-    factory SceneInfo.fromMsgPack(List list) {
-      return SceneInfo(
+    factory SceneRoomInfo.fromMsgPack(List list) {
+      return SceneRoomInfo(
         roomId: list[0] as int,
         createTimeS: list[1] as int,
         title: list[2] as String,
         desc: list[3] as String,
         messageId: list[4] as int,
-        participants: (list[5] as List)
-          .map((e) => RoomParticipant.fromMsgPack(e as List))
-          .toList(growable: true),
       );
     }
 }
