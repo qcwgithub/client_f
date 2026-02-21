@@ -1,5 +1,5 @@
 import 'package:scene_hub/i_to_msg_pack.dart';
-import 'package:scene_hub/gen/room_participant.dart';
+import 'package:scene_hub/gen/private_room_user.dart';
 
 class PrivateRoomInfo implements IToMsgPack {
     // [0]
@@ -9,13 +9,13 @@ class PrivateRoomInfo implements IToMsgPack {
     // [2]
     int messageId;
     // [3]
-    List<RoomParticipant> participants;
+    List<PrivateRoomUser> users;
 
     PrivateRoomInfo({
       required this.roomId,
       required this.createTimeS,
       required this.messageId,
-      required this.participants,
+      required this.users,
     });
 
     @override
@@ -24,7 +24,7 @@ class PrivateRoomInfo implements IToMsgPack {
         roomId,
         createTimeS,
         messageId,
-        participants.map((e) => e.toMsgPack()).toList(growable: false),
+        users.map((e) => e.toMsgPack()).toList(growable: false),
       ];
     }
 
@@ -33,8 +33,8 @@ class PrivateRoomInfo implements IToMsgPack {
         roomId: list[0] as int,
         createTimeS: list[1] as int,
         messageId: list[2] as int,
-        participants: (list[3] as List)
-          .map((e) => RoomParticipant.fromMsgPack(e as List))
+        users: (list[3] as List)
+          .map((e) => PrivateRoomUser.fromMsgPack(e as List))
           .toList(growable: true),
       );
     }

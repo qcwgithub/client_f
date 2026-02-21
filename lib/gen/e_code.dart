@@ -34,7 +34,7 @@ enum ECode {
   noHandler(98),
   invalidRoomId(99),
   fileNotExist(100),
-  chat_TooFast(101),
+  chatTooFast(101),
   notSupported(102),
   nameTooShort(103),
   nameTooLong(104),
@@ -60,7 +60,8 @@ enum ECode {
   outgoingFriendRequestAlreadyExist(124),
   notFriends(125),
   duplicate(126),
-  invalidRoomType(127);
+  invalidRoomType(127),
+  offline(128);
 
   static ECode fromCode(int code) {
     switch (code) {
@@ -135,7 +136,7 @@ enum ECode {
       case 100:
         return ECode.fileNotExist;
       case 101:
-        return ECode.chat_TooFast;
+        return ECode.chatTooFast;
       case 102:
         return ECode.notSupported;
       case 103:
@@ -188,6 +189,8 @@ enum ECode {
         return ECode.duplicate;
       case 127:
         return ECode.invalidRoomType;
+      case 128:
+        return ECode.offline;
       default:
         return ECode.error;
     }
