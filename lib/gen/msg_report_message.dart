@@ -5,13 +5,13 @@ class MsgReportMessage implements IToMsgPack {
     // [0]
     int roomId;
     // [1]
-    int messageId;
+    int seq;
     // [2]
     MessageReportReason reason;
 
     MsgReportMessage({
       required this.roomId,
-      required this.messageId,
+      required this.seq,
       required this.reason,
     });
 
@@ -19,7 +19,7 @@ class MsgReportMessage implements IToMsgPack {
     List toMsgPack() {
       return [
         roomId,
-        messageId,
+        seq,
         reason.code,
       ];
     }
@@ -27,7 +27,7 @@ class MsgReportMessage implements IToMsgPack {
     factory MsgReportMessage.fromMsgPack(List list) {
       return MsgReportMessage(
         roomId: list[0] as int,
-        messageId: list[1] as int,
+        seq: list[1] as int,
         reason: MessageReportReason.fromCode(list[2] as int),
       );
     }

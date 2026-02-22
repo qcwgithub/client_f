@@ -25,7 +25,7 @@ enum MsgType {
   aOtherRejectFriendRequest(10023),
   aRemoveFriend(10024),
   getUserBriefInfos(10025),
-  sendPrivateChat(10026),
+  sendFriendChat(10026),
   count(10027);
 
   static MsgType fromCode(int code) {
@@ -83,7 +83,7 @@ enum MsgType {
       case 10025:
         return MsgType.getUserBriefInfos;
       case 10026:
-        return MsgType.sendPrivateChat;
+        return MsgType.sendFriendChat;
       case 10027:
         return MsgType.count;
       default:

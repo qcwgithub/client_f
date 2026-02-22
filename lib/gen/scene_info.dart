@@ -10,14 +10,14 @@ class SceneInfo implements IToMsgPack {
     // [3]
     String desc;
     // [4]
-    int messageId;
+    int messageSeq;
 
     SceneInfo({
       required this.roomId,
       required this.createTimeS,
       required this.title,
       required this.desc,
-      required this.messageId,
+      required this.messageSeq,
     });
 
     @override
@@ -27,7 +27,7 @@ class SceneInfo implements IToMsgPack {
         createTimeS,
         title,
         desc,
-        messageId,
+        messageSeq,
       ];
     }
 
@@ -37,7 +37,7 @@ class SceneInfo implements IToMsgPack {
         createTimeS: list[1] as int,
         title: list[2] as String,
         desc: list[3] as String,
-        messageId: list[4] as int,
+        messageSeq: list[4] as int,
       );
     }
 }

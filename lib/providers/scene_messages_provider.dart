@@ -56,7 +56,7 @@ class SceneMessagesModel {
           return i;
         }
       } else {
-        if (!message.useClientId && message.messageId == messageId) {
+        if (!message.useClientId && message.seq == messageId) {
           return i;
         }
       }
@@ -147,7 +147,7 @@ class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
   ) {
     int clientMessageId = clientMessageIdGenerator.nextId();
     final inner = ChatMessage(
-      messageId: 0,
+      seq: 0,
       roomId: roomId,
       senderId: sc.me.userId,
       senderName: sc.me.userName,
@@ -257,17 +257,17 @@ class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
       return false;
     }
 
-    int lastMessageId = 0;
+    int lastSeq = 0;
     for (int i = 0; i < state.messages.length; i++) {
       if (!state.messages[i].useClientId) {
-        lastMessageId = state.messages[i].messageId;
+        lastSeq = state.messages[i].seq;
         break;
       }
     }
 
     final r = await sc.server.request(
       MsgType.getSceneChatHistory,
-      MsgGetSceneChatHistory(roomId: roomId, lastMessageId: lastMessageId),
+      MsgGetSceneChatHistory(roomId: roomId, lastSeq: lastSeq),
     );
 
     if (r.e != ECode.success) {
@@ -281,7 +281,7 @@ class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
     }
 
     logger.d(
-      "requestHistory ok, got messageIds ${res.history.map((m) => m.messageId).toList()}",
+      "requestHistory ok, got messageIds ${res.history.map((m) => m.seq).toList()}",
     );
 
     final history = res.history

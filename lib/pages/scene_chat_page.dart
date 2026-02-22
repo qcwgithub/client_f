@@ -154,13 +154,13 @@ class _ChatPageState extends ConsumerState<SceneChatPage> {
 
           return SceneChatMessageItem(
             key: ValueKey(
-              message.useClientId ? message.clientMessageId : message.messageId,
+              message.useClientId ? message.clientMessageId : message.seq,
             ),
             roomId: widget.roomId,
             useClientId: message.useClientId,
             messageId: message.useClientId
                 ? message.clientMessageId
-                : message.messageId,
+                : message.seq,
             showTime: showTime,
           );
         },

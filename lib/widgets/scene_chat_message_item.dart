@@ -144,7 +144,7 @@ class SceneChatMessageItem extends ConsumerWidget {
           ),
         ),
         child: Text(
-          "[${message.messageId}] ${message.content}",
+          "[${message.seq}] ${message.content}",
           style: TextStyle(color: isMe ? Colors.white : Colors.black87),
         ),
       ),

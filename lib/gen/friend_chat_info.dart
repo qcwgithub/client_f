@@ -1,7 +1,7 @@
 import 'package:scene_hub/i_to_msg_pack.dart';
 import 'package:scene_hub/gen/private_room_user.dart';
 
-class PrivateRoomInfo implements IToMsgPack {
+class FriendChatInfo implements IToMsgPack {
     // [0]
     int roomId;
     // [1]
@@ -11,7 +11,7 @@ class PrivateRoomInfo implements IToMsgPack {
     // [3]
     List<PrivateRoomUser> users;
 
-    PrivateRoomInfo({
+    FriendChatInfo({
       required this.roomId,
       required this.createTimeS,
       required this.seq,
@@ -28,8 +28,8 @@ class PrivateRoomInfo implements IToMsgPack {
       ];
     }
 
-    factory PrivateRoomInfo.fromMsgPack(List list) {
-      return PrivateRoomInfo(
+    factory FriendChatInfo.fromMsgPack(List list) {
+      return FriendChatInfo(
         roomId: list[0] as int,
         createTimeS: list[1] as int,
         seq: list[2] as int,

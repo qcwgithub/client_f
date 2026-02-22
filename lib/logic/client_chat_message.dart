@@ -33,7 +33,7 @@ class ClientChatMessage {
     );
   }
 
-  int get messageId => inner.messageId;
+  int get seq => inner.seq;
   int get roomId => inner.roomId;
   int get senderId => inner.senderId;
   String get senderName => inner.senderName;

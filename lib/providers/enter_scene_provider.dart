@@ -46,7 +46,7 @@ class EnterSceneNotifier extends StateNotifier<EnterSceneModel> {
 
     final r = await sc.server.request(
       MsgType.enterScene,
-      MsgEnterScene(roomId: roomId, lastMessageId: 0),
+      MsgEnterScene(roomId: roomId, lastSeq: 0),
     );
 
     if (r.e != ECode.success) {
@@ -62,11 +62,11 @@ class EnterSceneNotifier extends StateNotifier<EnterSceneModel> {
     var recentMessages = <ClientChatMessage>[];
     for (int i = 0; i < res.recentMessages.length; i++) {
       ChatMessage m = res.recentMessages[i];
-      if (min == -1 || m.messageId < min) {
-        min = m.messageId;
+      if (min == -1 || m.seq < min) {
+        min = m.seq;
       }
-      if (max == -1 || m.messageId > max) {
-        max = m.messageId;
+      if (max == -1 || m.seq > max) {
+        max = m.seq;
       }
       recentMessages.add(
         ClientChatMessage(

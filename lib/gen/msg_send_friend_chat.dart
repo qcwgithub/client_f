@@ -2,7 +2,7 @@ import 'package:scene_hub/i_to_msg_pack.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/gen/chat_message_image_content.dart';
 
-class MsgSendPrivateChat implements IToMsgPack {
+class MsgSendFriendChat implements IToMsgPack {
     // [0]
     int friendUserId;
     // [1]
@@ -14,7 +14,7 @@ class MsgSendPrivateChat implements IToMsgPack {
     // [4]
     ChatMessageImageContent? imageContent;
 
-    MsgSendPrivateChat({
+    MsgSendFriendChat({
       required this.friendUserId,
       required this.chatMessageType,
       required this.content,
@@ -33,8 +33,8 @@ class MsgSendPrivateChat implements IToMsgPack {
       ];
     }
 
-    factory MsgSendPrivateChat.fromMsgPack(List list) {
-      return MsgSendPrivateChat(
+    factory MsgSendFriendChat.fromMsgPack(List list) {
+      return MsgSendFriendChat(
         friendUserId: list[0] as int,
         chatMessageType: ChatMessageType.fromCode(list[1] as int),
         content: list[2] as String,
