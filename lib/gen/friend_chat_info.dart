@@ -7,14 +7,14 @@ class FriendChatInfo implements IToMsgPack {
     // [1]
     int createTimeS;
     // [2]
-    int seq;
+    int messageSeq;
     // [3]
     List<PrivateRoomUser> users;
 
     FriendChatInfo({
       required this.roomId,
       required this.createTimeS,
-      required this.seq,
+      required this.messageSeq,
       required this.users,
     });
 
@@ -23,7 +23,7 @@ class FriendChatInfo implements IToMsgPack {
       return [
         roomId,
         createTimeS,
-        seq,
+        messageSeq,
         users.map((e) => e.toMsgPack()).toList(growable: false),
       ];
     }
@@ -32,7 +32,7 @@ class FriendChatInfo implements IToMsgPack {
       return FriendChatInfo(
         roomId: list[0] as int,
         createTimeS: list[1] as int,
-        seq: list[2] as int,
+        messageSeq: list[2] as int,
         users: (list[3] as List)
           .map((e) => PrivateRoomUser.fromMsgPack(e as List))
           .toList(growable: true),
