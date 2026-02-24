@@ -30,8 +30,6 @@ class ChatMessage implements IToMsgPack {
     ChatMessageStatus status;
     // [12]
     ChatMessageImageContent? imageContent;
-    // [13]
-    int messageId;
 
     ChatMessage({
       required this.seq,
@@ -47,7 +45,6 @@ class ChatMessage implements IToMsgPack {
       required this.clientMessageId,
       required this.status,
       required this.imageContent,
-      required this.messageId,
     });
 
     @override
@@ -66,7 +63,6 @@ class ChatMessage implements IToMsgPack {
         clientMessageId,
         status.code,
         imageContent?.toMsgPack(),
-        messageId,
       ];
     }
 
@@ -85,7 +81,6 @@ class ChatMessage implements IToMsgPack {
         clientMessageId: list[10] as int,
         status: ChatMessageStatus.fromCode(list[11] as int),
         imageContent: list[12] == null ? null : ChatMessageImageContent.fromMsgPack(list[12] as List),
-        messageId: list[13] as int,
       );
     }
 }
