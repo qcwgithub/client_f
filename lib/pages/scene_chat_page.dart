@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/gen/msg_leave_scene.dart';
 import 'package:scene_hub/gen/msg_type.dart';
-import 'package:scene_hub/gen/scene_info.dart';
+import 'package:scene_hub/gen/scene_room_info.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
-import 'package:scene_hub/pages/scene_info_page.dart';
+import 'package:scene_hub/pages/scene_room_info_page.dart';
 import 'package:scene_hub/providers/scene_messages_provider.dart';
 import 'package:scene_hub/sc.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
@@ -11,10 +11,10 @@ import 'package:scene_hub/widgets/scene_chat_message_item.dart';
 import 'package:flutter/material.dart';
 
 class SceneChatPage extends ConsumerStatefulWidget {
-  final SceneInfo sceneInfo;
-  int get roomId => sceneInfo.roomId;
+  final SceneRoomInfo roomInfo;
+  int get roomId => roomInfo.roomId;
 
-  const SceneChatPage({super.key, required this.sceneInfo});
+  const SceneChatPage({super.key, required this.roomInfo});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() {
@@ -95,14 +95,14 @@ class _ChatPageState extends ConsumerState<SceneChatPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.sceneInfo.title),
+        title: Text(widget.roomInfo.title),
         actions: [
           IconButton(
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => SceneInfoPage(sceneInfo: widget.sceneInfo),
+                  builder: (_) => SceneRoomInfoPage(sceneRoomInfo: widget.roomInfo),
                 ),
               );
             },

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:scene_hub/gen/scene_info.dart';
+import 'package:scene_hub/gen/scene_room_info.dart';
 
-class SceneInfoPage extends StatelessWidget {
-  final SceneInfo sceneInfo;
-  const SceneInfoPage({super.key, required this.sceneInfo});
+class SceneRoomInfoPage extends StatelessWidget {
+  final SceneRoomInfo sceneRoomInfo;
+  const SceneRoomInfoPage({super.key, required this.sceneRoomInfo});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +15,7 @@ class SceneInfoPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Scene ID: ${sceneInfo.roomId}",
+              "Scene ID: ${sceneRoomInfo.roomId}",
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),

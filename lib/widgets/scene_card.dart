@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:scene_hub/gen/scene_info.dart';
+import 'package:scene_hub/gen/scene_room_info.dart';
 import 'package:scene_hub/pages/scene_chat_page.dart';
 import 'package:flutter/material.dart';
 import 'package:scene_hub/providers/enter_scene_provider.dart';
@@ -7,9 +7,9 @@ import 'package:scene_hub/providers/scene_messages_provider.dart';
 import 'package:scene_hub/sc.dart';
 
 class SceneCard extends ConsumerWidget {
-  final SceneInfo sceneInfo;
+  final SceneRoomInfo roomInfo;
 
-  const SceneCard({super.key, required this.sceneInfo});
+  const SceneCard({super.key, required this.roomInfo});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,9 +20,9 @@ class SceneCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            title: Text(sceneInfo.title),
+            title: Text(roomInfo.title),
             subtitle: Text(
-              sceneInfo.desc,
+              roomInfo.desc,
               style: TextStyle(fontSize: 14, color: Colors.green),
             ),
             trailing: const Icon(Icons.arrow_forward_ios),
@@ -31,7 +31,7 @@ class SceneCard extends ConsumerWidget {
                 enterSceneProvider.notifier,
               );
 
-              final success = await notifier.enterScene(sceneInfo.roomId);
+              final success = await notifier.enterScene(roomInfo.roomId);
               if (!context.mounted) return;
 
               if (!success) {
@@ -42,7 +42,7 @@ class SceneCard extends ConsumerWidget {
               }
 
               ref
-                  .read(sceneMessagesProvider(sceneInfo.roomId).notifier)
+                  .read(sceneMessagesProvider(roomInfo.roomId).notifier)
                   .setInitialMessages(
                     ref.read(enterSceneProvider).recentMessages,
                   );
@@ -51,7 +51,7 @@ class SceneCard extends ConsumerWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) {
-                    return SceneChatPage(sceneInfo: sceneInfo);
+                    return SceneChatPage(roomInfo: roomInfo);
                   },
                 ),
               );
