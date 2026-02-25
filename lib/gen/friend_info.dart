@@ -7,11 +7,17 @@ class FriendInfo implements IToMsgPack {
     int timeS;
     // [2]
     int roomId;
+    // [3]
+    int readSeq;
+    // [4]
+    int receivedSeq;
 
     FriendInfo({
       required this.userId,
       required this.timeS,
       required this.roomId,
+      required this.readSeq,
+      required this.receivedSeq,
     });
 
     @override
@@ -20,6 +26,8 @@ class FriendInfo implements IToMsgPack {
         userId,
         timeS,
         roomId,
+        readSeq,
+        receivedSeq,
       ];
     }
 
@@ -28,6 +36,8 @@ class FriendInfo implements IToMsgPack {
         userId: list[0] as int,
         timeS: list[1] as int,
         roomId: list[2] as int,
+        readSeq: list[3] as int,
+        receivedSeq: list[4] as int,
       );
     }
 }

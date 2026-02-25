@@ -26,10 +26,9 @@ enum MsgType {
   aRemoveFriend(10024),
   getUserBriefInfos(10025),
   sendFriendChat(10026),
-  getFriendChatUnreadMessages(10027),
-  ackFriendChatReadSeq1(10028),
-  ackFriendChatReadSeqN(10029),
-  count(10030);
+  receiveFriendChatMessages(10027),
+  setFriendChatReadSeq(10028),
+  count(10029);
 
   static MsgType fromCode(int code) {
     switch (code) {
@@ -88,12 +87,10 @@ enum MsgType {
       case 10026:
         return MsgType.sendFriendChat;
       case 10027:
-        return MsgType.getFriendChatUnreadMessages;
+        return MsgType.receiveFriendChatMessages;
       case 10028:
-        return MsgType.ackFriendChatReadSeq1;
+        return MsgType.setFriendChatReadSeq;
       case 10029:
-        return MsgType.ackFriendChatReadSeqN;
-      case 10030:
         return MsgType.count;
       default:
         return MsgType.clientStart;
