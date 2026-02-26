@@ -1,0 +1,5 @@
+class FriendScript {
+  void doAddFriend(){
+
+  }
+}

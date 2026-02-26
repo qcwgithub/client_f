@@ -42,6 +42,7 @@ class ClientChatMessage {
   int get timestamp => inner.timestamp;
   int get clientMessageId => inner.clientMessageId;
   ChatMessageStatus get status => inner.status;
+  int get senderAvatarIndex => inner.senderAvatarIndex;
 
   ClientChatMessage copyWith({ClientChatMessageStatus? clientStatus}) {
     return ClientChatMessage(

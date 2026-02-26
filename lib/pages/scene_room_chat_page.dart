@@ -7,14 +7,14 @@ import 'package:scene_hub/pages/scene_room_info_page.dart';
 import 'package:scene_hub/providers/scene_messages_provider.dart';
 import 'package:scene_hub/sc.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
-import 'package:scene_hub/widgets/scene_chat_message_item.dart';
+import 'package:scene_hub/widgets/scene_room_chat_message_item.dart';
 import 'package:flutter/material.dart';
 
-class SceneChatPage extends ConsumerStatefulWidget {
+class SceneRoomChatPage extends ConsumerStatefulWidget {
   final SceneRoomInfo roomInfo;
   int get roomId => roomInfo.roomId;
 
-  const SceneChatPage({super.key, required this.roomInfo});
+  const SceneRoomChatPage({super.key, required this.roomInfo});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() {
@@ -22,7 +22,7 @@ class SceneChatPage extends ConsumerStatefulWidget {
   }
 }
 
-class _ChatPageState extends ConsumerState<SceneChatPage> {
+class _ChatPageState extends ConsumerState<SceneRoomChatPage> {
   final ScrollController _scrollController = ScrollController();
   final _inputController = TextEditingController();
 
@@ -152,7 +152,7 @@ class _ChatPageState extends ConsumerState<SceneChatPage> {
             }
           }
 
-          return SceneChatMessageItem(
+          return SceneRoomChatMessageItem(
             key: ValueKey(
               message.useClientId ? message.clientMessageId : message.seq,
             ),

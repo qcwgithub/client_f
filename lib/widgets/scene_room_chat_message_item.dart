@@ -7,17 +7,17 @@ import 'package:intl/intl.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/pages/fullscreen_image_page.dart';
-import 'package:scene_hub/pages/user_page.dart';
+import 'package:scene_hub/pages/user_info_page.dart';
 import 'package:scene_hub/providers/scene_messages_provider.dart';
 import 'package:scene_hub/providers/scene_message_provider.dart';
 import 'package:scene_hub/sc.dart';
 
-class SceneChatMessageItem extends ConsumerWidget {
+class SceneRoomChatMessageItem extends ConsumerWidget {
   final int roomId;
   final bool useClientId;
   final int messageId;
   final bool showTime;
-  const SceneChatMessageItem({
+  const SceneRoomChatMessageItem({
     super.key,
     required this.roomId,
     required this.useClientId,
@@ -30,9 +30,10 @@ class SceneChatMessageItem extends ConsumerWidget {
       context,
       MaterialPageRoute(
         builder: (_) {
-          return UserPage(
+          return UserInfoPage(
             userId: message.senderId,
             userName: message.senderName,
+            senderAvatarIndex: message.senderAvatarIndex,
           );
         },
       ),
@@ -271,18 +272,25 @@ class SceneChatMessageItem extends ConsumerWidget {
       onTap: () => onClick(context, message),
 
       child: Container(
-        // padding: isMe ? EdgeInsets.only() : EdgeInsets.only(top: 5),
         width: 38,
         height: 38,
         margin: isMe
             ? const EdgeInsets.only(right: 6, left: 6)
             : const EdgeInsets.only(right: 6, left: 6, top: 12),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(6), // 圆角方形
-          // child: Image.network(
-          //   messageItem.senderAvatarUrl ?? "",
-          //   fit: BoxFit.cover,
-          // ),
+        decoration: BoxDecoration(
+          color: Colors.indigo.shade100,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          message.senderName.isNotEmpty
+              ? message.senderName[0].toUpperCase()
+              : '?',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.indigo.shade700,
+          ),
         ),
       ),
     );

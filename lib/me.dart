@@ -23,4 +23,8 @@ class Me {
   String get userName {
     return _userInfo!.userName;
   }
+
+  bool isFriend(int userId) {
+    return userInfo.friends.any((f) => f.userId == userId);
+  }
 }
