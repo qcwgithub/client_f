@@ -9,7 +9,7 @@ import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/pages/fullscreen_image_page.dart';
 import 'package:scene_hub/pages/user_info_page.dart';
 import 'package:scene_hub/providers/scene_messages_provider.dart';
-import 'package:scene_hub/providers/scene_message_provider.dart';
+import 'package:scene_hub/providers/scene_room_message_provider.dart';
 import 'package:scene_hub/sc.dart';
 
 class SceneRoomChatMessageItem extends ConsumerWidget {
@@ -43,7 +43,7 @@ class SceneRoomChatMessageItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ClientChatMessage message = ref.watch(
-      sceneMessageProvider((roomId, useClientId, messageId)),
+      sceneRoomMessageProvider((roomId, useClientId, messageId)),
     );
     bool isMe = sc.me.isMe(message.senderId);
 

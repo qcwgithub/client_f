@@ -6,6 +6,7 @@ import 'package:scene_hub/gen/msg_accept_friend_request.dart';
 import 'package:scene_hub/gen/msg_get_user_brief_infos.dart';
 import 'package:scene_hub/gen/msg_reject_friend_request.dart';
 import 'package:scene_hub/gen/msg_type.dart';
+import 'package:scene_hub/gen/res_accept_friend_request.dart';
 import 'package:scene_hub/gen/res_get_user_brief_infos.dart';
 import 'package:scene_hub/gen/user_brief_info.dart';
 import 'package:scene_hub/pages/avatar_pick_page.dart';
@@ -37,15 +38,15 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
     }
 
     final userIds = requests.map((r) => r.fromUserId).toSet();
-    final res = await sc.server.request(
+    final r = await sc.server.request(
       MsgType.getUserBriefInfos,
       MsgGetUserBriefInfos(userIds: userIds),
     );
 
     if (!mounted) return;
 
-    if (res.e == ECode.success && res.res != null) {
-      final brief = ResGetUserBriefInfos.fromMsgPack(res.res!);
+    if (r.e == ECode.success && r.res != null) {
+      final brief = ResGetUserBriefInfos.fromMsgPack(r.res!);
       for (final info in brief.userBriefInfos) {
         _briefInfos[info.userId] = info;
       }
@@ -152,35 +153,45 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
   }
 
   void _accept(BuildContext context, IncomingFriendRequest request) async {
-    final res = await sc.server.request(
+    final r = await sc.server.request(
       MsgType.acceptFriendRequest,
       MsgAcceptFriendRequest(fromUserId: request.fromUserId),
     );
 
     if (!mounted) return;
 
-    if (res.e == ECode.success) {
+    if (r.e == ECode.success && r.res != null) {
       request.result = FriendRequestResult.accepted;
+
+      // 解析返回的 FriendInfo 并加入好友列表
+      final resData = ResAcceptFriendRequest.fromMsgPack(r.res!);
+      sc.me.userInfo.friends.add(resData.friendInfo);
+
+      // 从 removedFriends 中移除对应 userId
+      sc.me.userInfo.removedFriends.removeWhere(
+        (f) => f.userId == request.fromUserId,
+      );
+
       setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Friend request accepted')),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed: ${res.e}')),
+        SnackBar(content: Text('Failed: ${r.e}')),
       );
     }
   }
 
   void _reject(BuildContext context, IncomingFriendRequest request) async {
-    final res = await sc.server.request(
+    final r = await sc.server.request(
       MsgType.rejectFriendRequest,
       MsgRejectFriendRequest(fromUserId: request.fromUserId),
     );
 
     if (!mounted) return;
 
-    if (res.e == ECode.success) {
+    if (r.e == ECode.success) {
       request.result = FriendRequestResult.rejected;
       setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(
@@ -188,7 +199,7 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed: ${res.e}')),
+        SnackBar(content: Text('Failed: ${r.e}')),
       );
     }
   }

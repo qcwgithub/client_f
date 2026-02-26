@@ -1,15 +1,15 @@
 enum FriendRequestResult {
   wait(0), // default for dart
-  accepted(0),
-  rejected(0);
+  accepted(1),
+  rejected(2);
 
   static FriendRequestResult fromCode(int code) {
     switch (code) {
       case 0:
         return FriendRequestResult.wait;
-      case 0:
+      case 1:
         return FriendRequestResult.accepted;
-      case 0:
+      case 2:
         return FriendRequestResult.rejected;
       default:
         return FriendRequestResult.wait;
