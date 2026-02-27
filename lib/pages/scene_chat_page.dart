@@ -3,18 +3,18 @@ import 'package:scene_hub/gen/msg_leave_scene.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/scene_room_info.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
-import 'package:scene_hub/pages/scene_room_info_page.dart';
+import 'package:scene_hub/pages/scene_info_page.dart';
 import 'package:scene_hub/providers/scene_messages_provider.dart';
 import 'package:scene_hub/sc.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
-import 'package:scene_hub/widgets/scene_room_chat_message_item.dart';
+import 'package:scene_hub/widgets/scene_chat_message_item.dart';
 import 'package:flutter/material.dart';
 
-class SceneRoomChatPage extends ConsumerStatefulWidget {
+class SceneChatPage extends ConsumerStatefulWidget {
   final SceneRoomInfo roomInfo;
   int get roomId => roomInfo.roomId;
 
-  const SceneRoomChatPage({super.key, required this.roomInfo});
+  const SceneChatPage({super.key, required this.roomInfo});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() {
@@ -22,7 +22,7 @@ class SceneRoomChatPage extends ConsumerStatefulWidget {
   }
 }
 
-class _ChatPageState extends ConsumerState<SceneRoomChatPage> {
+class _ChatPageState extends ConsumerState<SceneChatPage> {
   final ScrollController _scrollController = ScrollController();
   final _inputController = TextEditingController();
 
@@ -102,7 +102,7 @@ class _ChatPageState extends ConsumerState<SceneRoomChatPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => SceneRoomInfoPage(sceneRoomInfo: widget.roomInfo),
+                  builder: (_) => SceneInfoPage(sceneRoomInfo: widget.roomInfo),
                 ),
               );
             },
@@ -152,7 +152,7 @@ class _ChatPageState extends ConsumerState<SceneRoomChatPage> {
             }
           }
 
-          return SceneRoomChatMessageItem(
+          return SceneChatMessageItem(
             key: ValueKey(
               message.useClientId ? message.clientMessageId : message.seq,
             ),

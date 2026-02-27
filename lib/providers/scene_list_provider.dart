@@ -9,36 +9,36 @@ import 'package:scene_hub/gen/scene_room_info.dart';
 import 'package:scene_hub/network/my_response.dart';
 import 'package:scene_hub/sc.dart';
 
-enum SceneRoomListStatus { idle, refreshing, success, empty, error }
+enum SceneListStatus { idle, refreshing, success, empty, error }
 
-class SceneRoomListModel {
+class SceneListModel {
   final List<SceneRoomInfo> roomInfos;
-  final SceneRoomListStatus status;
+  final SceneListStatus status;
 
-  const SceneRoomListModel({required this.roomInfos, required this.status});
+  const SceneListModel({required this.roomInfos, required this.status});
 
-  factory SceneRoomListModel.initial() {
-    return SceneRoomListModel(roomInfos: [], status: SceneRoomListStatus.idle);
+  factory SceneListModel.initial() {
+    return SceneListModel(roomInfos: [], status: SceneListStatus.idle);
   }
 
-  SceneRoomListModel copyWith({
+  SceneListModel copyWith({
     List<SceneRoomInfo>? roomInfos,
-    SceneRoomListStatus? status,
+    SceneListStatus? status,
   }) {
-    return SceneRoomListModel(
+    return SceneListModel(
       roomInfos: roomInfos ?? this.roomInfos,
       status: status ?? this.status,
     );
   }
 }
 
-class SceneListNotifier extends StateNotifier<SceneRoomListModel> {
-  SceneListNotifier() : super(SceneRoomListModel.initial());
+class SceneListNotifier extends StateNotifier<SceneListModel> {
+  SceneListNotifier() : super(SceneListModel.initial());
 
   Future<bool> getRecommendedScenes() async {
-    if (state.status == SceneRoomListStatus.refreshing) return false;
+    if (state.status == SceneListStatus.refreshing) return false;
 
-    state = state.copyWith(status: SceneRoomListStatus.refreshing);
+    state = state.copyWith(status: SceneListStatus.refreshing);
 
     final r = await sc.server.request(
       MsgType.getRecommendedScenes,
@@ -46,27 +46,27 @@ class SceneListNotifier extends StateNotifier<SceneRoomListModel> {
     );
 
     if (r.e != ECode.success) {
-      state = state.copyWith(status: SceneRoomListStatus.error);
+      state = state.copyWith(status: SceneListStatus.error);
       return false;
     }
 
     final res = ResGetRecommendedScenes.fromMsgPack(r.res!);
 
     if (res.roomInfos.isEmpty) {
-      state = state.copyWith(roomInfos: [], status: SceneRoomListStatus.empty);
+      state = state.copyWith(roomInfos: [], status: SceneListStatus.empty);
     } else {
       state = state.copyWith(
         roomInfos: res.roomInfos,
-        status: SceneRoomListStatus.idle,
+        status: SceneListStatus.idle,
       );
     }
     return true;
   }
 
   Future<void> search(String keyword) async {
-    if (state.status == SceneRoomListStatus.refreshing) return;
+    if (state.status == SceneListStatus.refreshing) return;
 
-    state = state.copyWith(status: SceneRoomListStatus.refreshing);
+    state = state.copyWith(status: SceneListStatus.refreshing);
 
     MyResponse r = await sc.server.request(
       MsgType.searchScene,
@@ -74,7 +74,7 @@ class SceneListNotifier extends StateNotifier<SceneRoomListModel> {
     );
 
     if (r.e != ECode.success) {
-      state = state.copyWith(status: SceneRoomListStatus.error);
+      state = state.copyWith(status: SceneListStatus.error);
       return;
     }
 
@@ -82,14 +82,14 @@ class SceneListNotifier extends StateNotifier<SceneRoomListModel> {
     final scenes = res.roomInfos;
 
     if (res.roomInfos.isEmpty) {
-      state = state.copyWith(roomInfos: [], status: SceneRoomListStatus.empty);
+      state = state.copyWith(roomInfos: [], status: SceneListStatus.empty);
     } else {
-      state = state.copyWith(roomInfos: scenes, status: SceneRoomListStatus.idle);
+      state = state.copyWith(roomInfos: scenes, status: SceneListStatus.idle);
     }
   }
 }
 
 final sceneListProvider =
-    StateNotifierProvider<SceneListNotifier, SceneRoomListModel>(
+    StateNotifierProvider<SceneListNotifier, SceneListModel>(
       (ref) => SceneListNotifier(),
     );

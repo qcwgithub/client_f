@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/painting.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/chat_message_image_content.dart';
@@ -9,10 +7,8 @@ import 'package:scene_hub/gen/chat_message_status.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/gen/e_code.dart';
 import 'package:scene_hub/gen/msg_a_chat_message.dart';
-import 'package:scene_hub/gen/msg_get_scene_chat_history.dart';
-import 'package:scene_hub/gen/msg_send_scene_chat.dart';
+import 'package:scene_hub/gen/msg_send_friend_chat.dart';
 import 'package:scene_hub/gen/msg_type.dart';
-import 'package:scene_hub/gen/res_get_scene_chat_history.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/logic/client_message_id_generator.dart';
 import 'package:scene_hub/logic/event_bus.dart';
@@ -20,30 +16,29 @@ import 'package:scene_hub/logic/time_utils.dart';
 import 'package:scene_hub/my_logger.dart';
 import 'package:scene_hub/sc.dart';
 
-enum SceneMessagesStatus { idle, refreshing, success, empty, error }
+enum FriendMessagesStatus { idle, refreshing, success, empty, error }
 
-class SceneMessagesModel {
+class FriendMessagesModel {
   final List<ClientChatMessage> messages;
-  final SceneMessagesStatus status;
-  SceneMessagesModel({required this.messages, required this.status});
+  final FriendMessagesStatus status;
+  FriendMessagesModel({required this.messages, required this.status});
 
   bool hasMore = true;
 
-  factory SceneMessagesModel.initial() {
-    return SceneMessagesModel(messages: [], status: SceneMessagesStatus.idle);
+  factory FriendMessagesModel.initial() {
+    return FriendMessagesModel(messages: [], status: FriendMessagesStatus.idle);
   }
 
-  SceneMessagesModel copyWith({
+  FriendMessagesModel copyWith({
     List<ClientChatMessage>? messages,
-    SceneMessagesStatus? status,
+    FriendMessagesStatus? status,
   }) {
-    return SceneMessagesModel(
+    return FriendMessagesModel(
       messages: messages ?? this.messages,
       status: status ?? this.status,
     );
   }
 
-  // TODO
   int findMessageIndex(
     bool useClientId,
     int messageId,
@@ -63,7 +58,7 @@ class SceneMessagesModel {
     }
     if (logErrorIfNotExist) {
       logger.e(
-        "findMessage failed, userClientId $useClientId messageId $messageId",
+        "findMessage failed, useClientId $useClientId messageId $messageId",
       );
     }
     return -1;
@@ -74,11 +69,14 @@ class SceneMessagesModel {
   }
 }
 
-class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
+class FriendMessagesNotifier extends StateNotifier<FriendMessagesModel> {
+  final int friendUserId;
   final int roomId;
   StreamSubscription<MsgAChatMessage>? _aChatSubscription;
   final List<int> _clientMessageIds = [];
-  SceneMessagesNotifier(this.roomId) : super(SceneMessagesModel.initial()) {
+
+  FriendMessagesNotifier(this.friendUserId, this.roomId)
+      : super(FriendMessagesModel.initial()) {
     _aChatSubscription = eventBus.on<MsgAChatMessage>().listen(_onAChatMessage);
   }
 
@@ -111,19 +109,19 @@ class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
   }
 
   void setInitialMessages(List<ClientChatMessage> messages) {
-    state = SceneMessagesModel(
+    state = FriendMessagesModel(
       messages: messages,
       status: messages.isEmpty
-          ? SceneMessagesStatus.empty
-          : SceneMessagesStatus.success,
+          ? FriendMessagesStatus.empty
+          : FriendMessagesStatus.success,
     );
   }
 
   void _addMessage(ClientChatMessage message) {
     state = state.copyWith(
       messages: [...state.messages, message],
-      status: state.status == SceneMessagesStatus.empty
-          ? SceneMessagesStatus.success
+      status: state.status == FriendMessagesStatus.empty
+          ? FriendMessagesStatus.success
           : state.status,
     );
   }
@@ -133,7 +131,6 @@ class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
     ClientChatMessage Function(ClientChatMessage) newMessageFunc,
   ) {
     final message = state.messages[index];
-
     final newMessage = newMessageFunc(message);
     state = state.copyWith(messages: [...state.messages]..[index] = newMessage);
     return newMessage;
@@ -141,9 +138,9 @@ class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
 
   static ClientChatMessage _createSending(
     int roomId,
+    int friendUserId,
     ChatMessageType type,
     String content,
-    int replyTo,
     ChatMessageImageContent? imageContent,
   ) {
     int clientMessageId = clientMessageIdGenerator.nextId();
@@ -156,30 +153,25 @@ class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
       type: type,
       content: content,
       timestamp: TimeUtils.now(),
-      replyTo: replyTo,
+      replyTo: 0,
       senderAvatarIndex: sc.me.userInfo.avatarIndex,
       clientMessageId: clientMessageId,
       status: ChatMessageStatus.normal,
       imageContent: imageContent,
     );
-    final message = ClientChatMessage.client(
+    return ClientChatMessage.client(
       inner: inner,
       clientStatus: ClientChatMessageStatus.sending,
     );
-
-    return message;
   }
 
-  static Future<bool> _requestSendChat(
-    int roomId,
-    ClientChatMessage message,
-  ) async {
+  Future<bool> _requestSendChat(ClientChatMessage message) async {
     assert(message.clientStatus == ClientChatMessageStatus.sending);
 
     final r = await sc.server.request(
-      MsgType.sendSceneChat,
-      MsgSendSceneChat(
-        roomId: roomId,
+      MsgType.sendFriendChat,
+      MsgSendFriendChat(
+        friendUserId: friendUserId,
         chatMessageType: message.type,
         content: message.content,
         clientMessageId: message.clientMessageId,
@@ -192,31 +184,27 @@ class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
       return false;
     }
 
-    // final res = ResSendRoomChat.fromMsgPack(r.res!);
     return true;
   }
 
   Future<void> sendChat(
     ChatMessageType type,
     String content,
-    int replyTo,
     ChatMessageImageContent? imageContent,
   ) async {
     ClientChatMessage message = _createSending(
       roomId,
+      friendUserId,
       type,
       content,
-      replyTo,
       imageContent,
     );
     _clientMessageIds.add(message.clientMessageId);
     _addMessage(message);
 
-    bool success = await _requestSendChat(roomId, message);
+    bool success = await _requestSendChat(message);
     int index = state.findMessageIndex(true, message.clientMessageId, true);
-    if (index < 0) {
-      return;
-    }
+    if (index < 0) return;
 
     _updateMessageAt(
       index,
@@ -230,17 +218,16 @@ class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
 
   Future<void> resendChat(int clientMessageId) async {
     int index = state.findMessageIndex(true, clientMessageId, true);
-    if (index <= 0) {
-      return;
-    }
+    if (index < 0) return;
 
     ClientChatMessage message = _updateMessageAt(
       index,
       (m) => m.copyWith(clientStatus: ClientChatMessageStatus.sending),
     );
 
-    bool success = await _requestSendChat(roomId, message);
+    bool success = await _requestSendChat(message);
     index = state.findMessageIndex(true, clientMessageId, true);
+    if (index < 0) return;
 
     _updateMessageAt(
       index,
@@ -251,61 +238,13 @@ class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
       ),
     );
   }
-
-  Future<bool> requestHistory(VoidCallback beforeChangeState) async {
-    if (!state.hasMore) {
-      logger.d("!hasMore");
-      return false;
-    }
-
-    int lastSeq = 0;
-    for (int i = 0; i < state.messages.length; i++) {
-      if (!state.messages[i].useClientId) {
-        lastSeq = state.messages[i].seq;
-        break;
-      }
-    }
-
-    final r = await sc.server.request(
-      MsgType.getSceneChatHistory,
-      MsgGetSceneChatHistory(roomId: roomId, lastSeq: lastSeq),
-    );
-
-    if (r.e != ECode.success) {
-      return false;
-    }
-
-    final res = ResGetSceneChatHistory.fromMsgPack(r.res!);
-    if (res.history.isEmpty) {
-      state.hasMore = false;
-      return false;
-    }
-
-    logger.d(
-      "requestHistory ok, got messageIds ${res.history.map((m) => m.seq).toList()}",
-    );
-
-    final history = res.history
-        .map((m) => ClientChatMessage.server(inner: m))
-        .toList();
-
-    beforeChangeState();
-
-    state = state.copyWith(
-      messages: [...history, ...state.messages],
-      status: SceneMessagesStatus.idle,
-    );
-
-    return true;
-  }
 }
 
-final sceneMessagesProvider =
-    StateNotifierProvider.family<
-      SceneMessagesNotifier,
-      SceneMessagesModel,
-      int
-    >((ref, roomId) {
-      final notifier = SceneMessagesNotifier(roomId);
-      return notifier;
-    });
+/// key: friendUserId
+final friendMessagesProvider = StateNotifierProvider.family<
+    FriendMessagesNotifier,
+    FriendMessagesModel,
+    (int, int)>((ref, params) {
+  final (int friendUserId, int roomId) = params;
+  return FriendMessagesNotifier(friendUserId, roomId);
+});

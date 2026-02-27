@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/gen/scene_room_info.dart';
 import 'package:scene_hub/providers/enter_scene_provider.dart';
-import 'package:scene_hub/providers/scene_room_list_provider.dart';
+import 'package:scene_hub/providers/scene_list_provider.dart';
 import 'package:scene_hub/sc.dart';
 import 'package:scene_hub/widgets/scene_card.dart';
 import 'package:flutter/material.dart';
@@ -117,8 +117,8 @@ class _MainPageState extends ConsumerState<MainPage> {
     );
   }
 
-  Widget _buildList(SceneRoomListModel model) {
-    if (model.status == SceneRoomListStatus.refreshing &&
+  Widget _buildList(SceneListModel model) {
+    if (model.status == SceneListStatus.refreshing &&
         model.roomInfos.isEmpty) {
       return ListView(
         children: const [
@@ -128,8 +128,8 @@ class _MainPageState extends ConsumerState<MainPage> {
       );
     }
 
-    if (model.status == SceneRoomListStatus.empty ||
-        model.status == SceneRoomListStatus.error) {
+    if (model.status == SceneListStatus.empty ||
+        model.status == SceneListStatus.error) {
       return ListView(
         children: const [
           SizedBox(height: 200),
@@ -146,9 +146,9 @@ class _MainPageState extends ConsumerState<MainPage> {
           padding: const EdgeInsets.all(12),
           itemCount:
               model.roomInfos.length +
-              (model.status == SceneRoomListStatus.refreshing ? 1 : 0),
+              (model.status == SceneListStatus.refreshing ? 1 : 0),
           itemBuilder: (BuildContext context, int index) {
-            if (model.status == SceneRoomListStatus.refreshing && index == 0) {
+            if (model.status == SceneListStatus.refreshing && index == 0) {
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8),
                 child: Center(child: Text("刷新中...")),
@@ -157,7 +157,7 @@ class _MainPageState extends ConsumerState<MainPage> {
 
             SceneRoomInfo roomInfo =
                 model.roomInfos[index -
-                    (model.status == SceneRoomListStatus.refreshing ? 1 : 0)];
+                    (model.status == SceneListStatus.refreshing ? 1 : 0)];
 
             return SceneCard(roomInfo: roomInfo);
           },

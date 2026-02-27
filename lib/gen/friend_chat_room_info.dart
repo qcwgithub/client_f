@@ -1,5 +1,5 @@
 import 'package:scene_hub/i_to_msg_pack.dart';
-import 'package:scene_hub/gen/private_room_user.dart';
+import 'package:scene_hub/gen/friend_chat_room_user.dart';
 
 class FriendChatRoomInfo implements IToMsgPack {
     // [0]
@@ -9,7 +9,7 @@ class FriendChatRoomInfo implements IToMsgPack {
     // [2]
     int messageSeq;
     // [3]
-    List<PrivateRoomUser> users;
+    List<FriendChatRoomUser> users;
 
     FriendChatRoomInfo({
       required this.roomId,
@@ -34,7 +34,7 @@ class FriendChatRoomInfo implements IToMsgPack {
         createTimeS: list[1] as int,
         messageSeq: list[2] as int,
         users: (list[3] as List)
-          .map((e) => PrivateRoomUser.fromMsgPack(e as List))
+          .map((e) => FriendChatRoomUser.fromMsgPack(e as List))
           .toList(growable: true),
       );
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:scene_hub/pages/avatar_pick_page.dart';
+import 'package:scene_hub/pages/friend_list_page.dart';
 import 'package:scene_hub/pages/friend_requests_page.dart';
 import 'package:scene_hub/pages/profile_edit_page.dart';
 import 'package:scene_hub/sc.dart';
@@ -67,7 +68,10 @@ class _ProfilePageState extends State<ProfilePage> {
             subtitle: Text('${me.userInfo.friends.length} friends'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // TODO: 跳转到好友列表页
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FriendListPage()),
+              );
             },
           ),
 

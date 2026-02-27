@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:scene_hub/gen/scene_room_info.dart';
 
-class SceneRoomInfoPage extends StatelessWidget {
+class SceneInfoPage extends StatelessWidget {
   final SceneRoomInfo sceneRoomInfo;
-  const SceneRoomInfoPage({super.key, required this.sceneRoomInfo});
+  const SceneInfoPage({super.key, required this.sceneRoomInfo});
 
   @override
   Widget build(BuildContext context) {

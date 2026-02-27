@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:scene_hub/gen/e_code.dart';
 import 'package:scene_hub/gen/msg_send_friend_request.dart';
 import 'package:scene_hub/gen/msg_type.dart';
+import 'package:scene_hub/pages/friend_chat_page.dart';
 import 'package:scene_hub/sc.dart';
 
 class UserInfoPage extends StatelessWidget {
@@ -85,7 +86,20 @@ class UserInfoPage extends StatelessWidget {
         width: double.infinity,
         child: FilledButton.icon(
           onPressed: () {
-            // TODO: 跳转到好友聊天页面
+            final friend = sc.me.userInfo.friends.firstWhere(
+              (f) => f.userId == userId,
+            );
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FriendChatPage(
+                  friendUserId: userId,
+                  friendName: userName ?? '',
+                  friendAvatarIndex: senderAvatarIndex,
+                  roomId: friend.roomId,
+                ),
+              ),
+            );
           },
           icon: const Icon(Icons.chat_bubble_outline),
           label: const Text('Send Message'),

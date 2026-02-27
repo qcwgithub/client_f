@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/gen/scene_room_info.dart';
-import 'package:scene_hub/pages/scene_room_chat_page.dart';
+import 'package:scene_hub/pages/scene_chat_page.dart';
 import 'package:flutter/material.dart';
 import 'package:scene_hub/providers/enter_scene_provider.dart';
 import 'package:scene_hub/providers/scene_messages_provider.dart';
@@ -51,7 +51,7 @@ class SceneCard extends ConsumerWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) {
-                    return SceneRoomChatPage(roomInfo: roomInfo);
+                    return SceneChatPage(roomInfo: roomInfo);
                   },
                 ),
               );
