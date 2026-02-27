@@ -28,7 +28,8 @@ enum MsgType {
   sendFriendChat(10026),
   receiveFriendChatMessages(10027),
   setFriendChatReadSeq(10028),
-  count(10029);
+  setFriendChatReceivedSeq(10029),
+  count(10030);
 
   static MsgType fromCode(int code) {
     switch (code) {
@@ -91,6 +92,8 @@ enum MsgType {
       case 10028:
         return MsgType.setFriendChatReadSeq;
       case 10029:
+        return MsgType.setFriendChatReceivedSeq;
+      case 10030:
         return MsgType.count;
       default:
         return MsgType.clientStart;

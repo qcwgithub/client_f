@@ -8,7 +8,10 @@ import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/gen/e_code.dart';
 import 'package:scene_hub/gen/msg_a_chat_message.dart';
 import 'package:scene_hub/gen/msg_send_friend_chat.dart';
+import 'package:scene_hub/gen/msg_set_friend_chat_received_seq.dart';
 import 'package:scene_hub/gen/msg_type.dart';
+import 'package:scene_hub/gen/res_send_friend_chat.dart';
+import 'package:scene_hub/gen/res_set_friend_chat_received_seq.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/logic/client_message_id_generator.dart';
 import 'package:scene_hub/logic/event_bus.dart';
@@ -76,8 +79,9 @@ class FriendMessagesNotifier extends StateNotifier<FriendMessagesModel> {
   final List<int> _clientMessageIds = [];
 
   FriendMessagesNotifier(this.friendUserId, this.roomId)
-      : super(FriendMessagesModel.initial()) {
+    : super(FriendMessagesModel.initial()) {
     _aChatSubscription = eventBus.on<MsgAChatMessage>().listen(_onAChatMessage);
+    _loadFromStorage();
   }
 
   @override
@@ -86,12 +90,31 @@ class FriendMessagesNotifier extends StateNotifier<FriendMessagesModel> {
     super.dispose();
   }
 
-  void _onAChatMessage(MsgAChatMessage aChatMessage) {
+  Future<void> _loadFromStorage() async {
+    final chatMessages = await sc.messageStorage.getMessages(roomId);
+    if (chatMessages.isEmpty) {
+      state = state.copyWith(status: FriendMessagesStatus.empty);
+      return;
+    }
+    final messages = chatMessages
+        .map((m) => ClientChatMessage.server(inner: m))
+        .toList();
+    state = FriendMessagesModel(
+      messages: messages,
+      status: FriendMessagesStatus.success,
+    );
+  }
+
+  void _onAChatMessage(MsgAChatMessage aChatMessage) async {
     final inner = aChatMessage.message;
     if (inner.roomId != roomId) return;
 
+    // 保存到本地存储（无论是谁发的，推送过来的都有 seq，直接存）
+    sc.messageStorage.upsertMessage(inner);
+
     if (sc.me.isMe(inner.senderId) &&
         _clientMessageIds.contains(inner.clientMessageId)) {
+      // 我发的 - 服务器冗余推送：更新内存中的消息状态
       final index = state.findMessageIndex(true, inner.clientMessageId, true);
       if (index >= 0) {
         final message = state.getMessageAt(index);
@@ -103,8 +126,21 @@ class FriendMessagesNotifier extends StateNotifier<FriendMessagesModel> {
         }
       }
     } else {
+      // 别人发的消息（或我在其他设备发的）
       final message = ClientChatMessage.server(inner: inner);
       _addMessage(message);
+    }
+
+    var r = await sc.server.request(
+      MsgType.setFriendChatReceivedSeq,
+      MsgSetFriendChatReceivedSeq(
+        friendUserId: friendUserId,
+        receivedSeq: inner.seq,
+      ),
+    );
+    if (r.e == ECode.success) {
+      var res = ResSetFriendChatReceivedSeq.fromMsgPack(r.res!);
+      sc.friendManager.getFriend(friendUserId)?.receivedSeq = res.receivedSeq;
     }
   }
 
@@ -165,7 +201,7 @@ class FriendMessagesNotifier extends StateNotifier<FriendMessagesModel> {
     );
   }
 
-  Future<bool> _requestSendChat(ClientChatMessage message) async {
+  Future<ChatMessage?> _requestSendChat(ClientChatMessage message) async {
     assert(message.clientStatus == ClientChatMessageStatus.sending);
 
     final r = await sc.server.request(
@@ -180,11 +216,12 @@ class FriendMessagesNotifier extends StateNotifier<FriendMessagesModel> {
     );
 
     if (r.e != ECode.success) {
-      message.clientStatus = ClientChatMessageStatus.failed;
-      return false;
+      return null;
     }
 
-    return true;
+    final res = ResSendFriendChat.fromMsgPack(r.res as List);
+    sc.messageStorage.upsertMessage(res.message);
+    return res.message;
   }
 
   Future<void> sendChat(
@@ -202,7 +239,7 @@ class FriendMessagesNotifier extends StateNotifier<FriendMessagesModel> {
     _clientMessageIds.add(message.clientMessageId);
     _addMessage(message);
 
-    bool success = await _requestSendChat(message);
+    bool success = await _requestSendChat(message) != null;
     int index = state.findMessageIndex(true, message.clientMessageId, true);
     if (index < 0) return;
 
@@ -225,7 +262,7 @@ class FriendMessagesNotifier extends StateNotifier<FriendMessagesModel> {
       (m) => m.copyWith(clientStatus: ClientChatMessageStatus.sending),
     );
 
-    bool success = await _requestSendChat(message);
+    bool success = await _requestSendChat(message) != null;
     index = state.findMessageIndex(true, clientMessageId, true);
     if (index < 0) return;
 
@@ -241,10 +278,12 @@ class FriendMessagesNotifier extends StateNotifier<FriendMessagesModel> {
 }
 
 /// key: friendUserId
-final friendMessagesProvider = StateNotifierProvider.family<
-    FriendMessagesNotifier,
-    FriendMessagesModel,
-    (int, int)>((ref, params) {
-  final (int friendUserId, int roomId) = params;
-  return FriendMessagesNotifier(friendUserId, roomId);
-});
+final friendMessagesProvider =
+    StateNotifierProvider.family<
+      FriendMessagesNotifier,
+      FriendMessagesModel,
+      (int, int)
+    >((ref, params) {
+      final (int friendUserId, int roomId) = params;
+      return FriendMessagesNotifier(friendUserId, roomId);
+    });

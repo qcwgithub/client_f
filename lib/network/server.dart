@@ -119,6 +119,10 @@ class Server {
     var res = ResLogin.fromMsgPack(r.res!);
     sc.me.isNewUser = res.isNewUser;
     sc.me.userInfo = res.userInfo;
+
+    // 登录成功后打开消息存储
+    await sc.messageStorage.open(sc.me.userId);
+
     logger.d('isNewUser? ${res.isNewUser}');
     logger.d('kickOther? ${res.kickOther}');
     logger.d('userId = ${res.userInfo.userId}');
@@ -246,6 +250,7 @@ class Server {
   }
 
   void close() {
+    sc.messageStorage.close();
     if (client != null) {
       client!.close();
     }

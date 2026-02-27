@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:scene_hub/gen/e_code.dart';
-import 'package:scene_hub/gen/msg_send_friend_request.dart';
-import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/pages/friend_chat_page.dart';
 import 'package:scene_hub/sc.dart';
 
@@ -17,7 +15,7 @@ class UserInfoPage extends StatelessWidget {
   });
 
   bool get _isMe => sc.me.isMe(userId);
-  bool get _isFriend => sc.me.isFriend(userId);
+  bool get _isFriend => sc.friendManager.isFriend(userId);
 
   @override
   Widget build(BuildContext context) {
@@ -62,10 +60,7 @@ class UserInfoPage extends StatelessWidget {
               // ID
               Text(
                 'ID: $userId',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               ),
 
               const SizedBox(height: 32),
@@ -86,20 +81,20 @@ class UserInfoPage extends StatelessWidget {
         width: double.infinity,
         child: FilledButton.icon(
           onPressed: () {
-            final friend = sc.me.userInfo.friends.firstWhere(
-              (f) => f.userId == userId,
-            );
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => FriendChatPage(
-                  friendUserId: userId,
-                  friendName: userName ?? '',
-                  friendAvatarIndex: senderAvatarIndex,
-                  roomId: friend.roomId,
+            final friend = sc.friendManager.getFriend(userId);
+            if (friend != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => FriendChatPage(
+                    friendUserId: userId,
+                    friendName: userName ?? '',
+                    friendAvatarIndex: senderAvatarIndex,
+                    roomId: friend.roomId,
+                  ),
                 ),
-              ),
-            );
+              );
+            }
           },
           icon: const Icon(Icons.chat_bubble_outline),
           label: const Text('Send Message'),
@@ -119,21 +114,18 @@ class UserInfoPage extends StatelessWidget {
   }
 
   void _sendFriendRequest(BuildContext context) async {
-    final res = await sc.server.request(
-      MsgType.sendFriendRequest,
-      MsgSendFriendRequest(toUserId: userId, say: ''),
-    );
+    final ECode e = await sc.friendManager.sendFriendRequest(userId);
 
     if (!context.mounted) return;
 
-    if (res.e == ECode.success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Friend request sent')),
-      );
+    if (e == ECode.success) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Friend request sent')));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed: ${res.e}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed: $e')));
     }
   }
 }

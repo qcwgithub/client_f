@@ -64,14 +64,14 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : requests.isEmpty
-              ? const Center(child: Text('No friend requests'))
-              : ListView.separated(
-                  itemCount: requests.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    return _buildRequestItem(context, requests[index]);
-                  },
-                ),
+          ? const Center(child: Text('No friend requests'))
+          : ListView.separated(
+              itemCount: requests.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                return _buildRequestItem(context, requests[index]);
+              },
+            ),
     );
   }
 
@@ -97,10 +97,7 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
           ),
         ),
       ),
-      title: Text(
-        name,
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
+      title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
       subtitle: request.say.isNotEmpty
           ? Text(request.say, maxLines: 2, overflow: TextOverflow.ellipsis)
           : null,
@@ -108,10 +105,7 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
     );
   }
 
-  Widget _buildTrailing(
-    BuildContext context,
-    IncomingFriendRequest request,
-  ) {
+  Widget _buildTrailing(BuildContext context, IncomingFriendRequest request) {
     switch (request.result) {
       case FriendRequestResult.wait:
         return Row(
@@ -165,21 +159,16 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
 
       // 解析返回的 FriendInfo 并加入好友列表
       final resData = ResAcceptFriendRequest.fromMsgPack(r.res!);
-      sc.me.userInfo.friends.add(resData.friendInfo);
-
-      // 从 removedFriends 中移除对应 userId
-      sc.me.userInfo.removedFriends.removeWhere(
-        (f) => f.userId == request.fromUserId,
-      );
+      sc.friendManager.addFriend(resData.friendInfo);
 
       setState(() {});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Friend request accepted')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Friend request accepted')));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed: ${r.e}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed: ${r.e}')));
     }
   }
 
@@ -194,13 +183,13 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
     if (r.e == ECode.success) {
       request.result = FriendRequestResult.rejected;
       setState(() {});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Friend request rejected')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Friend request rejected')));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed: ${r.e}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed: ${r.e}')));
     }
   }
 }

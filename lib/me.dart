@@ -6,25 +6,12 @@ class Me {
   }
 
   UserInfo? _userInfo;
-  UserInfo get userInfo {
-    return _userInfo!;
-  }
+  UserInfo get userInfo => _userInfo!;
 
-  set userInfo(UserInfo value) {
-    _userInfo = value;
-  }
+  set userInfo(UserInfo value) => _userInfo = value;
 
   bool isNewUser = false;
 
-  int get userId {
-    return _userInfo!.userId;
-  }
-
-  String get userName {
-    return _userInfo!.userName;
-  }
-
-  bool isFriend(int userId) {
-    return userInfo.friends.any((f) => f.userId == userId);
-  }
+  int get userId => _userInfo!.userId;
+  String get userName => _userInfo!.userName;
 }
