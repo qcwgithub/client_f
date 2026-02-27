@@ -17,27 +17,26 @@ import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/logic/client_message_id_generator.dart';
 import 'package:scene_hub/logic/event_bus.dart';
 import 'package:scene_hub/logic/time_utils.dart';
-import 'package:scene_hub/my_logger.dart';
 import 'package:scene_hub/sc.dart';
 
-enum SceneMessagesStatus { idle, refreshing, success, empty, error }
+enum SceneChatMessagesStatus { idle, refreshing, success, empty, error }
 
-class SceneMessagesModel {
+class SceneChatMessagesModel {
   final List<ClientChatMessage> messages;
-  final SceneMessagesStatus status;
-  SceneMessagesModel({required this.messages, required this.status});
+  final SceneChatMessagesStatus status;
+  SceneChatMessagesModel({required this.messages, required this.status});
 
   bool hasMore = true;
 
-  factory SceneMessagesModel.initial() {
-    return SceneMessagesModel(messages: [], status: SceneMessagesStatus.idle);
+  factory SceneChatMessagesModel.initial() {
+    return SceneChatMessagesModel(messages: [], status: SceneChatMessagesStatus.idle);
   }
 
-  SceneMessagesModel copyWith({
+  SceneChatMessagesModel copyWith({
     List<ClientChatMessage>? messages,
-    SceneMessagesStatus? status,
+    SceneChatMessagesStatus? status,
   }) {
-    return SceneMessagesModel(
+    return SceneChatMessagesModel(
       messages: messages ?? this.messages,
       status: status ?? this.status,
     );
@@ -62,7 +61,7 @@ class SceneMessagesModel {
       }
     }
     if (logErrorIfNotExist) {
-      logger.e(
+      sc.logger.e(
         "findMessage failed, userClientId $useClientId messageId $messageId",
       );
     }
@@ -74,22 +73,22 @@ class SceneMessagesModel {
   }
 }
 
-class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
+class SceneChatMessagesNotifier extends StateNotifier<SceneChatMessagesModel> {
   final int roomId;
-  StreamSubscription<MsgAChatMessage>? _aChatSubscription;
+  StreamSubscription<ChatMessage>? _subscription;
   final List<int> _clientMessageIds = [];
-  SceneMessagesNotifier(this.roomId) : super(SceneMessagesModel.initial()) {
-    _aChatSubscription = eventBus.on<MsgAChatMessage>().listen(_onAChatMessage);
+  SceneChatMessagesNotifier(this.roomId) : super(SceneChatMessagesModel.initial()) {
+    _subscription = sc.sceneChatMessageManager.stream.listen(_onChatMessage);
   }
 
   @override
   void dispose() {
-    _aChatSubscription?.cancel();
+    _subscription?.cancel();
+    _subscription = null;
     super.dispose();
   }
 
-  void _onAChatMessage(MsgAChatMessage aChatMessage) {
-    final inner = aChatMessage.message;
+  void _onChatMessage(ChatMessage inner) {
     if (inner.roomId != roomId) return;
 
     if (sc.me.isMe(inner.senderId) &&
@@ -111,19 +110,19 @@ class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
   }
 
   void setInitialMessages(List<ClientChatMessage> messages) {
-    state = SceneMessagesModel(
+    state = SceneChatMessagesModel(
       messages: messages,
       status: messages.isEmpty
-          ? SceneMessagesStatus.empty
-          : SceneMessagesStatus.success,
+          ? SceneChatMessagesStatus.empty
+          : SceneChatMessagesStatus.success,
     );
   }
 
   void _addMessage(ClientChatMessage message) {
     state = state.copyWith(
       messages: [...state.messages, message],
-      status: state.status == SceneMessagesStatus.empty
-          ? SceneMessagesStatus.success
+      status: state.status == SceneChatMessagesStatus.empty
+          ? SceneChatMessagesStatus.success
           : state.status,
     );
   }
@@ -254,7 +253,7 @@ class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
 
   Future<bool> requestHistory(VoidCallback beforeChangeState) async {
     if (!state.hasMore) {
-      logger.d("!hasMore");
+      sc.logger.d("!hasMore");
       return false;
     }
 
@@ -281,7 +280,7 @@ class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
       return false;
     }
 
-    logger.d(
+    sc.logger.d(
       "requestHistory ok, got messageIds ${res.history.map((m) => m.seq).toList()}",
     );
 
@@ -293,19 +292,19 @@ class SceneMessagesNotifier extends StateNotifier<SceneMessagesModel> {
 
     state = state.copyWith(
       messages: [...history, ...state.messages],
-      status: SceneMessagesStatus.idle,
+      status: SceneChatMessagesStatus.idle,
     );
 
     return true;
   }
 }
 
-final sceneMessagesProvider =
+final sceneChatMessagesProvider =
     StateNotifierProvider.family<
-      SceneMessagesNotifier,
-      SceneMessagesModel,
+      SceneChatMessagesNotifier,
+      SceneChatMessagesModel,
       int
     >((ref, roomId) {
-      final notifier = SceneMessagesNotifier(roomId);
+      final notifier = SceneChatMessagesNotifier(roomId);
       return notifier;
     });

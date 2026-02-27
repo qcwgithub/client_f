@@ -2,16 +2,14 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:msgpack_dart/msgpack_dart.dart';
-import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/e_code.dart';
-import 'package:scene_hub/gen/msg_a_chat_message.dart';
 import 'package:scene_hub/gen/msg_login.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/res_login.dart';
 import 'package:scene_hub/i_to_msg_pack.dart';
-import 'package:scene_hub/logic/event_bus.dart';
+import 'package:scene_hub/logic/events/login_event.dart';
+import 'package:scene_hub/logic/events/logout_event.dart';
 import 'package:scene_hub/main.dart';
-import 'package:scene_hub/my_logger.dart';
 import 'package:scene_hub/network/binary_message_packer.dart';
 import 'package:scene_hub/network/my_response.dart';
 import 'package:scene_hub/network/network_status.dart';
@@ -31,8 +29,17 @@ class Server {
   NetworkStatus _state = NetworkStatus.init;
   NetworkStatus get state => _state;
   void _setState(NetworkStatus e) {
+    if (_state == e) return;
+
+    final old = _state;
     _state = e;
     print("-> $e");
+
+    if (e == NetworkStatus.online) {
+      sc.eventBus.emit(LoginEvent());
+    } else if (old == NetworkStatus.online) {
+      sc.eventBus.emit(LogoutEvent());
+    }
   }
 
   String? _ip;
@@ -92,7 +99,7 @@ class Server {
     assert(_state == NetworkStatus.connected);
 
     _setState(NetworkStatus.logining);
-    logger.d('login...');
+    sc.logger.d('login...');
 
     var msg = new MsgLogin(
       version: "1.0",
@@ -107,7 +114,7 @@ class Server {
     );
 
     MyResponse r = await request(MsgType.login, msg);
-    logger.d('login result ${r.e}');
+    sc.logger.d('login result ${r.e}');
 
     if (r.e != ECode.success) {
       _setState(NetworkStatus.init);
@@ -121,12 +128,12 @@ class Server {
     sc.me.userInfo = res.userInfo;
 
     // 登录成功后打开消息存储
-    await sc.messageStorage.open(sc.me.userId);
+    await sc.chatMessageStorage.open(sc.me.userId);
 
-    logger.d('isNewUser? ${res.isNewUser}');
-    logger.d('kickOther? ${res.kickOther}');
-    logger.d('userId = ${res.userInfo.userId}');
-    logger.d('userName = ${res.userInfo.userName}');
+    sc.logger.d('isNewUser? ${res.isNewUser}');
+    sc.logger.d('kickOther? ${res.kickOther}');
+    sc.logger.d('userId = ${res.userInfo.userId}');
+    sc.logger.d('userName = ${res.userInfo.userName}');
 
     // TEMP
     globalContainer.read(navProvider.notifier).state = 1;
@@ -204,7 +211,7 @@ class Server {
     }
 
     int seq = nextSeq++;
-    logger.d('request $msgType seq $seq');
+    sc.logger.d('request $msgType seq $seq');
     final completer = Completer<MyResponse>();
     _pending[seq] = PendingRequest(msgType: msgType, completer: completer);
 
@@ -236,21 +243,12 @@ class Server {
     } else if (result.seq > 0) {
       MsgType msgType = MsgType.fromCode(result.code);
       List msg = result.msgBytes != null ? deserialize(result.msgBytes!) : null;
-      _handlePush(msgType, msg);
-    }
-  }
-
-  void _handlePush(MsgType msgType, List msg) {
-    logger.d("received $msgType");
-
-    if (msgType == MsgType.aChatMessage) {
-      final aChatMessage = MsgAChatMessage.fromMsgPack(msg);
-      eventBus.emit(aChatMessage);
+      sc.msgHandler.handle(msgType, msg);
     }
   }
 
   void close() {
-    sc.messageStorage.close();
+    sc.chatMessageStorage.close();
     if (client != null) {
       client!.close();
     }

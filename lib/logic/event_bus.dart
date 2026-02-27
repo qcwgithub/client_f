@@ -13,5 +13,3 @@ class EventBus {
     _map[T]?.add(event);
   }
 }
-
-final eventBus = EventBus();

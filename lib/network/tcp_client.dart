@@ -3,9 +3,9 @@ import 'dart:io';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:scene_hub/my_logger.dart';
 import 'package:scene_hub/network/i_message_packer.dart';
 import 'package:scene_hub/network/unpack_result.dart';
+import 'package:scene_hub/sc.dart';
 
 typedef MessageHandler = void Function(UnpackResult result);
 
@@ -26,9 +26,9 @@ class TcpClient {
 
   Future<bool> connect() async {
     try {
-      logger.d('connectint to $host $port...');
+      sc.logger.d('connectint to $host $port...');
       _socket = await Socket.connect(host, port, timeout: Duration(seconds: 5));
-      logger.d('OK');
+      sc.logger.d('OK');
 
       _socket!.setOption(SocketOption.tcpNoDelay, true);
 
@@ -43,13 +43,13 @@ class TcpClient {
 
       return true;
     } on SocketException catch (e) {
-      logger.e('$e');
+      sc.logger.e('$e');
       return false;
     } on TimeoutException catch (e) {
-      logger.e('$e');
+      sc.logger.e('$e');
       return false;
     } catch (e) {
-      logger.e('$e');
+      sc.logger.e('$e');
       return false;
     }
   }

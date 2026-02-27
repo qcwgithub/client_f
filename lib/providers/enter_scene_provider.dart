@@ -5,7 +5,6 @@ import 'package:scene_hub/gen/msg_enter_scene.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/res_enter_scene.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
-import 'package:scene_hub/my_logger.dart';
 import 'package:scene_hub/sc.dart';
 
 enum EnterSceneStatus { idle, loading }
@@ -76,7 +75,7 @@ class EnterSceneNotifier extends StateNotifier<EnterSceneModel> {
         ),
       );
     }
-    logger.d("enterScene ok, recentMessages messageId range [$min, $max]");
+    sc.logger.d("enterScene ok, recentMessages messageId range [$min, $max]");
 
     state = state.copyWith(
       recentMessages: recentMessages,

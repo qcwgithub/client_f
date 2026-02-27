@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
-import 'package:scene_hub/providers/friend_messages_provider.dart';
+import 'package:scene_hub/providers/friend_chat_messages_provider.dart';
 import 'package:scene_hub/sc.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
 import 'package:scene_hub/widgets/friend_chat_message_item.dart';
@@ -57,8 +57,8 @@ class _FriendChatPageState extends ConsumerState<FriendChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final FriendMessagesModel model = ref.watch(
-      friendMessagesProvider(_providerKey),
+    final FriendChatMessagesModel model = ref.watch(
+      friendChatMessagesProvider(_providerKey),
     );
 
     return Scaffold(
@@ -72,7 +72,7 @@ class _FriendChatPageState extends ConsumerState<FriendChatPage> {
             controller: _inputController,
             callback: (type, content, imageContent) {
               ref
-                  .read(friendMessagesProvider(_providerKey).notifier)
+                  .read(friendChatMessagesProvider(_providerKey).notifier)
                   .sendChat(type, content, imageContent);
             },
           ),
@@ -81,7 +81,7 @@ class _FriendChatPageState extends ConsumerState<FriendChatPage> {
     );
   }
 
-  Widget _buildChatList(FriendMessagesModel model) {
+  Widget _buildChatList(FriendChatMessagesModel model) {
     return Expanded(
       child: ListView.builder(
         controller: _scrollController,

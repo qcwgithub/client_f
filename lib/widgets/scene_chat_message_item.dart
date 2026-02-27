@@ -8,8 +8,8 @@ import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/pages/fullscreen_image_page.dart';
 import 'package:scene_hub/pages/user_info_page.dart';
-import 'package:scene_hub/providers/scene_messages_provider.dart';
-import 'package:scene_hub/providers/scene_message_provider.dart';
+import 'package:scene_hub/providers/scene_chat_messages_provider.dart';
+import 'package:scene_hub/providers/scene_chat_message_provider.dart';
 import 'package:scene_hub/sc.dart';
 
 class SceneChatMessageItem extends ConsumerWidget {
@@ -43,7 +43,7 @@ class SceneChatMessageItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ClientChatMessage message = ref.watch(
-      sceneMessageProvider((roomId, useClientId, messageId)),
+      sceneChatMessageProvider((roomId, useClientId, messageId)),
     );
     bool isMe = sc.me.isMe(message.senderId);
 
@@ -69,7 +69,7 @@ class SceneChatMessageItem extends ConsumerWidget {
                 child: _buildClientStatus(
                   message,
                   () => ref
-                      .read(sceneMessagesProvider(roomId).notifier)
+                      .read(sceneChatMessagesProvider(roomId).notifier)
                       .resendChat(message.clientMessageId),
                 ),
               ),

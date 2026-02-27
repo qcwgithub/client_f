@@ -3,7 +3,7 @@ import 'package:scene_hub/gen/scene_room_info.dart';
 import 'package:scene_hub/pages/scene_chat_page.dart';
 import 'package:flutter/material.dart';
 import 'package:scene_hub/providers/enter_scene_provider.dart';
-import 'package:scene_hub/providers/scene_messages_provider.dart';
+import 'package:scene_hub/providers/scene_chat_messages_provider.dart';
 import 'package:scene_hub/sc.dart';
 
 class SceneCard extends ConsumerWidget {
@@ -42,7 +42,7 @@ class SceneCard extends ConsumerWidget {
               }
 
               ref
-                  .read(sceneMessagesProvider(roomInfo.roomId).notifier)
+                  .read(sceneChatMessagesProvider(roomInfo.roomId).notifier)
                   .setInitialMessages(
                     ref.read(enterSceneProvider).recentMessages,
                   );

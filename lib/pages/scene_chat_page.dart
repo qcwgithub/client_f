@@ -4,7 +4,7 @@ import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/scene_room_info.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/pages/scene_info_page.dart';
-import 'package:scene_hub/providers/scene_messages_provider.dart';
+import 'package:scene_hub/providers/scene_chat_messages_provider.dart';
 import 'package:scene_hub/sc.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
 import 'package:scene_hub/widgets/scene_chat_message_item.dart';
@@ -44,7 +44,7 @@ class _ChatPageState extends ConsumerState<SceneChatPage> {
         // double beforePixels = _scrollController.position.pixels;
         // double beforeExtent = 0;
         bool loaded = await ref
-            .read(sceneMessagesProvider(widget.roomId).notifier)
+            .read(sceneChatMessagesProvider(widget.roomId).notifier)
             .requestHistory(() {
               // beforeExtent = _scrollController.position.maxScrollExtent;
             });
@@ -89,8 +89,8 @@ class _ChatPageState extends ConsumerState<SceneChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final SceneMessagesModel model = ref.watch(
-      sceneMessagesProvider(widget.roomId),
+    final SceneChatMessagesModel model = ref.watch(
+      sceneChatMessagesProvider(widget.roomId),
     );
 
     return Scaffold(
@@ -118,7 +118,7 @@ class _ChatPageState extends ConsumerState<SceneChatPage> {
             controller: _inputController,
             callback: (type, content, imageContent) {
               ref
-                  .read(sceneMessagesProvider(widget.roomId).notifier)
+                  .read(sceneChatMessagesProvider(widget.roomId).notifier)
                   .sendChat(type, content, 0, imageContent);
               // messageProvider.sendMessage(type, content);
 
@@ -132,7 +132,7 @@ class _ChatPageState extends ConsumerState<SceneChatPage> {
     );
   }
 
-  Widget _buildChatList(SceneMessagesModel model) {
+  Widget _buildChatList(SceneChatMessagesModel model) {
     return Expanded(
       child: ListView.builder(
         controller: _scrollController,
