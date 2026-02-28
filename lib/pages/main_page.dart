@@ -47,8 +47,8 @@ class _MainPageState extends ConsumerState<MainPage> {
             icon: Icon(Icons.refresh),
           ),
           IconButton(
-            onPressed: () {
-              sc.server.close();
+            onPressed: () async {
+              await sc.lifecycleManager.quit();
             },
             icon: Icon(Icons.exit_to_app),
           ),

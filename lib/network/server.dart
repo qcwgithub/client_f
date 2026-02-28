@@ -9,13 +9,11 @@ import 'package:scene_hub/gen/res_login.dart';
 import 'package:scene_hub/i_to_msg_pack.dart';
 import 'package:scene_hub/logic/events/login_event.dart';
 import 'package:scene_hub/logic/events/logout_event.dart';
-import 'package:scene_hub/main.dart';
 import 'package:scene_hub/network/binary_message_packer.dart';
 import 'package:scene_hub/network/my_response.dart';
 import 'package:scene_hub/network/network_status.dart';
 import 'package:scene_hub/network/tcp_client.dart';
 import 'package:scene_hub/network/unpack_result.dart';
-import 'package:scene_hub/providers/nav_provider.dart';
 import 'package:scene_hub/sc.dart';
 
 class PendingRequest {
@@ -28,6 +26,7 @@ class Server {
   TcpClient? client;
   NetworkStatus _state = NetworkStatus.init;
   NetworkStatus get state => _state;
+  int _loginCount = 0;
   void _setState(NetworkStatus e) {
     if (_state == e) return;
 
@@ -36,7 +35,8 @@ class Server {
     print("-> $e");
 
     if (e == NetworkStatus.online) {
-      sc.eventBus.emit(LoginEvent());
+      _loginCount++;
+      sc.eventBus.emit(LoginEvent(count: _loginCount));
     } else if (old == NetworkStatus.online) {
       sc.eventBus.emit(LogoutEvent());
     }
@@ -88,11 +88,6 @@ class Server {
     _pending.clear();
 
     _setState(NetworkStatus.init);
-
-    stopLoop();
-
-    // TEMP
-    globalContainer.read(navProvider.notifier).state = 0;
   }
 
   Future<bool> _loginOnce() async {
@@ -121,22 +116,16 @@ class Server {
       return false;
     }
 
-    _setState(NetworkStatus.online);
-
     var res = ResLogin.fromMsgPack(r.res!);
     sc.me.isNewUser = res.isNewUser;
     sc.me.userInfo = res.userInfo;
-
-    // 登录成功后打开消息存储
-    await sc.chatMessageStorage.open(sc.me.userId);
 
     sc.logger.d('isNewUser? ${res.isNewUser}');
     sc.logger.d('kickOther? ${res.kickOther}');
     sc.logger.d('userId = ${res.userInfo.userId}');
     sc.logger.d('userName = ${res.userInfo.userName}');
 
-    // TEMP
-    globalContainer.read(navProvider.notifier).state = 1;
+    _setState(NetworkStatus.online);
     return true;
   }
 
@@ -195,10 +184,6 @@ class Server {
     }
   }
 
-  void stopLoop() {
-    _running = false;
-  }
-
   static int nextSeq = 1;
   final Map<int, PendingRequest> _pending = {};
 
@@ -248,7 +233,8 @@ class Server {
   }
 
   void close() {
-    sc.chatMessageStorage.close();
+    _running = false;
+
     if (client != null) {
       client!.close();
     }

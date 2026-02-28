@@ -19,7 +19,7 @@ class MsgHandler {
             msg.message.roomId,
           );
           if (friendInfo != null) {
-            sc.friendChatMessageManager.onMsgAChatMessage(msg, friendInfo.userId);
+            sc.friendChatMessageManager.onMsgAChatMessage(msg, friendInfo);
           } else {
             sc.sceneChatMessageManager.onMsgAChatMessage(msg);
           }

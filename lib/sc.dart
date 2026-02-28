@@ -2,11 +2,13 @@ import 'package:logger/web.dart';
 import 'package:scene_hub/logic/event_bus.dart';
 import 'package:scene_hub/logic/image_selector.dart';
 import 'package:scene_hub/logic/image_uploader.dart';
+import 'package:scene_hub/logic/managers/lifecycle_manager.dart';
 import 'package:scene_hub/logic/managers/friend_chat_message_manager.dart';
-import 'package:scene_hub/logic/chat_message_storage.dart';
+import 'package:scene_hub/logic/storage/chat_message_storage.dart';
 import 'package:scene_hub/logic/managers/friend_manager.dart';
 import 'package:scene_hub/logic/managers/msg_handler.dart';
 import 'package:scene_hub/logic/managers/scene_chat_message_manager.dart';
+import 'package:scene_hub/logic/managers/conversation_manager.dart';
 import 'package:scene_hub/me.dart';
 import 'package:scene_hub/network/server.dart';
 
@@ -24,6 +26,7 @@ class Sc {
   );
   final Server server = Server();
   final Me me = Me();
+  final LifecycleManager lifecycleManager = LifecycleManager();
   final MsgHandler msgHandler = MsgHandler();
 
   final ImageUploader imageUploader = ImageUploader();
@@ -34,7 +37,9 @@ class Sc {
       FriendChatMessageManager();
   final SceneChatMessageManager sceneChatMessageManager =
       SceneChatMessageManager();
+  final ConversationManager conversationManager = ConversationManager();
   Sc() {
+    lifecycleManager.init();
     friendChatMessageManager.init();
     sceneChatMessageManager.init();
   }

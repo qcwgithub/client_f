@@ -4,14 +4,16 @@ import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/chat_message_image_content.dart';
 import 'package:scene_hub/gen/chat_message_status.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
+import 'package:scene_hub/sc.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 
 class ChatMessageStorage {
   Database? _db;
 
-  Future<void> open(int userId) async {
+  Future<void> onFirstLogin() async {
     final dbPath = await getDatabasesPath();
+    int userId = sc.me.userId;
     final path = p.join(dbPath, 'messages_$userId.db');
 
     _db = await openDatabase(
@@ -40,7 +42,7 @@ class ChatMessageStorage {
     );
   }
 
-  Future<void> close() async {
+  Future<void> onQuit() async {
     await _db?.close();
     _db = null;
   }

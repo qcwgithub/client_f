@@ -1,4 +1,5 @@
 import 'contacts_page.dart';
+import 'conversation_list_page.dart';
 import 'explore_page.dart';
 import 'main_page.dart';
 import 'profile_page.dart';
@@ -17,6 +18,7 @@ class _HomePageState extends State<HomePage> {
   int currentIndex = 0;
   
   final List<Widget> pages = const [
+    ConversationListPage(),
     MainPage(),
     ContactsPage(),
     ExplorePage(),
@@ -39,6 +41,11 @@ class _HomePageState extends State<HomePage> {
           });
         },
         destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.chat_outlined), 
+            selectedIcon: Icon(Icons.chat),
+            label: "Chat"
+          ),
           NavigationDestination(
             icon: Icon(Icons.home_outlined), 
             selectedIcon: Icon(Icons.home),

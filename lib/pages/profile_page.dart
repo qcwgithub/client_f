@@ -144,7 +144,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ) ?? false;
 
               if (!ok || !context.mounted) return;
-              sc.server.close();
+              await sc.lifecycleManager.quit();
             },
           ),
         ],

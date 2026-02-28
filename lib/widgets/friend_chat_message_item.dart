@@ -45,12 +45,16 @@ class FriendChatMessageItem extends ConsumerWidget {
       friendChatMessageProvider((friendUserId, roomId, useClientId, messageId)),
     );
     bool isMe = sc.me.isMe(message.senderId);
+    if (!useClientId) {
+      sc.friendChatMessageManager.onMessageViewed(message.inner.seq);
+    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 5),
       child: Row(
-        mainAxisAlignment:
-            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isMe) _buildAvatar(isMe, context, message, _onClickAvatar),
@@ -66,7 +70,12 @@ class FriendChatMessageItem extends ConsumerWidget {
                 child: _buildClientStatus(
                   message,
                   () => ref
-                      .read(friendChatMessagesProvider((friendUserId, roomId)).notifier)
+                      .read(
+                        friendChatMessagesProvider((
+                          friendUserId,
+                          roomId,
+                        )).notifier,
+                      )
                       .resendChat(message.clientMessageId),
                 ),
               ),
@@ -87,8 +96,9 @@ class FriendChatMessageItem extends ConsumerWidget {
 
     return Flexible(
       child: Column(
-        crossAxisAlignment:
-            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment: isMe
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         children: [
           if (!isMe)
             Text(
@@ -151,9 +161,8 @@ class FriendChatMessageItem extends ConsumerWidget {
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => FullscreenImagePage(
-              imageUrl: message.inner.imageContent!.url,
-            ),
+            builder: (_) =>
+                FullscreenImagePage(imageUrl: message.inner.imageContent!.url),
           ),
         );
       },
@@ -198,9 +207,7 @@ class FriendChatMessageItem extends ConsumerWidget {
         position.dx,
         position.dy,
       ),
-      items: [
-        const PopupMenuItem(value: "copy", child: Text("Copy")),
-      ],
+      items: [const PopupMenuItem(value: "copy", child: Text("Copy"))],
     );
 
     if (selected == null) return;
@@ -210,9 +217,9 @@ class FriendChatMessageItem extends ConsumerWidget {
         if (context.mounted) {
           if (message.type == ChatMessageType.text) {
             Clipboard.setData(ClipboardData(text: message.content));
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Copied!")),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text("Copied!")));
           }
         }
         break;
