@@ -10,12 +10,26 @@ import 'package:scene_hub/logic/client_message_id_generator.dart';
 import 'package:scene_hub/logic/time_utils.dart';
 import 'package:scene_hub/sc.dart';
 
-enum FriendChatMessagesStatus { idle, refreshing, success, empty, error }
+enum FriendChatMessagesStatus { idle, refreshing, refreshError }
 
 class FriendChatMessagesModel {
   final List<ClientChatMessage> messages;
   final FriendChatMessagesStatus status;
-  FriendChatMessagesModel({required this.messages, required this.status});
+  // 索引：seq -> list index
+  final Map<int, int> _seqIndex;
+  // 索引：clientMessageId -> list index
+  final Map<int, int> _clientIdIndex;
+  FriendChatMessagesModel({required this.messages, required this.status})
+    : _seqIndex = {},
+      _clientIdIndex = {} {
+    for (int i = 0; i < messages.length; i++) {
+      if (messages[i].useClientId) {
+        _clientIdIndex[messages[i].clientMessageId] = i;
+      } else {
+        _seqIndex[messages[i].seq] = i;
+      }
+    }
+  }
 
   bool hasMore = true;
 
@@ -41,18 +55,10 @@ class FriendChatMessagesModel {
     int messageId,
     bool logErrorIfNotExist,
   ) {
-    for (int i = 0; i < messages.length; i++) {
-      final message = messages[i];
-      if (useClientId) {
-        if (message.useClientId && message.clientMessageId == messageId) {
-          return i;
-        }
-      } else {
-        if (!message.useClientId && message.seq == messageId) {
-          return i;
-        }
-      }
-    }
+    final index = useClientId
+        ? _clientIdIndex[messageId]
+        : _seqIndex[messageId];
+    if (index != null) return index;
     if (logErrorIfNotExist) {
       sc.logger.e(
         "findMessage failed, useClientId $useClientId messageId $messageId",
@@ -103,50 +109,17 @@ class FriendChatMessagesNotifier
     }
 
     if (changed) {
-      state = state.copyWith(
-        messages: updatedMessages,
-        status: updatedMessages.isEmpty
-            ? FriendChatMessagesStatus.empty
-            : FriendChatMessagesStatus.success,
-      );
+      state = state.copyWith(messages: updatedMessages);
     }
   }
 
   void _onChatMessage(ChatMessage inner) {
     if (inner.roomId != roomId) return;
 
-    if (sc.me.isMe(inner.senderId) &&
-        _clientMessageIds.contains(inner.clientMessageId)) {
-      // 我发的 - 本地有 sending 态的消息，更新为 normal
-      final index = state.findMessageIndex(true, inner.clientMessageId, true);
-      if (index >= 0) {
-        final message = state.getMessageAt(index);
-        if (message.clientStatus != ClientChatMessageStatus.normal) {
-          _updateMessageAt(
-            index,
-            (m) => m.copyWith(clientStatus: ClientChatMessageStatus.normal),
-          );
-        }
-      }
-    } else {
-      // 别人发的消息（或我在其他设备发的）：插入或更新
-      final updatedMessages = [...state.messages];
-      if (_upsertIntoList(updatedMessages, inner)) {
-        state = state.copyWith(
-          messages: updatedMessages,
-          status: FriendChatMessagesStatus.success,
-        );
-      }
+    final updatedMessages = [...state.messages];
+    if (_upsertIntoList(updatedMessages, inner)) {
+      state = state.copyWith(messages: updatedMessages);
     }
-  }
-
-  void setInitialMessages(List<ClientChatMessage> messages) {
-    state = FriendChatMessagesModel(
-      messages: messages,
-      status: messages.isEmpty
-          ? FriendChatMessagesStatus.empty
-          : FriendChatMessagesStatus.success,
-    );
   }
 
   /// 将服务器消息插入或更新到 [list] 中，返回是否有变更。
@@ -182,15 +155,12 @@ class FriendChatMessagesNotifier
     return true;
   }
 
+  // 目前只用于添加客户端新的发送消息
   void _addMessage(ClientChatMessage message) {
-    state = state.copyWith(
-      messages: [...state.messages, message],
-      status: state.status == FriendChatMessagesStatus.empty
-          ? FriendChatMessagesStatus.success
-          : state.status,
-    );
+    state = state.copyWith(messages: [...state.messages, message]);
   }
 
+  // 目前只用于更新客户端发送消息的状态 sending -> failed -> sending ->...，不包括 normal
   ClientChatMessage _updateMessageAt(
     int index,
     ClientChatMessage Function(ClientChatMessage) newMessageFunc,
@@ -255,16 +225,14 @@ class FriendChatMessagesNotifier
     _addMessage(message);
 
     bool success = await _requestSendChat(message);
+    if (success) return; // 成功由 stream 消息处理
+
     int index = state.findMessageIndex(true, message.clientMessageId, true);
     if (index < 0) return;
 
     _updateMessageAt(
       index,
-      (m) => m.copyWith(
-        clientStatus: success
-            ? ClientChatMessageStatus.normal
-            : ClientChatMessageStatus.failed,
-      ),
+      (m) => m.copyWith(clientStatus: ClientChatMessageStatus.failed),
     );
   }
 
@@ -278,16 +246,14 @@ class FriendChatMessagesNotifier
     );
 
     bool success = await _requestSendChat(message);
+    if (success) return; // 成功由 stream 消息处理
+
     index = state.findMessageIndex(true, clientMessageId, true);
     if (index < 0) return;
 
     _updateMessageAt(
       index,
-      (m) => m.copyWith(
-        clientStatus: success
-            ? ClientChatMessageStatus.normal
-            : ClientChatMessageStatus.failed,
-      ),
+      (m) => m.copyWith(clientStatus: ClientChatMessageStatus.failed),
     );
   }
 }

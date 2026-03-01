@@ -5,11 +5,13 @@ import 'package:scene_hub/providers/friend_chat_messages_provider.dart';
 /// params: (friendUserId, roomId, useClientId, messageId)
 final friendChatMessageProvider =
     Provider.family<ClientChatMessage, (int, int, bool, int)>((ref, params) {
-  final (int friendUserId, int roomId, bool useClientId, int messageId) = params;
-  FriendChatMessagesModel model = ref.watch(
-    friendChatMessagesProvider((friendUserId, roomId)),
-  );
+      final (int friendUserId, int roomId, bool useClientId, int messageId) =
+          params;
 
-  int index = model.findMessageIndex(useClientId, messageId, true);
-  return model.getMessageAt(index);
-});
+      return ref.watch(
+        friendChatMessagesProvider((friendUserId, roomId)).select((model) {
+          int index = model.findMessageIndex(useClientId, messageId, true);
+          return model.getMessageAt(index);
+        }),
+      );
+    });
