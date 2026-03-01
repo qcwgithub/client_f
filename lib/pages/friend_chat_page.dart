@@ -39,38 +39,21 @@ class _FriendChatPageState extends ConsumerState<FriendChatPage> {
     });
 
     _scrollController.addListener(() async {
-      bool isTop =
-          _scrollController.position.atEdge &&
-          _scrollController.position.pixels != 0;
+      final pos = _scrollController.position;
+      final threshold = 200.0;
 
-      if (isTop) {
-        // print("isTop!");
-        // double beforePixels = _scrollController.position.pixels;
-        // double beforeExtent = 0;
+      // reverse: true，pixels 越大越靠近旧消息（顶部）
+      bool nearTop = pos.pixels >= pos.maxScrollExtent - threshold;
+      bool nearBottom = pos.pixels <= pos.minScrollExtent + threshold;
+
+      if (nearTop) {
         await ref
             .read(friendChatMessagesProvider(_providerKey).notifier)
             .loadOlderMessages();
-
-        // if (loaded) {
-        //   WidgetsBinding.instance.addPostFrameCallback((_) {
-        //     double afterExtent = _scrollController.position.maxScrollExtent;
-        //     double diff = afterExtent - beforeExtent;
-        //     _scrollController.jumpTo(beforePixels + diff);
-        //     print(
-        //       "extent ${beforeExtent} -> ${afterExtent} jumpTo ${beforePixels + diff}",
-        //     );
-        //   });
-        // }
-      } else {
-        bool isBottom =
-            _scrollController.position.atEdge &&
-            _scrollController.position.pixels == 0;
-
-        if (isBottom) {
-          await ref
-              .read(friendChatMessagesProvider(_providerKey).notifier)
-              .loadNewerMessages();
-        }
+      } else if (nearBottom) {
+        await ref
+            .read(friendChatMessagesProvider(_providerKey).notifier)
+            .loadNewerMessages();
       }
     });
   }

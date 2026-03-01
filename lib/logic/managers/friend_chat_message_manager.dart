@@ -81,27 +81,32 @@ class FriendChatMessageManager {
     }
   }
 
-  Future<void> initialLoad(int roomId) async {
-    final messages = await sc.chatMessageStorage.getMessages(roomId);
-    if (messages.isNotEmpty) {
-      _controller2Add(messages);
-    }
-  }
-
-  Future<void> loadOlderMessages(int roomId, int beforeSeq) async {
-    final messages = await sc.chatMessageStorage.getMessagesBefore(
+  Future<void> initialLoad(int roomId, int count) async {
+    final messages = await sc.chatMessageStorage.getMessages(
       roomId,
-      beforeSeq,
+      limit: count,
     );
     if (messages.isNotEmpty) {
       _controller2Add(messages);
     }
   }
 
-  Future<void> loadNewerMessages(int roomId, int afterSeq) async {
+  Future<void> loadOlderMessages(int roomId, int beforeSeq, int count) async {
+    final messages = await sc.chatMessageStorage.getMessagesBefore(
+      roomId,
+      beforeSeq,
+      limit: count,
+    );
+    if (messages.isNotEmpty) {
+      _controller2Add(messages);
+    }
+  }
+
+  Future<void> loadNewerMessages(int roomId, int afterSeq, int count) async {
     final messages = await sc.chatMessageStorage.getMessagesAfter(
       roomId,
       afterSeq,
+      limit: count,
     );
     if (messages.isNotEmpty) {
       _controller2Add(messages);
