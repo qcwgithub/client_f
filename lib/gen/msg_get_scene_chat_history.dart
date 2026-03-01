@@ -4,25 +4,30 @@ class MsgGetSceneChatHistory implements IToMsgPack {
     // [0]
     int roomId;
     // [1]
-    int lastSeq;
+    int beforeSeq;
+    // [2]
+    int count;
 
     MsgGetSceneChatHistory({
       required this.roomId,
-      required this.lastSeq,
+      required this.beforeSeq,
+      required this.count,
     });
 
     @override
     List toMsgPack() {
       return [
         roomId,
-        lastSeq,
+        beforeSeq,
+        count,
       ];
     }
 
     factory MsgGetSceneChatHistory.fromMsgPack(List list) {
       return MsgGetSceneChatHistory(
         roomId: list[0] as int,
-        lastSeq: list[1] as int,
+        beforeSeq: list[1] as int,
+        count: list[2] as int,
       );
     }
 }

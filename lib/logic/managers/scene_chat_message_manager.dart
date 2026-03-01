@@ -36,12 +36,16 @@ class SceneChatMessageManager extends ChatMessageManager {
   Future<void> loadOlderMessages(int roomId, int beforeSeq, int count) async {
     final r = await sc.server.request(
       MsgType.getSceneChatHistory,
-      MsgGetSceneChatHistory(roomId: roomId, lastSeq: beforeSeq, count: count),
+      MsgGetSceneChatHistory(
+        roomId: roomId,
+        beforeSeq: beforeSeq,
+        count: count,
+      ),
     );
 
     if (r.e == ECode.success) {
       final res = ResGetSceneChatHistory.fromMsgPack(r.res as List);
-      controllerAdd(res.history);
+      controllerAdd(res.messages);
     }
   }
 

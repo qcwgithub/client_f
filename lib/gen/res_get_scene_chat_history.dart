@@ -3,22 +3,22 @@ import 'package:scene_hub/gen/chat_message.dart';
 
 class ResGetSceneChatHistory implements IToMsgPack {
     // [0]
-    List<ChatMessage> history;
+    List<ChatMessage> messages;
 
     ResGetSceneChatHistory({
-      required this.history,
+      required this.messages,
     });
 
     @override
     List toMsgPack() {
       return [
-        history.map((e) => e.toMsgPack()).toList(growable: false),
+        messages.map((e) => e.toMsgPack()).toList(growable: false),
       ];
     }
 
     factory ResGetSceneChatHistory.fromMsgPack(List list) {
       return ResGetSceneChatHistory(
-        history: (list[0] as List)
+        messages: (list[0] as List)
           .map((e) => ChatMessage.fromMsgPack(e as List))
           .toList(growable: true),
       );
