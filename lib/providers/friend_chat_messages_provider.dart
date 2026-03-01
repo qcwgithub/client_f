@@ -107,27 +107,33 @@ class FriendChatMessagesNotifier
     if (roomMessages.isEmpty) return;
 
     final updatedMessages = [...state.messages];
-    bool changed = false;
 
+    int delta = 0;
     for (final inner in roomMessages) {
-      if (_isNewMessageOutOfRange(inner)) continue;
       final result = _upsertIntoList(updatedMessages, inner);
-      if (result) changed = true;
+      if (result) delta++;
     }
 
-    if (changed) {
-      _trimOldest(updatedMessages);
+    if (delta > 0) {
+      // 如果我正在浏览旧的，这里会不会把我要看的 trim 没了？
+      // 不会的，看旧的一定会走到 loadOlderMessages，那里已经 trim 新的了，这里不会再满足 trim 条件
+      if (_shouldTrim(state.serverMessageCount + delta)) {
+        _trimOldest(updatedMessages);
+      }
       state = state.copyWith(messages: updatedMessages);
     }
   }
 
   void _onChatMessage(ChatMessage inner) {
     if (inner.roomId != roomId) return;
-    if (_isNewMessageOutOfRange(inner)) return;
 
     final updatedMessages = [...state.messages];
     if (_upsertIntoList(updatedMessages, inner)) {
-      _trimOldest(updatedMessages);
+      // 如果我正在浏览旧的，这里会不会把我要看的 trim 没了？
+      // 不会的，看旧的一定会走到 loadOlderMessages，那里已经 trim 新的了，这里不会再满足 trim 条件
+      if (_shouldTrim(state.serverMessageCount + 1)) {
+        _trimOldest(updatedMessages);
+      }
       state = state.copyWith(messages: updatedMessages);
     }
   }
@@ -150,50 +156,25 @@ class FriendChatMessagesNotifier
 
   static const int _maxServerMessages = 3000;
   static const int _loadBatchSize = 200;
+  static const int _trimOnceCount = 600;
 
-  /// 判断消息是否在缓存范围外（seq < minSeq 且不是更新已有消息）
-  bool _isNewMessageOutOfRange(ChatMessage inner) {
-    if (state.minSeq == 0) return false; // 还没有消息，全部接受
-    if (inner.seq >= state.minSeq) return false; // 在窗口内或更新
-    // seq < minSeq，检查是否是更新已有消息
-    if (state.findMessageIndex(false, inner.seq, false) >= 0) return false;
-    if (sc.me.isMe(inner.senderId) &&
-        inner.clientSeq != 0 &&
-        state.findMessageIndex(true, inner.clientSeq, false) >= 0) {
-      return false;
-    }
-    return true; // 超出缓存范围，丢弃
+  bool _shouldTrim(int serverMessageCount) {
+    return serverMessageCount >= _maxServerMessages;
   }
 
-  /// 从列表头部移除最旧的服务器消息，直到服务器消息数量 <= _maxServerMessages
-  static void _trimOldest(List<ClientChatMessage> list) {
-    int serverCount = 0;
-    for (final m in list) {
-      if (!m.useClientSeq) serverCount++;
-    }
-    if (serverCount <= _maxServerMessages) return;
-
-    int toRemove = serverCount - _maxServerMessages;
+  void _trimOldest(List<ClientChatMessage> list) {
     int removed = 0;
     list.removeWhere((m) {
-      if (removed >= toRemove) return false;
+      if (removed >= _trimOnceCount) return false;
       if (m.useClientSeq) return false;
       removed++;
       return true;
     });
   }
 
-  /// 从列表尾部移除最新的服务器消息（保留客户端消息），直到服务器消息数量 <= _maxServerMessages
-  static void _trimNewest(List<ClientChatMessage> list) {
-    int serverCount = 0;
-    for (final m in list) {
-      if (!m.useClientSeq) serverCount++;
-    }
-    if (serverCount <= _maxServerMessages) return;
-
-    int toRemove = serverCount - _maxServerMessages;
+  void _trimNewest(List<ClientChatMessage> list) {
     int removed = 0;
-    for (int i = list.length - 1; i >= 0 && removed < toRemove; i--) {
+    for (int i = list.length - 1; i >= 0 && removed < _trimOnceCount; i--) {
       if (!list[i].useClientSeq) {
         list.removeAt(i);
         removed++;
@@ -338,8 +319,7 @@ class FriendChatMessagesNotifier
   Future<void> loadOlderMessages() async {
     if (state.minSeq <= 1) return;
 
-    // 预裁剪尾部（最新），为即将加载的旧消息腾出空间
-    if (state.serverMessageCount >= _maxServerMessages - _loadBatchSize) {
+    if (_shouldTrim(state.serverMessageCount)) {
       final trimmed = [...state.messages];
       _trimNewest(trimmed);
       state = state.copyWith(messages: trimmed);
@@ -353,8 +333,7 @@ class FriendChatMessagesNotifier
   }
 
   Future<void> loadNewerMessages() async {
-    // 预裁剪头部（最旧），为即将加载的新消息腾出空间
-    if (state.serverMessageCount >= _maxServerMessages - _loadBatchSize) {
+    if (_shouldTrim(state.serverMessageCount)) {
       final trimmed = [...state.messages];
       _trimOldest(trimmed);
       state = state.copyWith(messages: trimmed);
