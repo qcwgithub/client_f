@@ -7,6 +7,7 @@ import 'package:scene_hub/gen/chat_message_status.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/logic/client_message_id_generator.dart';
+import 'package:scene_hub/logic/events/friend_chat_refresh_event.dart';
 import 'package:scene_hub/logic/time_utils.dart';
 import 'package:scene_hub/sc.dart';
 
@@ -78,12 +79,14 @@ class FriendChatMessagesNotifier
   final int roomId;
   StreamSubscription<ChatMessage>? _sub1;
   StreamSubscription<List<ChatMessage>>? _sub2;
+  StreamSubscription<FriendChatRefreshEvent>? _sub3;
   final List<int> _clientMessageIds = [];
 
   FriendChatMessagesNotifier(this.friendUserId, this.roomId)
     : super(FriendChatMessagesModel.initial()) {
     _sub1 = sc.friendChatMessageManager.stream1.listen(_onChatMessage);
     _sub2 = sc.friendChatMessageManager.stream2.listen(_onChatMessages);
+    _sub3 = sc.eventBus.on<FriendChatRefreshEvent>().listen(_onRefreshEvent);
     sc.friendChatMessageManager.loadFromStorage(roomId);
   }
 
@@ -93,6 +96,8 @@ class FriendChatMessagesNotifier
     _sub1 = null;
     _sub2?.cancel();
     _sub2 = null;
+    _sub3?.cancel();
+    _sub3 = null;
     super.dispose();
   }
 
@@ -119,6 +124,20 @@ class FriendChatMessagesNotifier
     final updatedMessages = [...state.messages];
     if (_upsertIntoList(updatedMessages, inner)) {
       state = state.copyWith(messages: updatedMessages);
+    }
+  }
+
+  void _onRefreshEvent(FriendChatRefreshEvent event) {
+    switch (event.status) {
+      case FriendChatRefreshStatus.refreshing:
+        state = state.copyWith(status: FriendChatMessagesStatus.refreshing);
+        break;
+      case FriendChatRefreshStatus.success:
+        state = state.copyWith(status: FriendChatMessagesStatus.idle);
+        break;
+      case FriendChatRefreshStatus.error:
+        state = state.copyWith(status: FriendChatMessagesStatus.refreshError);
+        break;
     }
   }
 

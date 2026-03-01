@@ -15,6 +15,7 @@ import 'package:scene_hub/gen/res_send_friend_chat.dart';
 import 'package:scene_hub/gen/res_set_friend_chat_read_seq.dart';
 import 'package:scene_hub/gen/res_set_friend_chat_received_seq.dart';
 import 'package:scene_hub/gen/user_info.dart';
+import 'package:scene_hub/logic/events/friend_chat_refresh_event.dart';
 import 'package:scene_hub/logic/events/login_event.dart';
 import 'package:scene_hub/sc.dart';
 
@@ -48,6 +49,10 @@ class FriendChatMessageManager {
   }
 
   Future<void> _requestReceiveFriendChatMessages() async {
+    sc.eventBus.fire(
+      FriendChatRefreshEvent(FriendChatRefreshStatus.refreshing),
+    );
+
     final r = await sc.server.request(
       MsgType.receiveFriendChatMessages,
       MsgReceiveFriendChatMessages(),
@@ -57,6 +62,9 @@ class FriendChatMessageManager {
       final res = ResReceiveFriendChatMessages.fromMsgPack(r.res!);
       sc.chatMessageStorage.upsertMessages(res.messages);
       _controller2.add(res.messages);
+      sc.eventBus.fire(FriendChatRefreshEvent(FriendChatRefreshStatus.success));
+    } else {
+      sc.eventBus.fire(FriendChatRefreshEvent(FriendChatRefreshStatus.error));
     }
   }
 

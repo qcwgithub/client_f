@@ -63,7 +63,26 @@ class _FriendChatPageState extends ConsumerState<FriendChatPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.friendName),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.friendName),
+            if (model.status == FriendChatMessagesStatus.refreshing)
+              const Text(
+                '同步中...',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+              ),
+            if (model.status == FriendChatMessagesStatus.refreshError)
+              const Text(
+                '同步失败',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.normal,
+                  color: Colors.red,
+                ),
+              ),
+          ],
+        ),
       ),
       body: Column(
         children: [
@@ -108,8 +127,9 @@ class _FriendChatPageState extends ConsumerState<FriendChatPage> {
             friendUserId: widget.friendUserId,
             roomId: widget.roomId,
             useClientId: message.useClientId,
-            messageId:
-                message.useClientId ? message.clientMessageId : message.seq,
+            messageId: message.useClientId
+                ? message.clientMessageId
+                : message.seq,
             showTime: showTime,
           );
         },
