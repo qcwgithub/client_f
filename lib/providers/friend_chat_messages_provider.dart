@@ -16,16 +16,27 @@ enum FriendChatMessagesStatus { idle, refreshing, refreshError }
 class FriendChatMessagesModel {
   final List<ClientChatMessage> messages;
   final FriendChatMessagesStatus status;
+  late int minSeq;
+  late int maxSeq;
   // 索引：seq -> list index
   final Map<int, int> _seqIndex = {};
   // 索引：clientSeq -> list index
   final Map<int, int> _clientIdIndex = {};
   FriendChatMessagesModel({required this.messages, required this.status}) {
+    minSeq = 0;
+    maxSeq = 0;
+
     for (int i = 0; i < messages.length; i++) {
-      if (messages[i].useClientSeq) {
-        _clientIdIndex[messages[i].clientSeq] = i;
+      final message = messages[i];
+      if (message.useClientSeq) {
+        _clientIdIndex[message.clientSeq] = i;
       } else {
-        _seqIndex[messages[i].seq] = i;
+        _seqIndex[message.seq] = i;
+
+        if (minSeq == 0) {
+          minSeq = message.seq;
+        }
+        maxSeq = message.seq;
       }
     }
   }
@@ -77,7 +88,7 @@ class FriendChatMessagesNotifier
     _sub1 = sc.friendChatMessageManager.stream1.listen(_onChatMessage);
     _sub2 = sc.friendChatMessageManager.stream2.listen(_onChatMessages);
     _sub3 = sc.eventBus.on<FriendChatRefreshEvent>().listen(_onRefreshEvent);
-    sc.friendChatMessageManager.loadFromStorage(roomId);
+    sc.friendChatMessageManager.initialLoad(roomId);
   }
 
   @override
@@ -235,7 +246,7 @@ class FriendChatMessagesNotifier
     bool success = await _requestSendChat(message);
     if (success) return; // 成功由 stream 消息处理
 
-    int index = state.findMessageIndex(true, message.clientSeq, true);
+    int index = state.findMessageIndex(true, message.clientSeq, false);
     if (index < 0) return;
 
     _updateMessageAt(
@@ -245,7 +256,7 @@ class FriendChatMessagesNotifier
   }
 
   Future<void> resendChat(int clientSeq) async {
-    int index = state.findMessageIndex(true, clientSeq, true);
+    int index = state.findMessageIndex(true, clientSeq, false);
     if (index < 0) return;
 
     ClientChatMessage message = _updateMessageAt(
@@ -263,6 +274,18 @@ class FriendChatMessagesNotifier
       index,
       (m) => m.copyWith(clientStatus: ClientChatMessageStatus.failed),
     );
+  }
+
+  Future<void> loadOlderMessages() async {
+    if (state.minSeq <= 1) {
+      return;
+    }
+
+    await sc.friendChatMessageManager.loadOlderMessages(roomId, state.minSeq);
+  }
+
+  Future<void> loadNewerMessages() async {
+    await sc.friendChatMessageManager.loadNewerMessages(roomId, state.maxSeq);
   }
 }
 

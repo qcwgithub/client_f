@@ -49,7 +49,7 @@ class FriendChatMessageManager {
   }
 
   Future<void> _requestReceiveFriendChatMessages() async {
-    sc.eventBus.fire(
+    sc.eventBus.emit(
       FriendChatRefreshEvent(FriendChatRefreshStatus.refreshing),
     );
 
@@ -60,17 +60,43 @@ class FriendChatMessageManager {
 
     if (r.e == ECode.success) {
       final res = ResReceiveFriendChatMessages.fromMsgPack(r.res!);
-      sc.chatMessageStorage.upsertMessages(res.messages);
-      _controller2.add(res.messages);
-      sc.eventBus.fire(FriendChatRefreshEvent(FriendChatRefreshStatus.success));
+      if (res.messages.isNotEmpty) {
+        sc.chatMessageStorage.upsertMessages(res.messages);
+        _controller2.add(res.messages);
+        sc.eventBus.emit(
+          FriendChatRefreshEvent(FriendChatRefreshStatus.success),
+        );
+      }
     } else {
-      sc.eventBus.fire(FriendChatRefreshEvent(FriendChatRefreshStatus.error));
+      sc.eventBus.emit(FriendChatRefreshEvent(FriendChatRefreshStatus.error));
     }
   }
 
-  Future<void> loadFromStorage(int roomId) async {
+  Future<void> initialLoad(int roomId) async {
     final messages = await sc.chatMessageStorage.getMessages(roomId);
-    _controller2.add(messages);
+    if (messages.isNotEmpty) {
+      _controller2.add(messages);
+    }
+  }
+
+  Future<void> loadOlderMessages(int roomId, int beforeSeq) async {
+    final messages = await sc.chatMessageStorage.getMessagesBefore(
+      roomId,
+      beforeSeq,
+    );
+    if (messages.isNotEmpty) {
+      _controller2.add(messages);
+    }
+  }
+
+  Future<void> loadNewerMessages(int roomId, int afterSeq) async {
+    final messages = await sc.chatMessageStorage.getMessagesAfter(
+      roomId,
+      afterSeq,
+    );
+    if (messages.isNotEmpty) {
+      _controller2.add(messages);
+    }
   }
 
   Future<bool> requestSendChat(ChatMessage message, int friendUserId) async {

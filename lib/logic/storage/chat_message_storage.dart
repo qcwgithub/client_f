@@ -108,6 +108,22 @@ class ChatMessageStorage {
     return rows.reversed.map(_fromRow).toList();
   }
 
+  /// 获取某个房间 seq > [afterSeq] 的新消息
+  Future<List<ChatMessage>> getMessagesAfter(
+    int roomId,
+    int afterSeq, {
+    int limit = 50,
+  }) async {
+    final rows = await _database.query(
+      'messages',
+      where: 'room_id = ? AND seq > ?',
+      whereArgs: [roomId, afterSeq],
+      orderBy: 'seq ASC',
+      limit: limit,
+    );
+    return rows.map(_fromRow).toList();
+  }
+
   /// 获取某个房间最大的 seq
   Future<int> getMaxSeq(int roomId) async {
     final result = await _database.rawQuery(

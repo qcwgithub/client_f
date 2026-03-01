@@ -37,6 +37,42 @@ class _FriendChatPageState extends ConsumerState<FriendChatPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToBottom();
     });
+
+    _scrollController.addListener(() async {
+      bool isTop =
+          _scrollController.position.atEdge &&
+          _scrollController.position.pixels != 0;
+
+      if (isTop) {
+        // print("isTop!");
+        // double beforePixels = _scrollController.position.pixels;
+        // double beforeExtent = 0;
+        await ref
+            .read(friendChatMessagesProvider(_providerKey).notifier)
+            .loadOlderMessages();
+
+        // if (loaded) {
+        //   WidgetsBinding.instance.addPostFrameCallback((_) {
+        //     double afterExtent = _scrollController.position.maxScrollExtent;
+        //     double diff = afterExtent - beforeExtent;
+        //     _scrollController.jumpTo(beforePixels + diff);
+        //     print(
+        //       "extent ${beforeExtent} -> ${afterExtent} jumpTo ${beforePixels + diff}",
+        //     );
+        //   });
+        // }
+      } else {
+        bool isBottom =
+            _scrollController.position.atEdge &&
+            _scrollController.position.pixels == 0;
+
+        if (isBottom) {
+          await ref
+              .read(friendChatMessagesProvider(_providerKey).notifier)
+              .loadNewerMessages();
+        }
+      }
+    });
   }
 
   void _scrollToBottom() {
