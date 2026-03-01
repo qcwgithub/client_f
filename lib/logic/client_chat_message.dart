@@ -7,18 +7,18 @@ enum ClientChatMessageStatus { normal, sending, failed }
 class ClientChatMessage {
   ChatMessage inner;
   ClientChatMessageStatus clientStatus;
-  bool useClientId;
+  bool useClientSeq;
   ClientChatMessage({
     required this.inner,
     required this.clientStatus,
-    required this.useClientId,
+    required this.useClientSeq,
   });
 
   factory ClientChatMessage.server({required ChatMessage inner}) {
     return ClientChatMessage(
       inner: inner,
       clientStatus: ClientChatMessageStatus.normal,
-      useClientId: false,
+      useClientSeq: false,
     );
   }
 
@@ -29,7 +29,7 @@ class ClientChatMessage {
     return ClientChatMessage(
       inner: inner,
       clientStatus: clientStatus,
-      useClientId: true,
+      useClientSeq: true,
     );
   }
 
@@ -40,7 +40,7 @@ class ClientChatMessage {
   ChatMessageType get type => inner.type;
   String get content => inner.content;
   int get timestamp => inner.timestamp;
-  int get clientMessageId => inner.clientMessageId;
+  int get clientSeq => inner.clientSeq;
   ChatMessageStatus get status => inner.status;
   int get senderAvatarIndex => inner.senderAvatarIndex;
 
@@ -48,7 +48,7 @@ class ClientChatMessage {
     return ClientChatMessage(
       inner: inner,
       clientStatus: clientStatus ?? this.clientStatus,
-      useClientId: useClientId,
+      useClientSeq: useClientSeq,
     );
   }
 }

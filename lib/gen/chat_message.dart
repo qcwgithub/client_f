@@ -4,83 +4,85 @@ import 'package:scene_hub/gen/chat_message_status.dart';
 import 'package:scene_hub/gen/chat_message_image_content.dart';
 
 class ChatMessage implements IToMsgPack {
-    // [0]
-    int seq;
-    // [1]
-    int roomId;
-    // [2]
-    int senderId;
-    // [3]
-    String senderName;
-    // [4]
-    String senderAvatar;
-    // [5]
-    ChatMessageType type;
-    // [6]
-    String content;
-    // [7]
-    int timestamp;
-    // [8]
-    int replyTo;
-    // [9]
-    int senderAvatarIndex;
-    // [10]
-    int clientMessageId;
-    // [11]
-    ChatMessageStatus status;
-    // [12]
-    ChatMessageImageContent? imageContent;
+  // [0]
+  int seq;
+  // [1]
+  int roomId;
+  // [2]
+  int senderId;
+  // [3]
+  String senderName;
+  // [4]
+  String senderAvatar;
+  // [5]
+  ChatMessageType type;
+  // [6]
+  String content;
+  // [7]
+  int timestamp;
+  // [8]
+  int replyTo;
+  // [9]
+  int senderAvatarIndex;
+  // [10]
+  int clientSeq;
+  // [11]
+  ChatMessageStatus status;
+  // [12]
+  ChatMessageImageContent? imageContent;
 
-    ChatMessage({
-      required this.seq,
-      required this.roomId,
-      required this.senderId,
-      required this.senderName,
-      required this.senderAvatar,
-      required this.type,
-      required this.content,
-      required this.timestamp,
-      required this.replyTo,
-      required this.senderAvatarIndex,
-      required this.clientMessageId,
-      required this.status,
-      required this.imageContent,
-    });
+  ChatMessage({
+    required this.seq,
+    required this.roomId,
+    required this.senderId,
+    required this.senderName,
+    required this.senderAvatar,
+    required this.type,
+    required this.content,
+    required this.timestamp,
+    required this.replyTo,
+    required this.senderAvatarIndex,
+    required this.clientSeq,
+    required this.status,
+    required this.imageContent,
+  });
 
-    @override
-    List toMsgPack() {
-      return [
-        seq,
-        roomId,
-        senderId,
-        senderName,
-        senderAvatar,
-        type.code,
-        content,
-        timestamp,
-        replyTo,
-        senderAvatarIndex,
-        clientMessageId,
-        status.code,
-        imageContent?.toMsgPack(),
-      ];
-    }
+  @override
+  List toMsgPack() {
+    return [
+      seq,
+      roomId,
+      senderId,
+      senderName,
+      senderAvatar,
+      type.code,
+      content,
+      timestamp,
+      replyTo,
+      senderAvatarIndex,
+      clientSeq,
+      status.code,
+      imageContent?.toMsgPack(),
+    ];
+  }
 
-    factory ChatMessage.fromMsgPack(List list) {
-      return ChatMessage(
-        seq: list[0] as int,
-        roomId: list[1] as int,
-        senderId: list[2] as int,
-        senderName: list[3] as String,
-        senderAvatar: list[4] as String,
-        type: ChatMessageType.fromCode(list[5] as int),
-        content: list[6] as String,
-        timestamp: list[7] as int,
-        replyTo: list[8] as int,
-        senderAvatarIndex: list[9] as int,
-        clientMessageId: list[10] as int,
-        status: ChatMessageStatus.fromCode(list[11] as int),
-        imageContent: list[12] == null ? null : ChatMessageImageContent.fromMsgPack(list[12] as List),
-      );
-    }
+  factory ChatMessage.fromMsgPack(List list) {
+    return ChatMessage(
+      seq: list[0] as int,
+      roomId: list[1] as int,
+      senderId: list[2] as int,
+      senderName: list[3] as String,
+      senderAvatar: list[4] as String,
+      type: ChatMessageType.fromCode(list[5] as int),
+      content: list[6] as String,
+      timestamp: list[7] as int,
+      replyTo: list[8] as int,
+      senderAvatarIndex: list[9] as int,
+      clientSeq: list[10] as int,
+      status: ChatMessageStatus.fromCode(list[11] as int),
+      imageContent: list[12] == null
+          ? null
+          : ChatMessageImageContent.fromMsgPack(list[12] as List),
+    );
+  }
 }

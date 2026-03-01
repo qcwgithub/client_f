@@ -17,15 +17,13 @@ class FriendChatMessagesModel {
   final List<ClientChatMessage> messages;
   final FriendChatMessagesStatus status;
   // 索引：seq -> list index
-  final Map<int, int> _seqIndex;
-  // 索引：clientMessageId -> list index
-  final Map<int, int> _clientIdIndex;
-  FriendChatMessagesModel({required this.messages, required this.status})
-    : _seqIndex = {},
-      _clientIdIndex = {} {
+  final Map<int, int> _seqIndex = {};
+  // 索引：clientSeq -> list index
+  final Map<int, int> _clientIdIndex = {};
+  FriendChatMessagesModel({required this.messages, required this.status}) {
     for (int i = 0; i < messages.length; i++) {
-      if (messages[i].useClientId) {
-        _clientIdIndex[messages[i].clientMessageId] = i;
+      if (messages[i].useClientSeq) {
+        _clientIdIndex[messages[i].clientSeq] = i;
       } else {
         _seqIndex[messages[i].seq] = i;
       }
@@ -51,19 +49,11 @@ class FriendChatMessagesModel {
     );
   }
 
-  int findMessageIndex(
-    bool useClientId,
-    int messageId,
-    bool logErrorIfNotExist,
-  ) {
-    final index = useClientId
-        ? _clientIdIndex[messageId]
-        : _seqIndex[messageId];
+  int findMessageIndex(bool useClientId, int seq, bool logErrorIfNotExist) {
+    final index = useClientId ? _clientIdIndex[seq] : _seqIndex[seq];
     if (index != null) return index;
     if (logErrorIfNotExist) {
-      sc.logger.e(
-        "findMessage failed, useClientId $useClientId messageId $messageId",
-      );
+      sc.logger.e("findMessage failed, useClientId $useClientId seq $seq");
     }
     return -1;
   }
@@ -80,7 +70,7 @@ class FriendChatMessagesNotifier
   StreamSubscription<ChatMessage>? _sub1;
   StreamSubscription<List<ChatMessage>>? _sub2;
   StreamSubscription<FriendChatRefreshEvent>? _sub3;
-  final List<int> _clientMessageIds = [];
+  final List<int> _clientSeqs = [];
 
   FriendChatMessagesNotifier(this.friendUserId, this.roomId)
     : super(FriendChatMessagesModel.initial()) {
@@ -145,17 +135,16 @@ class FriendChatMessagesNotifier
   bool _upsertIntoList(List<ClientChatMessage> list, ChatMessage inner) {
     // 先按 seq 查是否已存在
     for (int i = 0; i < list.length; i++) {
-      if (!list[i].useClientId && list[i].seq == inner.seq) {
+      if (!list[i].useClientSeq && list[i].seq == inner.seq) {
         // 已存在，替换
         list[i] = ClientChatMessage.server(inner: inner);
         return true;
       }
     }
-    // 再按 clientMessageId 查是否是自己发的 sending 态消息
-    if (sc.me.isMe(inner.senderId) && inner.clientMessageId != 0) {
+    // 再按 clientSeq 查是否是自己发的 sending 态消息
+    if (sc.me.isMe(inner.senderId) && inner.clientSeq != 0) {
       for (int i = 0; i < list.length; i++) {
-        if (list[i].useClientId &&
-            list[i].clientMessageId == inner.clientMessageId) {
+        if (list[i].useClientSeq && list[i].clientSeq == inner.clientSeq) {
           list[i] = ClientChatMessage.server(inner: inner);
           return true;
         }
@@ -197,7 +186,7 @@ class FriendChatMessagesNotifier
     String content,
     ChatMessageImageContent? imageContent,
   ) {
-    int clientMessageId = clientMessageIdGenerator.nextId();
+    int clientSeq = clientMessageIdGenerator.nextId();
     final inner = ChatMessage(
       seq: 0,
       roomId: roomId,
@@ -209,7 +198,7 @@ class FriendChatMessagesNotifier
       timestamp: TimeUtils.now(),
       replyTo: 0,
       senderAvatarIndex: sc.me.userInfo.avatarIndex,
-      clientMessageId: clientMessageId,
+      clientSeq: clientSeq,
       status: ChatMessageStatus.normal,
       imageContent: imageContent,
     );
@@ -240,13 +229,13 @@ class FriendChatMessagesNotifier
       content,
       imageContent,
     );
-    _clientMessageIds.add(message.clientMessageId);
+    _clientSeqs.add(message.clientSeq);
     _addMessage(message);
 
     bool success = await _requestSendChat(message);
     if (success) return; // 成功由 stream 消息处理
 
-    int index = state.findMessageIndex(true, message.clientMessageId, true);
+    int index = state.findMessageIndex(true, message.clientSeq, true);
     if (index < 0) return;
 
     _updateMessageAt(
@@ -255,8 +244,8 @@ class FriendChatMessagesNotifier
     );
   }
 
-  Future<void> resendChat(int clientMessageId) async {
-    int index = state.findMessageIndex(true, clientMessageId, true);
+  Future<void> resendChat(int clientSeq) async {
+    int index = state.findMessageIndex(true, clientSeq, true);
     if (index < 0) return;
 
     ClientChatMessage message = _updateMessageAt(
@@ -267,7 +256,7 @@ class FriendChatMessagesNotifier
     bool success = await _requestSendChat(message);
     if (success) return; // 成功由 stream 消息处理
 
-    index = state.findMessageIndex(true, clientMessageId, true);
+    index = state.findMessageIndex(true, clientSeq, true);
     if (index < 0) return;
 
     _updateMessageAt(

@@ -14,15 +14,15 @@ import 'package:scene_hub/sc.dart';
 class FriendChatMessageItem extends ConsumerWidget {
   final int friendUserId;
   final int roomId;
-  final bool useClientId;
-  final int messageId;
+  final bool useClientSeq;
+  final int seq;
   final bool showTime;
   const FriendChatMessageItem({
     super.key,
     required this.friendUserId,
     required this.roomId,
-    required this.useClientId,
-    required this.messageId,
+    required this.useClientSeq,
+    required this.seq,
     required this.showTime,
   });
 
@@ -42,10 +42,10 @@ class FriendChatMessageItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ClientChatMessage message = ref.watch(
-      friendChatMessageProvider((friendUserId, roomId, useClientId, messageId)),
+      friendChatMessageProvider((friendUserId, roomId, useClientSeq, seq)),
     );
     bool isMe = sc.me.isMe(message.senderId);
-    if (!useClientId) {
+    if (!useClientSeq) {
       sc.friendChatMessageManager.onMessageViewed(
         friendUserId,
         message.inner.seq,
@@ -79,7 +79,7 @@ class FriendChatMessageItem extends ConsumerWidget {
                           roomId,
                         )).notifier,
                       )
-                      .resendChat(message.clientMessageId),
+                      .resendChat(message.clientSeq),
                 ),
               ),
             ),

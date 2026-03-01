@@ -15,13 +15,13 @@ import 'package:scene_hub/sc.dart';
 class SceneChatMessageItem extends ConsumerWidget {
   final int roomId;
   final bool useClientId;
-  final int messageId;
+  final int seq;
   final bool showTime;
   const SceneChatMessageItem({
     super.key,
     required this.roomId,
     required this.useClientId,
-    required this.messageId,
+    required this.seq,
     required this.showTime,
   });
 
@@ -43,7 +43,7 @@ class SceneChatMessageItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ClientChatMessage message = ref.watch(
-      sceneChatMessageProvider((roomId, useClientId, messageId)),
+      sceneChatMessageProvider((roomId, useClientId, seq)),
     );
     bool isMe = sc.me.isMe(message.senderId);
 
@@ -70,7 +70,7 @@ class SceneChatMessageItem extends ConsumerWidget {
                   message,
                   () => ref
                       .read(sceneChatMessagesProvider(roomId).notifier)
-                      .resendChat(message.clientMessageId),
+                      .resendChat(message.clientSeq),
                 ),
               ),
             ),

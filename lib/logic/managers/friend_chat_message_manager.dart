@@ -80,7 +80,7 @@ class FriendChatMessageManager {
         friendUserId: friendUserId,
         chatMessageType: message.type,
         content: message.content,
-        clientMessageId: message.clientMessageId,
+        clientMessageId: message.clientSeq,
         imageContent: message.imageContent,
       ),
     );

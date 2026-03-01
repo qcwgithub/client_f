@@ -147,7 +147,7 @@ class ChatMessageStorage {
       'timestamp': msg.timestamp,
       'reply_to': msg.replyTo,
       'sender_avatar_index': msg.senderAvatarIndex,
-      'client_message_id': msg.clientMessageId,
+      'client_message_id': msg.clientSeq,
       'status': msg.status.code,
       'image_content': msg.imageContent != null
           ? jsonEncode({
@@ -186,7 +186,7 @@ class ChatMessageStorage {
       timestamp: row['timestamp'] as int,
       replyTo: row['reply_to'] as int,
       senderAvatarIndex: row['sender_avatar_index'] as int,
-      clientMessageId: row['client_message_id'] as int,
+      clientSeq: row['client_message_id'] as int,
       status: ChatMessageStatus.fromCode(row['status'] as int),
       imageContent: imageContent,
     );

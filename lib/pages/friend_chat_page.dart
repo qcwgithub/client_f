@@ -122,14 +122,12 @@ class _FriendChatPageState extends ConsumerState<FriendChatPage> {
 
           return FriendChatMessageItem(
             key: ValueKey(
-              message.useClientId ? message.clientMessageId : message.seq,
+              message.useClientSeq ? message.clientSeq : message.seq,
             ),
             friendUserId: widget.friendUserId,
             roomId: widget.roomId,
-            useClientId: message.useClientId,
-            messageId: message.useClientId
-                ? message.clientMessageId
-                : message.seq,
+            useClientSeq: message.useClientSeq,
+            seq: message.useClientSeq ? message.clientSeq : message.seq,
             showTime: showTime,
           );
         },

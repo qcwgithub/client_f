@@ -71,7 +71,7 @@ class EnterSceneNotifier extends StateNotifier<EnterSceneModel> {
         ClientChatMessage(
           inner: m,
           clientStatus: ClientChatMessageStatus.normal,
-          useClientId: false,
+          useClientSeq: false,
         ),
       );
     }

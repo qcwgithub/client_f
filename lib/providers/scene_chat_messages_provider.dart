@@ -29,7 +29,10 @@ class SceneChatMessagesModel {
   bool hasMore = true;
 
   factory SceneChatMessagesModel.initial() {
-    return SceneChatMessagesModel(messages: [], status: SceneChatMessagesStatus.idle);
+    return SceneChatMessagesModel(
+      messages: [],
+      status: SceneChatMessagesStatus.idle,
+    );
   }
 
   SceneChatMessagesModel copyWith({
@@ -51,11 +54,11 @@ class SceneChatMessagesModel {
     for (int i = 0; i < messages.length; i++) {
       final message = messages[i];
       if (useClientId) {
-        if (message.useClientId && message.clientMessageId == messageId) {
+        if (message.useClientSeq && message.clientSeq == messageId) {
           return i;
         }
       } else {
-        if (!message.useClientId && message.seq == messageId) {
+        if (!message.useClientSeq && message.seq == messageId) {
           return i;
         }
       }
@@ -77,7 +80,8 @@ class SceneChatMessagesNotifier extends StateNotifier<SceneChatMessagesModel> {
   final int roomId;
   StreamSubscription<ChatMessage>? _subscription;
   final List<int> _clientMessageIds = [];
-  SceneChatMessagesNotifier(this.roomId) : super(SceneChatMessagesModel.initial()) {
+  SceneChatMessagesNotifier(this.roomId)
+    : super(SceneChatMessagesModel.initial()) {
     _subscription = sc.sceneChatMessageManager.stream.listen(_onChatMessage);
   }
 
@@ -92,8 +96,8 @@ class SceneChatMessagesNotifier extends StateNotifier<SceneChatMessagesModel> {
     if (inner.roomId != roomId) return;
 
     if (sc.me.isMe(inner.senderId) &&
-        _clientMessageIds.contains(inner.clientMessageId)) {
-      final index = state.findMessageIndex(true, inner.clientMessageId, true);
+        _clientMessageIds.contains(inner.clientSeq)) {
+      final index = state.findMessageIndex(true, inner.clientSeq, true);
       if (index >= 0) {
         final message = state.getMessageAt(index);
         if (message.clientStatus != ClientChatMessageStatus.normal) {
@@ -157,7 +161,7 @@ class SceneChatMessagesNotifier extends StateNotifier<SceneChatMessagesModel> {
       timestamp: TimeUtils.now(),
       replyTo: replyTo,
       senderAvatarIndex: sc.me.userInfo.avatarIndex,
-      clientMessageId: clientMessageId,
+      clientSeq: clientMessageId,
       status: ChatMessageStatus.normal,
       imageContent: imageContent,
     );
@@ -181,7 +185,7 @@ class SceneChatMessagesNotifier extends StateNotifier<SceneChatMessagesModel> {
         roomId: roomId,
         chatMessageType: message.type,
         content: message.content,
-        clientMessageId: message.clientMessageId,
+        clientMessageId: message.clientSeq,
         imageContent: message.inner.imageContent,
       ),
     );
@@ -208,11 +212,11 @@ class SceneChatMessagesNotifier extends StateNotifier<SceneChatMessagesModel> {
       replyTo,
       imageContent,
     );
-    _clientMessageIds.add(message.clientMessageId);
+    _clientMessageIds.add(message.clientSeq);
     _addMessage(message);
 
     bool success = await _requestSendChat(roomId, message);
-    int index = state.findMessageIndex(true, message.clientMessageId, true);
+    int index = state.findMessageIndex(true, message.clientSeq, true);
     if (index < 0) {
       return;
     }
@@ -259,7 +263,7 @@ class SceneChatMessagesNotifier extends StateNotifier<SceneChatMessagesModel> {
 
     int lastSeq = 0;
     for (int i = 0; i < state.messages.length; i++) {
-      if (!state.messages[i].useClientId) {
+      if (!state.messages[i].useClientSeq) {
         lastSeq = state.messages[i].seq;
         break;
       }
