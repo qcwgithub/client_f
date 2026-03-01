@@ -88,12 +88,24 @@ class FriendChatMessageManager {
     }
   }
 
-  Future<List<ChatMessage>> getOlderMessages(int roomId, int beforeSeq) async {
-    return await sc.chatMessageStorage.getMessagesBefore(roomId, beforeSeq);
+  Future<void> loadOlderMessages(int roomId, int beforeSeq) async {
+    final messages = await sc.chatMessageStorage.getMessagesBefore(
+      roomId,
+      beforeSeq,
+    );
+    if (messages.isNotEmpty) {
+      _controller2Add(messages);
+    }
   }
 
-  Future<List<ChatMessage>> getNewerMessages(int roomId, int afterSeq) async {
-    return await sc.chatMessageStorage.getMessagesAfter(roomId, afterSeq);
+  Future<void> loadNewerMessages(int roomId, int afterSeq) async {
+    final messages = await sc.chatMessageStorage.getMessagesAfter(
+      roomId,
+      afterSeq,
+    );
+    if (messages.isNotEmpty) {
+      _controller2Add(messages);
+    }
   }
 
   Future<bool> requestSendChat(ChatMessage message, int friendUserId) async {

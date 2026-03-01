@@ -149,6 +149,7 @@ class FriendChatMessagesNotifier
   // ---- 消息窗口管理 ----
 
   static const int _maxServerMessages = 5000;
+  static const int _loadBatchSize = 50;
 
   /// 判断消息是否在缓存范围外（seq < minSeq 且不是更新已有消息）
   bool _isNewMessageOutOfRange(ChatMessage inner) {
@@ -198,6 +199,14 @@ class FriendChatMessagesNotifier
         removed++;
       }
     }
+  }
+
+  int _serverMessageCount() {
+    int count = 0;
+    for (final m in state.messages) {
+      if (!m.useClientSeq) count++;
+    }
+    return count;
   }
 
   /// 将服务器消息插入或更新到 [list] 中，返回是否有变更。
@@ -335,43 +344,27 @@ class FriendChatMessagesNotifier
   }
 
   Future<void> loadOlderMessages() async {
-    if (state.minSeq <= 1) {
-      return;
+    if (state.minSeq <= 1) return;
+
+    // 预裁剪尾部（最新），为即将加载的旧消息腾出空间
+    if (_serverMessageCount() >= _maxServerMessages - _loadBatchSize) {
+      final trimmed = [...state.messages];
+      _trimNewest(trimmed);
+      state = state.copyWith(messages: trimmed);
     }
 
-    final messages = await sc.friendChatMessageManager.getOlderMessages(
-      roomId,
-      state.minSeq,
-    );
-    if (messages.isEmpty) return;
-
-    final updatedMessages = [...state.messages];
-    bool changed = false;
-    for (final inner in messages) {
-      if (_upsertIntoList(updatedMessages, inner)) changed = true;
-    }
-    if (changed) {
-      _trimNewest(updatedMessages);
-      state = state.copyWith(messages: updatedMessages);
-    }
+    await sc.friendChatMessageManager.loadOlderMessages(roomId, state.minSeq);
   }
 
   Future<void> loadNewerMessages() async {
-    final messages = await sc.friendChatMessageManager.getNewerMessages(
-      roomId,
-      state.maxSeq,
-    );
-    if (messages.isEmpty) return;
+    // 预裁剪头部（最旧），为即将加载的新消息腾出空间
+    if (_serverMessageCount() >= _maxServerMessages - _loadBatchSize) {
+      final trimmed = [...state.messages];
+      _trimOldest(trimmed);
+      state = state.copyWith(messages: trimmed);
+    }
 
-    final updatedMessages = [...state.messages];
-    bool changed = false;
-    for (final inner in messages) {
-      if (_upsertIntoList(updatedMessages, inner)) changed = true;
-    }
-    if (changed) {
-      _trimOldest(updatedMessages);
-      state = state.copyWith(messages: updatedMessages);
-    }
+    await sc.friendChatMessageManager.loadNewerMessages(roomId, state.maxSeq);
   }
 }
 
