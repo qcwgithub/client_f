@@ -48,6 +48,15 @@ class FriendChatMessageManager {
     }
   }
 
+  void _controller2Add(List<ChatMessage> messages) {
+    for (int i = 0; i < messages.length - 1; i++) {
+      if (messages[i].seq >= messages[i + 1].seq) {
+        sc.logger.d("消息 seq 不递增！${messages[i].seq} >= ${messages[i + 1].seq}");
+      }
+    }
+    _controller2.add(messages);
+  }
+
   Future<void> _requestReceiveFriendChatMessages() async {
     sc.eventBus.emit(
       FriendChatRefreshEvent(FriendChatRefreshStatus.refreshing),
@@ -62,7 +71,7 @@ class FriendChatMessageManager {
       final res = ResReceiveFriendChatMessages.fromMsgPack(r.res!);
       if (res.messages.isNotEmpty) {
         sc.chatMessageStorage.upsertMessages(res.messages);
-        _controller2.add(res.messages);
+        _controller2Add(res.messages);
         sc.eventBus.emit(
           FriendChatRefreshEvent(FriendChatRefreshStatus.success),
         );
@@ -75,28 +84,16 @@ class FriendChatMessageManager {
   Future<void> initialLoad(int roomId) async {
     final messages = await sc.chatMessageStorage.getMessages(roomId);
     if (messages.isNotEmpty) {
-      _controller2.add(messages);
+      _controller2Add(messages);
     }
   }
 
-  Future<void> loadOlderMessages(int roomId, int beforeSeq) async {
-    final messages = await sc.chatMessageStorage.getMessagesBefore(
-      roomId,
-      beforeSeq,
-    );
-    if (messages.isNotEmpty) {
-      _controller2.add(messages);
-    }
+  Future<List<ChatMessage>> getOlderMessages(int roomId, int beforeSeq) async {
+    return await sc.chatMessageStorage.getMessagesBefore(roomId, beforeSeq);
   }
 
-  Future<void> loadNewerMessages(int roomId, int afterSeq) async {
-    final messages = await sc.chatMessageStorage.getMessagesAfter(
-      roomId,
-      afterSeq,
-    );
-    if (messages.isNotEmpty) {
-      _controller2.add(messages);
-    }
+  Future<List<ChatMessage>> getNewerMessages(int roomId, int afterSeq) async {
+    return await sc.chatMessageStorage.getMessagesAfter(roomId, afterSeq);
   }
 
   Future<bool> requestSendChat(ChatMessage message, int friendUserId) async {

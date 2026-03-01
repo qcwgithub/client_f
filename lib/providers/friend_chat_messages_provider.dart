@@ -110,20 +110,24 @@ class FriendChatMessagesNotifier
     bool changed = false;
 
     for (final inner in roomMessages) {
+      if (_isNewMessageOutOfRange(inner)) continue;
       final result = _upsertIntoList(updatedMessages, inner);
       if (result) changed = true;
     }
 
     if (changed) {
+      _trimOldest(updatedMessages);
       state = state.copyWith(messages: updatedMessages);
     }
   }
 
   void _onChatMessage(ChatMessage inner) {
     if (inner.roomId != roomId) return;
+    if (_isNewMessageOutOfRange(inner)) return;
 
     final updatedMessages = [...state.messages];
     if (_upsertIntoList(updatedMessages, inner)) {
+      _trimOldest(updatedMessages);
       state = state.copyWith(messages: updatedMessages);
     }
   }
@@ -139,6 +143,60 @@ class FriendChatMessagesNotifier
       case FriendChatRefreshStatus.error:
         state = state.copyWith(status: FriendChatMessagesStatus.refreshError);
         break;
+    }
+  }
+
+  // ---- 消息窗口管理 ----
+
+  static const int _maxServerMessages = 5000;
+
+  /// 判断消息是否在缓存范围外（seq < minSeq 且不是更新已有消息）
+  bool _isNewMessageOutOfRange(ChatMessage inner) {
+    if (state.minSeq == 0) return false; // 还没有消息，全部接受
+    if (inner.seq >= state.minSeq) return false; // 在窗口内或更新
+    // seq < minSeq，检查是否是更新已有消息
+    if (state.findMessageIndex(false, inner.seq, false) >= 0) return false;
+    if (sc.me.isMe(inner.senderId) &&
+        inner.clientSeq != 0 &&
+        state.findMessageIndex(true, inner.clientSeq, false) >= 0) {
+      return false;
+    }
+    return true; // 超出缓存范围，丢弃
+  }
+
+  /// 从列表头部移除最旧的服务器消息，直到服务器消息数量 <= _maxServerMessages
+  static void _trimOldest(List<ClientChatMessage> list) {
+    int serverCount = 0;
+    for (final m in list) {
+      if (!m.useClientSeq) serverCount++;
+    }
+    if (serverCount <= _maxServerMessages) return;
+
+    int toRemove = serverCount - _maxServerMessages;
+    int removed = 0;
+    list.removeWhere((m) {
+      if (removed >= toRemove) return false;
+      if (m.useClientSeq) return false;
+      removed++;
+      return true;
+    });
+  }
+
+  /// 从列表尾部移除最新的服务器消息（保留客户端消息），直到服务器消息数量 <= _maxServerMessages
+  static void _trimNewest(List<ClientChatMessage> list) {
+    int serverCount = 0;
+    for (final m in list) {
+      if (!m.useClientSeq) serverCount++;
+    }
+    if (serverCount <= _maxServerMessages) return;
+
+    int toRemove = serverCount - _maxServerMessages;
+    int removed = 0;
+    for (int i = list.length - 1; i >= 0 && removed < toRemove; i--) {
+      if (!list[i].useClientSeq) {
+        list.removeAt(i);
+        removed++;
+      }
     }
   }
 
@@ -281,11 +339,39 @@ class FriendChatMessagesNotifier
       return;
     }
 
-    await sc.friendChatMessageManager.loadOlderMessages(roomId, state.minSeq);
+    final messages = await sc.friendChatMessageManager.getOlderMessages(
+      roomId,
+      state.minSeq,
+    );
+    if (messages.isEmpty) return;
+
+    final updatedMessages = [...state.messages];
+    bool changed = false;
+    for (final inner in messages) {
+      if (_upsertIntoList(updatedMessages, inner)) changed = true;
+    }
+    if (changed) {
+      _trimNewest(updatedMessages);
+      state = state.copyWith(messages: updatedMessages);
+    }
   }
 
   Future<void> loadNewerMessages() async {
-    await sc.friendChatMessageManager.loadNewerMessages(roomId, state.maxSeq);
+    final messages = await sc.friendChatMessageManager.getNewerMessages(
+      roomId,
+      state.maxSeq,
+    );
+    if (messages.isEmpty) return;
+
+    final updatedMessages = [...state.messages];
+    bool changed = false;
+    for (final inner in messages) {
+      if (_upsertIntoList(updatedMessages, inner)) changed = true;
+    }
+    if (changed) {
+      _trimOldest(updatedMessages);
+      state = state.copyWith(messages: updatedMessages);
+    }
   }
 }
 
