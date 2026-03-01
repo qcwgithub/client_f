@@ -133,7 +133,7 @@ class _ChatPageState extends ConsumerState<SceneChatPage> {
     );
   }
 
-  Widget _buildChatList(SceneChatMessagesModel model) {
+  Widget _buildChatList(ChatMessagesModel model) {
     return Expanded(
       child: ListView.builder(
         controller: _scrollController,

@@ -75,7 +75,7 @@ class EnterSceneNotifier extends StateNotifier<EnterSceneModel> {
         ),
       );
     }
-    sc.logger.d("enterScene ok, recentMessages messageId range [$min, $max]");
+    sc.logger.d("enterScene ok, recentMessages seq range [$min, $max]");
 
     state = state.copyWith(
       recentMessages: recentMessages,

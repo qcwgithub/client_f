@@ -14,15 +14,12 @@ import 'package:scene_hub/gen/res_receive_friend_chat_messages.dart';
 import 'package:scene_hub/gen/res_send_friend_chat.dart';
 import 'package:scene_hub/gen/res_set_friend_chat_read_seq.dart';
 import 'package:scene_hub/gen/res_set_friend_chat_received_seq.dart';
-import 'package:scene_hub/gen/user_info.dart';
 import 'package:scene_hub/logic/events/friend_chat_refresh_event.dart';
 import 'package:scene_hub/logic/events/login_event.dart';
 import 'package:scene_hub/logic/managers/chat_message_manager.dart';
 import 'package:scene_hub/sc.dart';
 
 class FriendChatMessageManager extends ChatMessageManager {
-  UserInfo get userInfo => sc.me.userInfo;
-
   StreamSubscription<LoginEvent>? _loginSub;
   void init() {
     _loginSub = sc.eventBus.on<LoginEvent>().listen(_onLogin);
@@ -103,14 +100,20 @@ class FriendChatMessageManager extends ChatMessageManager {
   }
 
   @override
-  Future<bool> requestSendChat(ChatMessage message, int friendUserId) async {
+  Future<bool> requestSendChat(ChatMessage message) async {
+    final friendInfo = sc.friendManager.getFriendByRoomId(message.roomId);
+    if (friendInfo == null) {
+      sc.logger.d("未找到好友信息，无法发送消息，roomId: ${message.roomId}");
+      return false;
+    }
+
     final r = await sc.server.request(
       MsgType.sendFriendChat,
       MsgSendFriendChat(
-        friendUserId: friendUserId,
+        friendUserId: friendInfo.userId,
         chatMessageType: message.type,
         content: message.content,
-        clientMessageId: message.clientSeq,
+        clientSeq: message.clientSeq,
         imageContent: message.imageContent,
       ),
     );
@@ -118,9 +121,10 @@ class FriendChatMessageManager extends ChatMessageManager {
     if (r.e == ECode.success) {
       final res = ResSendFriendChat.fromMsgPack(r.res as List);
       sc.chatMessageStorage.upsertMessage(res.message);
-      controllerAdd([message]);
+      controllerAdd([res.message]);
       return true;
     }
+
     return false;
   }
 

@@ -13,7 +13,7 @@ import 'package:scene_hub/gen/msg_send_scene_chat.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/res_get_scene_chat_history.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
-import 'package:scene_hub/logic/client_message_id_generator.dart';
+import 'package:scene_hub/logic/client_seq_generator.dart';
 import 'package:scene_hub/logic/time_utils.dart';
 import 'package:scene_hub/providers/chat_messages_notifier.dart';
 import 'package:scene_hub/sc.dart';
@@ -21,7 +21,7 @@ import 'package:scene_hub/sc.dart';
 class SceneChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
   final int roomId;
   StreamSubscription<ChatMessage>? _subscription;
-  final List<int> _clientMessageIds = [];
+  final List<int> _clientSeqs = [];
   SceneChatMessagesNotifier(this.roomId) : super(ChatMessagesModel.initial()) {
     _subscription = sc.sceneChatMessageManager.stream.listen(_onChatMessage);
   }
@@ -36,8 +36,7 @@ class SceneChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
   void _onChatMessage(ChatMessage inner) {
     if (inner.roomId != roomId) return;
 
-    if (sc.me.isMe(inner.senderId) &&
-        _clientMessageIds.contains(inner.clientSeq)) {
+    if (sc.me.isMe(inner.senderId) && _clientSeqs.contains(inner.clientSeq)) {
       final index = state.findMessageIndex(true, inner.clientSeq, true);
       if (index >= 0) {
         final message = state.getMessageAt(index);
@@ -83,7 +82,7 @@ class SceneChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
     int replyTo,
     ChatMessageImageContent? imageContent,
   ) {
-    int clientMessageId = clientMessageIdGenerator.nextId();
+    int clientSeq = clientSeqGenerator.nextId();
     final inner = ChatMessage(
       seq: 0,
       roomId: roomId,
@@ -95,7 +94,7 @@ class SceneChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
       timestamp: TimeUtils.now(),
       replyTo: replyTo,
       senderAvatarIndex: sc.me.userInfo.avatarIndex,
-      clientSeq: clientMessageId,
+      clientSeq: clientSeq,
       status: ChatMessageStatus.normal,
       imageContent: imageContent,
     );
@@ -119,7 +118,7 @@ class SceneChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
         roomId: roomId,
         chatMessageType: message.type,
         content: message.content,
-        clientMessageId: message.clientSeq,
+        clientSeq: message.clientSeq,
         imageContent: message.inner.imageContent,
       ),
     );
@@ -146,7 +145,7 @@ class SceneChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
       replyTo,
       imageContent,
     );
-    _clientMessageIds.add(message.clientSeq);
+    _clientSeqs.add(message.clientSeq);
     _addMessage(message);
 
     bool success = await _requestSendChat(roomId, message);
@@ -165,8 +164,8 @@ class SceneChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
     );
   }
 
-  Future<void> resendChat(int clientMessageId) async {
-    int index = state.findMessageIndex(true, clientMessageId, true);
+  Future<void> resendChat(int clientSeq) async {
+    int index = state.findMessageIndex(true, clientSeq, true);
     if (index <= 0) {
       return;
     }
@@ -177,7 +176,7 @@ class SceneChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
     );
 
     bool success = await _requestSendChat(roomId, message);
-    index = state.findMessageIndex(true, clientMessageId, true);
+    index = state.findMessageIndex(true, clientSeq, true);
 
     _updateMessageAt(
       index,
@@ -219,7 +218,7 @@ class SceneChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
     }
 
     sc.logger.d(
-      "requestHistory ok, got messageIds ${res.history.map((m) => m.seq).toList()}",
+      "requestHistory ok, got seqs ${res.history.map((m) => m.seq).toList()}",
     );
 
     final history = res.history

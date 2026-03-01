@@ -6,7 +6,7 @@ import 'package:scene_hub/gen/chat_message_image_content.dart';
 import 'package:scene_hub/gen/chat_message_status.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
-import 'package:scene_hub/logic/client_message_id_generator.dart';
+import 'package:scene_hub/logic/client_seq_generator.dart';
 import 'package:scene_hub/logic/managers/chat_message_manager.dart';
 import 'package:scene_hub/logic/time_utils.dart';
 import 'package:scene_hub/sc.dart';
@@ -198,7 +198,7 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
     ChatMessageImageContent? imageContent, {
     int replyTo = 0,
   }) {
-    int clientSeq = clientMessageIdGenerator.nextId();
+    int clientSeq = clientSeqGenerator.nextId();
     final inner = ChatMessage(
       seq: 0,
       roomId: roomId,

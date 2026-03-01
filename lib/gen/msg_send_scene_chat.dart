@@ -10,7 +10,7 @@ class MsgSendSceneChat implements IToMsgPack {
     // [2]
     String content;
     // [3]
-    int clientMessageId;
+    int clientSeq;
     // [4]
     ChatMessageImageContent? imageContent;
 
@@ -18,7 +18,7 @@ class MsgSendSceneChat implements IToMsgPack {
       required this.roomId,
       required this.chatMessageType,
       required this.content,
-      required this.clientMessageId,
+      required this.clientSeq,
       required this.imageContent,
     });
 
@@ -28,7 +28,7 @@ class MsgSendSceneChat implements IToMsgPack {
         roomId,
         chatMessageType.code,
         content,
-        clientMessageId,
+        clientSeq,
         imageContent?.toMsgPack(),
       ];
     }
@@ -38,7 +38,7 @@ class MsgSendSceneChat implements IToMsgPack {
         roomId: list[0] as int,
         chatMessageType: ChatMessageType.fromCode(list[1] as int),
         content: list[2] as String,
-        clientMessageId: list[3] as int,
+        clientSeq: list[3] as int,
         imageContent: list[4] == null ? null : ChatMessageImageContent.fromMsgPack(list[4] as List),
       );
     }

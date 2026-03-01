@@ -42,7 +42,7 @@ class FriendChatMessagesNotifier extends ChatMessagesNotifier {
 
   @override
   Future<bool> requestSendChat(ClientChatMessage message) {
-    return manager.requestSendChat(message.inner, friendUserId);
+    return manager.requestSendChat(message.inner);
   }
 }
 
