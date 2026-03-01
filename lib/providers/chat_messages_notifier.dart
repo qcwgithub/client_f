@@ -1,0 +1,296 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:scene_hub/gen/chat_message.dart';
+import 'package:scene_hub/gen/chat_message_image_content.dart';
+import 'package:scene_hub/gen/chat_message_status.dart';
+import 'package:scene_hub/gen/chat_message_type.dart';
+import 'package:scene_hub/logic/client_chat_message.dart';
+import 'package:scene_hub/logic/client_message_id_generator.dart';
+import 'package:scene_hub/logic/managers/chat_message_manager.dart';
+import 'package:scene_hub/logic/time_utils.dart';
+import 'package:scene_hub/sc.dart';
+
+enum ChatMessagesStatus { idle, refreshing, refreshError }
+
+class ChatMessagesModel {
+  final List<ClientChatMessage> messages;
+  final ChatMessagesStatus status;
+  int minSeq = 0;
+  int maxSeq = 0;
+  int serverMessageCount = 0;
+  // 索引：seq -> list index
+  final Map<int, int> _seqIndex = {};
+  // 索引：clientSeq -> list index
+  final Map<int, int> _clientIdIndex = {};
+
+  ChatMessagesModel({required this.messages, required this.status}) {
+    for (int i = 0; i < messages.length; i++) {
+      final message = messages[i];
+      if (message.useClientSeq) {
+        _clientIdIndex[message.clientSeq] = i;
+      } else {
+        _seqIndex[message.seq] = i;
+
+        if (minSeq == 0) {
+          minSeq = message.seq;
+        }
+        maxSeq = message.seq;
+
+        serverMessageCount++;
+      }
+    }
+  }
+
+  bool hasMore = true;
+
+  factory ChatMessagesModel.initial() {
+    return ChatMessagesModel(messages: [], status: ChatMessagesStatus.idle);
+  }
+
+  ChatMessagesModel copyWith({
+    List<ClientChatMessage>? messages,
+    ChatMessagesStatus? status,
+  }) {
+    return ChatMessagesModel(
+      messages: messages ?? this.messages,
+      status: status ?? this.status,
+    );
+  }
+
+  int findMessageIndex(bool useClientId, int seq, bool logErrorIfNotExist) {
+    final index = useClientId ? _clientIdIndex[seq] : _seqIndex[seq];
+    if (index != null) return index;
+    if (logErrorIfNotExist) {
+      sc.logger.e("findMessage failed, useClientId $useClientId seq $seq");
+    }
+    return -1;
+  }
+
+  ClientChatMessage getMessageAt(int index) {
+    return messages[index];
+  }
+}
+
+abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
+  final ChatMessageManager manager;
+  final int roomId;
+  StreamSubscription<List<ChatMessage>>? _streamSub;
+  final List<int> _clientSeqs = [];
+
+  ChatMessagesNotifier(this.manager, this.roomId)
+    : super(ChatMessagesModel.initial()) {
+    _streamSub = manager.stream.listen(_onChatMessages);
+    manager.initialLoad(roomId, _loadBatchSize);
+  }
+
+  @override
+  void dispose() {
+    _streamSub?.cancel();
+    _streamSub = null;
+    super.dispose();
+  }
+
+  void _onChatMessages(List<ChatMessage> messages) {
+    final roomMessages = messages.where((m) => m.roomId == roomId).toList();
+    if (roomMessages.isEmpty) return;
+
+    final updatedMessages = [...state.messages];
+
+    int delta = 0;
+    for (final inner in roomMessages) {
+      final result = _upsertIntoList(updatedMessages, inner);
+      if (result) delta++;
+    }
+
+    if (delta > 0) {
+      // 如果我正在浏览旧的，这里会不会把我要看的 trim 没了？
+      // 不会的，看旧的一定会走到 loadOlderMessages，那里已经 trim 新的了，这里不会再满足 trim 条件
+      if (_shouldTrim(state.serverMessageCount + delta)) {
+        _trimOldest(updatedMessages);
+      }
+      state = state.copyWith(messages: updatedMessages);
+    }
+  }
+
+  // ---- 消息窗口管理 ----
+
+  static const int _maxServerMessages = 3000;
+  static const int _loadBatchSize = 200;
+  static const int _trimOnceCount = 600;
+
+  bool _shouldTrim(int serverMessageCount) {
+    return serverMessageCount >= _maxServerMessages;
+  }
+
+  void _trimOldest(List<ClientChatMessage> list) {
+    int removed = 0;
+    list.removeWhere((m) {
+      if (removed >= _trimOnceCount) return false;
+      if (m.useClientSeq) return false;
+      removed++;
+      return true;
+    });
+  }
+
+  void _trimNewest(List<ClientChatMessage> list) {
+    int removed = 0;
+    for (int i = list.length - 1; i >= 0 && removed < _trimOnceCount; i--) {
+      if (!list[i].useClientSeq) {
+        list.removeAt(i);
+        removed++;
+      }
+    }
+  }
+
+  /// 将服务器消息插入或更新到 [list] 中，返回是否有变更。
+  bool _upsertIntoList(List<ClientChatMessage> list, ChatMessage inner) {
+    // 先按 seq 查是否已存在
+    for (int i = 0; i < list.length; i++) {
+      if (!list[i].useClientSeq && list[i].seq == inner.seq) {
+        // 已存在，替换
+        list[i] = ClientChatMessage.server(inner: inner);
+        return true;
+      }
+    }
+    // 再按 clientSeq 查是否是自己发的 sending 态消息
+    if (sc.me.isMe(inner.senderId) && inner.clientSeq != 0) {
+      for (int i = 0; i < list.length; i++) {
+        if (list[i].useClientSeq && list[i].clientSeq == inner.clientSeq) {
+          list[i] = ClientChatMessage.server(inner: inner);
+          return true;
+        }
+      }
+    }
+    // 不存在，按 seq 顺序插入
+    final newMessage = ClientChatMessage.server(inner: inner);
+    int insertIndex = list.length;
+    for (int i = 0; i < list.length; i++) {
+      if (list[i].seq > inner.seq) {
+        insertIndex = i;
+        break;
+      }
+    }
+    list.insert(insertIndex, newMessage);
+    return true;
+  }
+
+  // ---- 消息操作 ----
+
+  void _addMessage(ClientChatMessage message) {
+    state = state.copyWith(messages: [...state.messages, message]);
+  }
+
+  ClientChatMessage _updateMessageAt(
+    int index,
+    ClientChatMessage Function(ClientChatMessage) newMessageFunc,
+  ) {
+    final message = state.messages[index];
+    final newMessage = newMessageFunc(message);
+    state = state.copyWith(messages: [...state.messages]..[index] = newMessage);
+    return newMessage;
+  }
+
+  static ClientChatMessage _createSending(
+    int roomId,
+    ChatMessageType type,
+    String content,
+    ChatMessageImageContent? imageContent, {
+    int replyTo = 0,
+  }) {
+    int clientSeq = clientMessageIdGenerator.nextId();
+    final inner = ChatMessage(
+      seq: 0,
+      roomId: roomId,
+      senderId: sc.me.userId,
+      senderName: sc.me.userName,
+      senderAvatar: "",
+      type: type,
+      content: content,
+      timestamp: TimeUtils.now(),
+      replyTo: replyTo,
+      senderAvatarIndex: sc.me.userInfo.avatarIndex,
+      clientSeq: clientSeq,
+      status: ChatMessageStatus.normal,
+      imageContent: imageContent,
+    );
+    return ClientChatMessage.client(
+      inner: inner,
+      clientStatus: ClientChatMessageStatus.sending,
+    );
+  }
+
+  /// 子类实现，调用对应 manager 的发送方法
+  Future<bool> requestSendChat(ClientChatMessage message);
+
+  Future<void> sendChat(
+    ChatMessageType type,
+    String content,
+    ChatMessageImageContent? imageContent, {
+    int replyTo = 0,
+  }) async {
+    ClientChatMessage message = _createSending(
+      roomId,
+      type,
+      content,
+      imageContent,
+      replyTo: replyTo,
+    );
+    _clientSeqs.add(message.clientSeq);
+    _addMessage(message);
+
+    bool success = await requestSendChat(message);
+    if (success) return; // 成功由 stream 消息处理
+
+    int index = state.findMessageIndex(true, message.clientSeq, false);
+    if (index < 0) return;
+
+    _updateMessageAt(
+      index,
+      (m) => m.copyWith(clientStatus: ClientChatMessageStatus.failed),
+    );
+  }
+
+  Future<void> resendChat(int clientSeq) async {
+    int index = state.findMessageIndex(true, clientSeq, false);
+    if (index < 0) return;
+
+    ClientChatMessage message = _updateMessageAt(
+      index,
+      (m) => m.copyWith(clientStatus: ClientChatMessageStatus.sending),
+    );
+
+    bool success = await requestSendChat(message);
+    if (success) return; // 成功由 stream 消息处理
+
+    index = state.findMessageIndex(true, clientSeq, true);
+    if (index < 0) return;
+
+    _updateMessageAt(
+      index,
+      (m) => m.copyWith(clientStatus: ClientChatMessageStatus.failed),
+    );
+  }
+
+  Future<void> loadOlderMessages() async {
+    if (state.minSeq <= 1) return;
+
+    if (_shouldTrim(state.serverMessageCount)) {
+      final trimmed = [...state.messages];
+      _trimNewest(trimmed);
+      state = state.copyWith(messages: trimmed);
+    }
+
+    await manager.loadOlderMessages(roomId, state.minSeq, _loadBatchSize);
+  }
+
+  Future<void> loadNewerMessages() async {
+    if (_shouldTrim(state.serverMessageCount)) {
+      final trimmed = [...state.messages];
+      _trimOldest(trimmed);
+      state = state.copyWith(messages: trimmed);
+    }
+
+    await manager.loadNewerMessages(roomId, state.maxSeq, _loadBatchSize);
+  }
+}
