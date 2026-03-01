@@ -76,7 +76,7 @@ class _FriendChatPageState extends ConsumerState<FriendChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final FriendChatMessagesModel model = ref.watch(
+    final ChatMessagesModel model = ref.watch(
       friendChatMessagesProvider(_providerKey),
     );
 
@@ -86,12 +86,12 @@ class _FriendChatPageState extends ConsumerState<FriendChatPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(widget.friendName),
-            if (model.status == FriendChatMessagesStatus.refreshing)
+            if (model.status == ChatMessagesStatus.refreshing)
               const Text(
                 '同步中...',
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
               ),
-            if (model.status == FriendChatMessagesStatus.refreshError)
+            if (model.status == ChatMessagesStatus.refreshError)
               const Text(
                 '同步失败',
                 style: TextStyle(
@@ -119,7 +119,7 @@ class _FriendChatPageState extends ConsumerState<FriendChatPage> {
     );
   }
 
-  Widget _buildChatList(FriendChatMessagesModel model) {
+  Widget _buildChatList(ChatMessagesModel model) {
     return Expanded(
       child: ListView.builder(
         controller: _scrollController,

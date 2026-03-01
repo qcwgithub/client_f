@@ -17,15 +17,10 @@ import 'package:scene_hub/gen/res_set_friend_chat_received_seq.dart';
 import 'package:scene_hub/gen/user_info.dart';
 import 'package:scene_hub/logic/events/friend_chat_refresh_event.dart';
 import 'package:scene_hub/logic/events/login_event.dart';
+import 'package:scene_hub/logic/managers/chat_message_manager.dart';
 import 'package:scene_hub/sc.dart';
 
-class FriendChatMessageManager {
-  final _controller1 = StreamController<ChatMessage>.broadcast();
-  Stream<ChatMessage> get stream1 => _controller1.stream;
-
-  final _controller2 = StreamController<List<ChatMessage>>.broadcast();
-  Stream<List<ChatMessage>> get stream2 => _controller2.stream;
-
+class FriendChatMessageManager extends ChatMessageManager {
   UserInfo get userInfo => sc.me.userInfo;
 
   StreamSubscription<LoginEvent>? _loginSub;
@@ -48,15 +43,6 @@ class FriendChatMessageManager {
     }
   }
 
-  void _controller2Add(List<ChatMessage> messages) {
-    for (int i = 0; i < messages.length - 1; i++) {
-      if (messages[i].seq >= messages[i + 1].seq) {
-        sc.logger.d("消息 seq 不递增！${messages[i].seq} >= ${messages[i + 1].seq}");
-      }
-    }
-    _controller2.add(messages);
-  }
-
   Future<void> _requestReceiveFriendChatMessages() async {
     sc.eventBus.emit(
       FriendChatRefreshEvent(FriendChatRefreshStatus.refreshing),
@@ -71,7 +57,7 @@ class FriendChatMessageManager {
       final res = ResReceiveFriendChatMessages.fromMsgPack(r.res!);
       if (res.messages.isNotEmpty) {
         sc.chatMessageStorage.upsertMessages(res.messages);
-        _controller2Add(res.messages);
+        controllerAdd(res.messages);
         sc.eventBus.emit(
           FriendChatRefreshEvent(FriendChatRefreshStatus.success),
         );
@@ -81,16 +67,18 @@ class FriendChatMessageManager {
     }
   }
 
+  @override
   Future<void> initialLoad(int roomId, int count) async {
     final messages = await sc.chatMessageStorage.getMessages(
       roomId,
       limit: count,
     );
     if (messages.isNotEmpty) {
-      _controller2Add(messages);
+      controllerAdd(messages);
     }
   }
 
+  @override
   Future<void> loadOlderMessages(int roomId, int beforeSeq, int count) async {
     final messages = await sc.chatMessageStorage.getMessagesBefore(
       roomId,
@@ -98,10 +86,11 @@ class FriendChatMessageManager {
       limit: count,
     );
     if (messages.isNotEmpty) {
-      _controller2Add(messages);
+      controllerAdd(messages);
     }
   }
 
+  @override
   Future<void> loadNewerMessages(int roomId, int afterSeq, int count) async {
     final messages = await sc.chatMessageStorage.getMessagesAfter(
       roomId,
@@ -109,10 +98,11 @@ class FriendChatMessageManager {
       limit: count,
     );
     if (messages.isNotEmpty) {
-      _controller2Add(messages);
+      controllerAdd(messages);
     }
   }
 
+  @override
   Future<bool> requestSendChat(ChatMessage message, int friendUserId) async {
     final r = await sc.server.request(
       MsgType.sendFriendChat,
@@ -128,7 +118,7 @@ class FriendChatMessageManager {
     if (r.e == ECode.success) {
       final res = ResSendFriendChat.fromMsgPack(r.res as List);
       sc.chatMessageStorage.upsertMessage(res.message);
-      _controller1.add(message);
+      controllerAdd([message]);
       return true;
     }
     return false;
@@ -140,7 +130,7 @@ class FriendChatMessageManager {
     ChatMessage message = msg.message;
 
     sc.chatMessageStorage.upsertMessage(message);
-    _controller1.add(message);
+    controllerAdd([message]);
 
     int friendUserId = friendInfo.userId;
     int seq = message.seq;
