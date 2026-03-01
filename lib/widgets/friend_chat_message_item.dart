@@ -1,286 +1,44 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
-import 'package:scene_hub/pages/fullscreen_image_page.dart';
-import 'package:scene_hub/pages/user_info_page.dart';
-import 'package:scene_hub/providers/friend_chat_messages_provider.dart';
 import 'package:scene_hub/providers/friend_chat_message_provider.dart';
+import 'package:scene_hub/providers/friend_chat_messages_provider.dart';
 import 'package:scene_hub/sc.dart';
+import 'package:scene_hub/widgets/chat_message_item.dart';
 
-class FriendChatMessageItem extends ConsumerWidget {
+class FriendChatMessageItem extends ChatMessageItemBase {
   final int friendUserId;
   final int roomId;
   final bool useClientSeq;
   final int seq;
-  final bool showTime;
+
   const FriendChatMessageItem({
     super.key,
     required this.friendUserId,
     required this.roomId,
     required this.useClientSeq,
     required this.seq,
-    required this.showTime,
+    required super.showTime,
   });
 
-  void _onClickAvatar(BuildContext context, ClientChatMessage message) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => UserInfoPage(
-          userId: message.senderId,
-          userName: message.senderName,
-          senderAvatarIndex: message.senderAvatarIndex,
-        ),
-      ),
+  @override
+  ClientChatMessage watchMessage(WidgetRef ref) {
+    return ref.watch(
+      friendChatMessageProvider((friendUserId, roomId, useClientSeq, seq)),
     );
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ClientChatMessage message = ref.watch(
-      friendChatMessageProvider((friendUserId, roomId, useClientSeq, seq)),
-    );
-    bool isMe = sc.me.isMe(message.senderId);
-    if (!useClientSeq) {
-      sc.friendChatMessageManager.onMessageViewed(
-        friendUserId,
-        message.inner.seq,
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 5),
-      child: Row(
-        mainAxisAlignment: isMe
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!isMe) _buildAvatar(isMe, context, message, _onClickAvatar),
-
-          _buildMessageBubble(context, message, isMe),
-
-          if (isMe)
-            Padding(
-              padding: const EdgeInsets.only(left: 6, top: 6),
-              child: SizedBox(
-                width: 16,
-                height: 16,
-                child: _buildClientStatus(
-                  message,
-                  () => ref
-                      .read(
-                        friendChatMessagesProvider((
-                          friendUserId,
-                          roomId,
-                        )).notifier,
-                      )
-                      .resendChat(message.clientSeq),
-                ),
-              ),
-            ),
-
-          if (isMe) _buildAvatar(isMe, context, message, _onClickAvatar),
-        ],
-      ),
+  void onMessageViewed(ClientChatMessage message) {
+    sc.friendChatMessageManager.onMessageViewed(
+      friendUserId,
+      message.inner.seq,
     );
   }
 
-  Widget _buildMessageBubble(
-    BuildContext context,
-    ClientChatMessage message,
-    bool isMe,
-  ) {
-    final timeString = _formatTimestamp(message.timestamp);
-
-    return Flexible(
-      child: Column(
-        crossAxisAlignment: isMe
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
-        children: [
-          if (!isMe)
-            Text(
-              message.senderName,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-            ),
-
-          if (!isMe) const SizedBox(height: 4),
-
-          if (message.type == ChatMessageType.text)
-            _buildTextBubble(context, message, isMe),
-
-          if (showTime) const SizedBox(height: 4),
-
-          if (showTime)
-            Text(
-              timeString,
-              style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextBubble(
-    BuildContext context,
-    ClientChatMessage message,
-    bool isMe,
-  ) {
-    final Radius radius = Radius.circular(12);
-    return GestureDetector(
-      onLongPressStart: (details) {
-        _showMessageMenu(context, message, details.globalPosition);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-        decoration: BoxDecoration(
-          color: isMe ? Colors.blueAccent : Colors.grey.shade300,
-          borderRadius: BorderRadius.only(
-            topLeft: radius,
-            topRight: radius,
-            bottomLeft: isMe ? radius : Radius.zero,
-            bottomRight: isMe ? Radius.zero : radius,
-          ),
-        ),
-        child: Text(
-          "[${message.seq}] ${message.content}",
-          style: TextStyle(color: isMe ? Colors.white : Colors.black87),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImageBubble(
-    BuildContext context,
-    ClientChatMessage message,
-    bool isMe,
-  ) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) =>
-                FullscreenImagePage(imageUrl: message.inner.imageContent!.url),
-          ),
-        );
-      },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          width: 180,
-          height: 180,
-          child: CachedNetworkImage(
-            imageUrl: message.inner.imageContent!.url,
-            fit: BoxFit.cover,
-            placeholder: (context, url) => Container(
-              color: Colors.grey.shade200,
-              child: const Center(
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            ),
-            errorWidget: (context, url, error) => Container(
-              color: Colors.grey.shade200,
-              child: const Center(child: Icon(Icons.broken_image, size: 40)),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showMessageMenu(
-    BuildContext context,
-    ClientChatMessage message,
-    Offset position,
-  ) async {
-    final selected = await showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        position.dx,
-        position.dy,
-        position.dx,
-        position.dy,
-      ),
-      items: [const PopupMenuItem(value: "copy", child: Text("Copy"))],
-    );
-
-    if (selected == null) return;
-
-    switch (selected) {
-      case "copy":
-        if (context.mounted) {
-          if (message.type == ChatMessageType.text) {
-            Clipboard.setData(ClipboardData(text: message.content));
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text("Copied!")));
-          }
-        }
-        break;
-    }
-  }
-
-  Widget _buildClientStatus(ClientChatMessage message, VoidCallback resend) {
-    switch (message.clientStatus) {
-      case ClientChatMessageStatus.normal:
-        return const Icon(Icons.check, color: Colors.green, size: 16);
-      case ClientChatMessageStatus.sending:
-        return CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-        );
-      case ClientChatMessageStatus.failed:
-        return GestureDetector(
-          onTap: resend,
-          child: const Icon(Icons.error, color: Colors.red, size: 16),
-        );
-    }
-  }
-
-  Widget _buildAvatar(
-    bool isMe,
-    BuildContext context,
-    ClientChatMessage message,
-    Function(BuildContext, ClientChatMessage) onClick,
-  ) {
-    return GestureDetector(
-      onTap: () => onClick(context, message),
-      child: Container(
-        width: 38,
-        height: 38,
-        margin: isMe
-            ? const EdgeInsets.only(right: 6, left: 6)
-            : const EdgeInsets.only(right: 6, left: 6, top: 12),
-        decoration: BoxDecoration(
-          color: Colors.indigo.shade100,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          message.senderName.isNotEmpty
-              ? message.senderName[0].toUpperCase()
-              : '?',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.indigo.shade700,
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _formatTimestamp(int timestamp) {
-    final dt = DateTime.fromMillisecondsSinceEpoch(timestamp);
-    return DateFormat('HH:mm').format(dt);
+  @override
+  void onResendChat(WidgetRef ref, int clientSeq) {
+    ref
+        .read(friendChatMessagesProvider((friendUserId, roomId)).notifier)
+        .resendChat(clientSeq);
   }
 }
