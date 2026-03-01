@@ -16,16 +16,14 @@ enum FriendChatMessagesStatus { idle, refreshing, refreshError }
 class FriendChatMessagesModel {
   final List<ClientChatMessage> messages;
   final FriendChatMessagesStatus status;
-  late int minSeq;
-  late int maxSeq;
+  int minSeq = 0;
+  int maxSeq = 0;
+  int serverMessageCount = 0;
   // 索引：seq -> list index
   final Map<int, int> _seqIndex = {};
   // 索引：clientSeq -> list index
   final Map<int, int> _clientIdIndex = {};
   FriendChatMessagesModel({required this.messages, required this.status}) {
-    minSeq = 0;
-    maxSeq = 0;
-
     for (int i = 0; i < messages.length; i++) {
       final message = messages[i];
       if (message.useClientSeq) {
@@ -37,6 +35,8 @@ class FriendChatMessagesModel {
           minSeq = message.seq;
         }
         maxSeq = message.seq;
+
+        serverMessageCount++;
       }
     }
   }
@@ -88,7 +88,7 @@ class FriendChatMessagesNotifier
     _sub1 = sc.friendChatMessageManager.stream1.listen(_onChatMessage);
     _sub2 = sc.friendChatMessageManager.stream2.listen(_onChatMessages);
     _sub3 = sc.eventBus.on<FriendChatRefreshEvent>().listen(_onRefreshEvent);
-    sc.friendChatMessageManager.initialLoad(roomId);
+    sc.friendChatMessageManager.initialLoad(roomId, _loadBatchSize);
   }
 
   @override
@@ -148,8 +148,8 @@ class FriendChatMessagesNotifier
 
   // ---- 消息窗口管理 ----
 
-  static const int _maxServerMessages = 5000;
-  static const int _loadBatchSize = 50;
+  static const int _maxServerMessages = 3000;
+  static const int _loadBatchSize = 200;
 
   /// 判断消息是否在缓存范围外（seq < minSeq 且不是更新已有消息）
   bool _isNewMessageOutOfRange(ChatMessage inner) {
@@ -199,14 +199,6 @@ class FriendChatMessagesNotifier
         removed++;
       }
     }
-  }
-
-  int _serverMessageCount() {
-    int count = 0;
-    for (final m in state.messages) {
-      if (!m.useClientSeq) count++;
-    }
-    return count;
   }
 
   /// 将服务器消息插入或更新到 [list] 中，返回是否有变更。
@@ -347,24 +339,32 @@ class FriendChatMessagesNotifier
     if (state.minSeq <= 1) return;
 
     // 预裁剪尾部（最新），为即将加载的旧消息腾出空间
-    if (_serverMessageCount() >= _maxServerMessages - _loadBatchSize) {
+    if (state.serverMessageCount >= _maxServerMessages - _loadBatchSize) {
       final trimmed = [...state.messages];
       _trimNewest(trimmed);
       state = state.copyWith(messages: trimmed);
     }
 
-    await sc.friendChatMessageManager.loadOlderMessages(roomId, state.minSeq);
+    await sc.friendChatMessageManager.loadOlderMessages(
+      roomId,
+      state.minSeq,
+      _loadBatchSize,
+    );
   }
 
   Future<void> loadNewerMessages() async {
     // 预裁剪头部（最旧），为即将加载的新消息腾出空间
-    if (_serverMessageCount() >= _maxServerMessages - _loadBatchSize) {
+    if (state.serverMessageCount >= _maxServerMessages - _loadBatchSize) {
       final trimmed = [...state.messages];
       _trimOldest(trimmed);
       state = state.copyWith(messages: trimmed);
     }
 
-    await sc.friendChatMessageManager.loadNewerMessages(roomId, state.maxSeq);
+    await sc.friendChatMessageManager.loadNewerMessages(
+      roomId,
+      state.maxSeq,
+      _loadBatchSize,
+    );
   }
 }
 
