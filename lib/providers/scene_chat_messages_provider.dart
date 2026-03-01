@@ -8,80 +8,21 @@ import 'package:scene_hub/gen/chat_message_image_content.dart';
 import 'package:scene_hub/gen/chat_message_status.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/gen/e_code.dart';
-import 'package:scene_hub/gen/msg_a_chat_message.dart';
 import 'package:scene_hub/gen/msg_get_scene_chat_history.dart';
 import 'package:scene_hub/gen/msg_send_scene_chat.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/res_get_scene_chat_history.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/logic/client_message_id_generator.dart';
-import 'package:scene_hub/logic/event_bus.dart';
 import 'package:scene_hub/logic/time_utils.dart';
+import 'package:scene_hub/providers/chat_messages_notifier.dart';
 import 'package:scene_hub/sc.dart';
 
-enum SceneChatMessagesStatus { idle, refreshing, success, empty, error }
-
-class SceneChatMessagesModel {
-  final List<ClientChatMessage> messages;
-  final SceneChatMessagesStatus status;
-  SceneChatMessagesModel({required this.messages, required this.status});
-
-  bool hasMore = true;
-
-  factory SceneChatMessagesModel.initial() {
-    return SceneChatMessagesModel(
-      messages: [],
-      status: SceneChatMessagesStatus.idle,
-    );
-  }
-
-  SceneChatMessagesModel copyWith({
-    List<ClientChatMessage>? messages,
-    SceneChatMessagesStatus? status,
-  }) {
-    return SceneChatMessagesModel(
-      messages: messages ?? this.messages,
-      status: status ?? this.status,
-    );
-  }
-
-  // TODO
-  int findMessageIndex(
-    bool useClientId,
-    int messageId,
-    bool logErrorIfNotExist,
-  ) {
-    for (int i = 0; i < messages.length; i++) {
-      final message = messages[i];
-      if (useClientId) {
-        if (message.useClientSeq && message.clientSeq == messageId) {
-          return i;
-        }
-      } else {
-        if (!message.useClientSeq && message.seq == messageId) {
-          return i;
-        }
-      }
-    }
-    if (logErrorIfNotExist) {
-      sc.logger.e(
-        "findMessage failed, userClientId $useClientId messageId $messageId",
-      );
-    }
-    return -1;
-  }
-
-  ClientChatMessage getMessageAt(int index) {
-    return messages[index];
-  }
-}
-
-class SceneChatMessagesNotifier extends StateNotifier<SceneChatMessagesModel> {
+class SceneChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
   final int roomId;
   StreamSubscription<ChatMessage>? _subscription;
   final List<int> _clientMessageIds = [];
-  SceneChatMessagesNotifier(this.roomId)
-    : super(SceneChatMessagesModel.initial()) {
+  SceneChatMessagesNotifier(this.roomId) : super(ChatMessagesModel.initial()) {
     _subscription = sc.sceneChatMessageManager.stream.listen(_onChatMessage);
   }
 
@@ -114,21 +55,14 @@ class SceneChatMessagesNotifier extends StateNotifier<SceneChatMessagesModel> {
   }
 
   void setInitialMessages(List<ClientChatMessage> messages) {
-    state = SceneChatMessagesModel(
+    state = ChatMessagesModel(
       messages: messages,
-      status: messages.isEmpty
-          ? SceneChatMessagesStatus.empty
-          : SceneChatMessagesStatus.success,
+      status: ChatMessagesStatus.idle,
     );
   }
 
   void _addMessage(ClientChatMessage message) {
-    state = state.copyWith(
-      messages: [...state.messages, message],
-      status: state.status == SceneChatMessagesStatus.empty
-          ? SceneChatMessagesStatus.success
-          : state.status,
-    );
+    state = state.copyWith(messages: [...state.messages, message]);
   }
 
   ClientChatMessage _updateMessageAt(
@@ -296,7 +230,7 @@ class SceneChatMessagesNotifier extends StateNotifier<SceneChatMessagesModel> {
 
     state = state.copyWith(
       messages: [...history, ...state.messages],
-      status: SceneChatMessagesStatus.idle,
+      status: ChatMessagesStatus.idle,
     );
 
     return true;
@@ -306,7 +240,7 @@ class SceneChatMessagesNotifier extends StateNotifier<SceneChatMessagesModel> {
 final sceneChatMessagesProvider =
     StateNotifierProvider.family<
       SceneChatMessagesNotifier,
-      SceneChatMessagesModel,
+      ChatMessagesModel,
       int
     >((ref, roomId) {
       final notifier = SceneChatMessagesNotifier(roomId);

@@ -4,6 +4,7 @@ import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/scene_room_info.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/pages/scene_info_page.dart';
+import 'package:scene_hub/providers/chat_messages_notifier.dart';
 import 'package:scene_hub/providers/scene_chat_messages_provider.dart';
 import 'package:scene_hub/sc.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
@@ -89,7 +90,7 @@ class _ChatPageState extends ConsumerState<SceneChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final SceneChatMessagesModel model = ref.watch(
+    final ChatMessagesModel model = ref.watch(
       sceneChatMessagesProvider(widget.roomId),
     );
 
