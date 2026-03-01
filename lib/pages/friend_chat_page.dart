@@ -66,19 +66,9 @@ class _FriendChatPageState extends ChatPageState<FriendChatPage> {
           children: [
             Text(widget.friendName),
             if (model.status == ChatMessagesStatus.refreshing)
-              const Text(
-                '同步中...',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-              ),
+              buildRefreshing(model.status),
             if (model.status == ChatMessagesStatus.refreshError)
-              const Text(
-                '同步失败',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.normal,
-                  color: Colors.red,
-                ),
-              ),
+              buildRefreshError(model.status),
           ],
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
+import 'package:scene_hub/providers/chat_messages_notifier.dart';
 import 'package:scene_hub/sc.dart';
 
 /// Base state class for chat pages. Provides:
@@ -56,6 +57,24 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
     scrollController.dispose();
     inputController.dispose();
     super.dispose();
+  }
+
+  Widget buildRefreshing(ChatMessagesStatus status) {
+    return const Text(
+      '同步中...',
+      style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+    );
+  }
+
+  Widget buildRefreshError(ChatMessagesStatus status) {
+    return const Text(
+      '同步失败',
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.normal,
+        color: Colors.red,
+      ),
+    );
   }
 
   /// Build the item widget for a given message. Must override.
