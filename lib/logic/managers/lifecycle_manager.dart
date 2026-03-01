@@ -14,11 +14,11 @@ class LifecycleManager {
 
   void _onLogin(LoginEvent event) async {
     if (event.count == 1) {
-      await sc.chatMessageStorage.onFirstLogin();
-      await sc.conversationManager.onFirstLogin();
+      await sc.chatMessageStorage.open();
+      await sc.conversationManager.openStorageAndInitialLoad();
 
       // bussiness
-      await sc.friendChatMessageManager.onFirstLogin();
+      await sc.friendChatMessageManager.firstLoginReceive();
 
       // 都搞定了才进去
       globalContainer.read(navProvider.notifier).state = 1;
@@ -29,7 +29,7 @@ class LifecycleManager {
     _loginSub?.cancel();
     _loginSub = null;
 
-    sc.server.close();
+    sc.server.stopRunningAndClose();
     while (sc.server.state != NetworkStatus.init) {
       await Future.delayed(Duration(milliseconds: 100));
     }

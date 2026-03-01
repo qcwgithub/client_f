@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/scheduler.dart';
 import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/e_code.dart';
 import 'package:scene_hub/gen/friend_info.dart';
@@ -18,8 +19,11 @@ import 'package:scene_hub/logic/events/login_event.dart';
 import 'package:scene_hub/sc.dart';
 
 class FriendChatMessageManager {
-  final _controller = StreamController<ChatMessage>.broadcast();
-  Stream<ChatMessage> get stream => _controller.stream;
+  final _controller1 = StreamController<ChatMessage>.broadcast();
+  Stream<ChatMessage> get stream1 => _controller1.stream;
+
+  final _controller2 = StreamController<List<ChatMessage>>.broadcast();
+  Stream<List<ChatMessage>> get stream2 => _controller2.stream;
 
   UserInfo get userInfo => sc.me.userInfo;
 
@@ -28,7 +32,7 @@ class FriendChatMessageManager {
     _loginSub = sc.eventBus.on<LoginEvent>().listen(_onLogin);
   }
 
-  Future<void> onFirstLogin() async {
+  Future<void> firstLoginReceive() async {
     await _requestReceiveFriendChatMessages();
   }
 
@@ -51,22 +55,17 @@ class FriendChatMessageManager {
 
     if (r.e == ECode.success) {
       final res = ResReceiveFriendChatMessages.fromMsgPack(r.res!);
-      for (final message in res.messages) {
-        sc.chatMessageStorage.upsertMessage(message);
-        _controller.add(message);
-      }
+      sc.chatMessageStorage.upsertMessages(res.messages);
+      _controller2.add(res.messages);
     }
   }
 
-  Future<List<ChatMessage>> loadFromStorage(int roomId) async {
+  Future<void> loadFromStorage(int roomId) async {
     final messages = await sc.chatMessageStorage.getMessages(roomId);
-    return messages;
+    _controller2.add(messages);
   }
 
-  Future<ChatMessage?> requestSendChat(
-    ChatMessage message,
-    int friendUserId,
-  ) async {
+  Future<bool> requestSendChat(ChatMessage message, int friendUserId) async {
     final r = await sc.server.request(
       MsgType.sendFriendChat,
       MsgSendFriendChat(
@@ -78,13 +77,59 @@ class FriendChatMessageManager {
       ),
     );
 
-    if (r.e != ECode.success) {
-      return null;
+    if (r.e == ECode.success) {
+      final res = ResSendFriendChat.fromMsgPack(r.res as List);
+      sc.chatMessageStorage.upsertMessage(res.message);
+      _controller1.add(message);
+      return true;
     }
+    return false;
+  }
 
-    final res = ResSendFriendChat.fromMsgPack(r.res as List);
-    sc.chatMessageStorage.upsertMessage(res.message);
-    return res.message;
+  // 收到服务器主动推送的消息
+  final Map<int, int> _receivedSeqMap = {};
+  void onMsgAChatMessage(MsgAChatMessage msg, FriendInfo friendInfo) {
+    ChatMessage message = msg.message;
+
+    sc.chatMessageStorage.upsertMessage(message);
+    _controller1.add(message);
+
+    int friendUserId = friendInfo.userId;
+    int seq = message.seq;
+    if (seq > friendInfo.receivedSeq) {
+      if (_receivedSeqMap[friendUserId] == null ||
+          seq > _receivedSeqMap[friendUserId]!) {
+        _receivedSeqMap[friendUserId] = seq;
+        _tryRegisterPostFrameCallback();
+      }
+    }
+  }
+
+  // Post Frame Callback
+
+  bool _registeredPostFrameCallback = false;
+  void _tryRegisterPostFrameCallback() {
+    if (_registeredPostFrameCallback) {
+      return;
+    }
+    _registeredPostFrameCallback = true;
+    SchedulerBinding.instance.addPostFrameCallback(_postFrameCallback);
+  }
+
+  void _postFrameCallback(Duration timeStamp) {
+    _registeredPostFrameCallback = false;
+
+    //
+    _receivedSeqMap.forEach((friendUserId, receivedSeq) {
+      _requestSetReceivedSeq(friendUserId, receivedSeq);
+    });
+    _receivedSeqMap.clear();
+
+    //
+    _readSeqMap.forEach((friendUserId, readSeq) {
+      _requestSetReadSeq(friendUserId, readSeq);
+    });
+    _readSeqMap.clear();
   }
 
   void _requestSetReceivedSeq(int friendUserId, int receivedSeq) async {
@@ -113,24 +158,17 @@ class FriendChatMessageManager {
     }
   }
 
-  // 收到服务器主动推送的消息
-  void onMsgAChatMessage(MsgAChatMessage msg, FriendInfo friendInfo) {
-    ChatMessage message = msg.message;
+  // 上报 read seq
 
-    // 保存到本地存储（无论是谁发的，推送过来的都有 seq，直接存）
-    sc.chatMessageStorage.upsertMessage(message);
-
-    _controller.add(message);
-
-    if (message.seq > friendInfo.receivedSeq) {
-      _requestSetReceivedSeq(friendInfo.userId, message.seq);
-    }
-  }
-
+  final Map<int, int> _readSeqMap = {};
   void onMessageViewed(int friendUserId, int seq) {
     final FriendInfo? friendInfo = sc.friendManager.getFriend(friendUserId);
     if (friendInfo != null && seq > friendInfo.readSeq) {
-      _requestSetReadSeq(friendInfo.userId, seq);
+      if (_readSeqMap[friendUserId] == null ||
+          seq > _readSeqMap[friendUserId]!) {
+        _readSeqMap[friendUserId] = seq;
+        _tryRegisterPostFrameCallback();
+      }
     }
   }
 }

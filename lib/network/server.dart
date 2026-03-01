@@ -232,7 +232,7 @@ class Server {
     }
   }
 
-  void close() {
+  void stopRunningAndClose() {
     _running = false;
 
     if (client != null) {

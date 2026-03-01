@@ -5,10 +5,6 @@ import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/chat_message_image_content.dart';
 import 'package:scene_hub/gen/chat_message_status.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
-import 'package:scene_hub/gen/e_code.dart';
-import 'package:scene_hub/gen/msg_set_friend_chat_received_seq.dart';
-import 'package:scene_hub/gen/msg_type.dart';
-import 'package:scene_hub/gen/res_set_friend_chat_received_seq.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/logic/client_message_id_generator.dart';
 import 'package:scene_hub/logic/time_utils.dart';
@@ -24,7 +20,10 @@ class FriendChatMessagesModel {
   bool hasMore = true;
 
   factory FriendChatMessagesModel.initial() {
-    return FriendChatMessagesModel(messages: [], status: FriendChatMessagesStatus.idle);
+    return FriendChatMessagesModel(
+      messages: [],
+      status: FriendChatMessagesStatus.idle,
+    );
   }
 
   FriendChatMessagesModel copyWith({
@@ -67,48 +66,58 @@ class FriendChatMessagesModel {
   }
 }
 
-class FriendChatMessagesNotifier extends StateNotifier<FriendChatMessagesModel> {
+class FriendChatMessagesNotifier
+    extends StateNotifier<FriendChatMessagesModel> {
   final int friendUserId;
   final int roomId;
-  StreamSubscription<ChatMessage>? _subscription;
+  StreamSubscription<ChatMessage>? _sub1;
+  StreamSubscription<List<ChatMessage>>? _sub2;
   final List<int> _clientMessageIds = [];
 
   FriendChatMessagesNotifier(this.friendUserId, this.roomId)
     : super(FriendChatMessagesModel.initial()) {
-    _subscription = sc.friendChatMessageManager.stream.listen(_onChatMessage);
-    _loadFromStorage();
+    _sub1 = sc.friendChatMessageManager.stream1.listen(_onChatMessage);
+    _sub2 = sc.friendChatMessageManager.stream2.listen(_onChatMessages);
+    sc.friendChatMessageManager.loadFromStorage(roomId);
   }
 
   @override
   void dispose() {
-    _subscription?.cancel();
-    _subscription = null;
+    _sub1?.cancel();
+    _sub1 = null;
+    _sub2?.cancel();
+    _sub2 = null;
     super.dispose();
   }
 
-  Future<void> _loadFromStorage() async {
-    final chatMessages = await sc.friendChatMessageManager.loadFromStorage(
-      roomId,
-    );
-    if (chatMessages.isEmpty) {
-      state = state.copyWith(status: FriendChatMessagesStatus.empty);
-      return;
+  void _onChatMessages(List<ChatMessage> messages) {
+    final roomMessages = messages.where((m) => m.roomId == roomId).toList();
+    if (roomMessages.isEmpty) return;
+
+    final updatedMessages = [...state.messages];
+    bool changed = false;
+
+    for (final inner in roomMessages) {
+      final result = _upsertIntoList(updatedMessages, inner);
+      if (result) changed = true;
     }
-    final messages = chatMessages
-        .map((m) => ClientChatMessage.server(inner: m))
-        .toList();
-    state = FriendChatMessagesModel(
-      messages: messages,
-      status: FriendChatMessagesStatus.success,
-    );
+
+    if (changed) {
+      state = state.copyWith(
+        messages: updatedMessages,
+        status: updatedMessages.isEmpty
+            ? FriendChatMessagesStatus.empty
+            : FriendChatMessagesStatus.success,
+      );
+    }
   }
 
-  void _onChatMessage(ChatMessage inner) async {
+  void _onChatMessage(ChatMessage inner) {
     if (inner.roomId != roomId) return;
 
     if (sc.me.isMe(inner.senderId) &&
         _clientMessageIds.contains(inner.clientMessageId)) {
-      // 我发的 - 服务器冗余推送：更新内存中的消息状态
+      // 我发的 - 本地有 sending 态的消息，更新为 normal
       final index = state.findMessageIndex(true, inner.clientMessageId, true);
       if (index >= 0) {
         final message = state.getMessageAt(index);
@@ -120,21 +129,14 @@ class FriendChatMessagesNotifier extends StateNotifier<FriendChatMessagesModel> 
         }
       }
     } else {
-      // 别人发的消息（或我在其他设备发的）
-      final message = ClientChatMessage.server(inner: inner);
-      _addMessage(message);
-    }
-
-    var r = await sc.server.request(
-      MsgType.setFriendChatReceivedSeq,
-      MsgSetFriendChatReceivedSeq(
-        friendUserId: friendUserId,
-        receivedSeq: inner.seq,
-      ),
-    );
-    if (r.e == ECode.success) {
-      var res = ResSetFriendChatReceivedSeq.fromMsgPack(r.res!);
-      sc.friendManager.getFriend(friendUserId)?.receivedSeq = res.receivedSeq;
+      // 别人发的消息（或我在其他设备发的）：插入或更新
+      final updatedMessages = [...state.messages];
+      if (_upsertIntoList(updatedMessages, inner)) {
+        state = state.copyWith(
+          messages: updatedMessages,
+          status: FriendChatMessagesStatus.success,
+        );
+      }
     }
   }
 
@@ -145,6 +147,39 @@ class FriendChatMessagesNotifier extends StateNotifier<FriendChatMessagesModel> 
           ? FriendChatMessagesStatus.empty
           : FriendChatMessagesStatus.success,
     );
+  }
+
+  /// 将服务器消息插入或更新到 [list] 中，返回是否有变更。
+  bool _upsertIntoList(List<ClientChatMessage> list, ChatMessage inner) {
+    // 先按 seq 查是否已存在
+    for (int i = 0; i < list.length; i++) {
+      if (!list[i].useClientId && list[i].seq == inner.seq) {
+        // 已存在，替换
+        list[i] = ClientChatMessage.server(inner: inner);
+        return true;
+      }
+    }
+    // 再按 clientMessageId 查是否是自己发的 sending 态消息
+    if (sc.me.isMe(inner.senderId) && inner.clientMessageId != 0) {
+      for (int i = 0; i < list.length; i++) {
+        if (list[i].useClientId &&
+            list[i].clientMessageId == inner.clientMessageId) {
+          list[i] = ClientChatMessage.server(inner: inner);
+          return true;
+        }
+      }
+    }
+    // 不存在，按 seq 顺序插入
+    final newMessage = ClientChatMessage.server(inner: inner);
+    int insertIndex = list.length;
+    for (int i = 0; i < list.length; i++) {
+      if (list[i].seq > inner.seq) {
+        insertIndex = i;
+        break;
+      }
+    }
+    list.insert(insertIndex, newMessage);
+    return true;
   }
 
   void _addMessage(ClientChatMessage message) {
@@ -195,12 +230,13 @@ class FriendChatMessagesNotifier extends StateNotifier<FriendChatMessagesModel> 
     );
   }
 
-  Future<ChatMessage?> _requestSendChat(ClientChatMessage message) async {
+  Future<bool> _requestSendChat(ClientChatMessage message) async {
     assert(message.clientStatus == ClientChatMessageStatus.sending);
 
-    ChatMessage? serverMessage = await sc.friendChatMessageManager
-        .requestSendChat(message.inner, friendUserId);
-    return serverMessage;
+    return sc.friendChatMessageManager.requestSendChat(
+      message.inner,
+      friendUserId,
+    );
   }
 
   Future<void> sendChat(
@@ -218,7 +254,7 @@ class FriendChatMessagesNotifier extends StateNotifier<FriendChatMessagesModel> 
     _clientMessageIds.add(message.clientMessageId);
     _addMessage(message);
 
-    bool success = await _requestSendChat(message) != null;
+    bool success = await _requestSendChat(message);
     int index = state.findMessageIndex(true, message.clientMessageId, true);
     if (index < 0) return;
 
@@ -241,7 +277,7 @@ class FriendChatMessagesNotifier extends StateNotifier<FriendChatMessagesModel> 
       (m) => m.copyWith(clientStatus: ClientChatMessageStatus.sending),
     );
 
-    bool success = await _requestSendChat(message) != null;
+    bool success = await _requestSendChat(message);
     index = state.findMessageIndex(true, clientMessageId, true);
     if (index < 0) return;
 

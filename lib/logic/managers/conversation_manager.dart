@@ -21,7 +21,7 @@ class ConversationManager {
   List<Conversation>? _conversationList;
   final Map<int, Conversation> _conversationMap = {};
 
-  Future<void> onFirstLogin() async {
+  Future<void> openStorageAndInitialLoad() async {
     await _storage.open(sc.me.userId);
 
     _conversationList = await _storage.getAll();

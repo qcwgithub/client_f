@@ -11,7 +11,7 @@ import 'package:path/path.dart' as p;
 class ChatMessageStorage {
   Database? _db;
 
-  Future<void> onFirstLogin() async {
+  Future<void> open() async {
     final dbPath = await getDatabasesPath();
     int userId = sc.me.userId;
     final path = p.join(dbPath, 'messages_$userId.db');

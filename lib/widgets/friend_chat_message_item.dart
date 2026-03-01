@@ -46,7 +46,10 @@ class FriendChatMessageItem extends ConsumerWidget {
     );
     bool isMe = sc.me.isMe(message.senderId);
     if (!useClientId) {
-      sc.friendChatMessageManager.onMessageViewed(message.inner.seq);
+      sc.friendChatMessageManager.onMessageViewed(
+        friendUserId,
+        message.inner.seq,
+      );
     }
 
     return Padding(
