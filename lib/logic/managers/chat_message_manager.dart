@@ -11,6 +11,7 @@ abstract class ChatMessageManager {
   Stream<List<ChatMessage>> get stream => _controller.stream;
 
   void controllerAdd(List<ChatMessage> messages) {
+    if (messages.isEmpty) return;
     for (int i = 0; i < messages.length - 1; i++) {
       if (messages[i].seq == 0) {
         sc.logger.e("消息 seq 不能为 0！message ${messages[i]}");

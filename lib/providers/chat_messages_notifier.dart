@@ -7,6 +7,7 @@ import 'package:scene_hub/gen/chat_message_status.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/logic/client_seq_generator.dart';
+import 'package:scene_hub/logic/events/chat_refresh_event.dart';
 import 'package:scene_hub/logic/managers/chat_message_manager.dart';
 import 'package:scene_hub/logic/time_utils.dart';
 import 'package:scene_hub/sc.dart';
@@ -77,11 +78,13 @@ class ChatMessagesModel {
 abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
   final ChatMessageManager manager;
   final int roomId;
+  StreamSubscription<ChatRefreshEvent>? _refreshSub;
   StreamSubscription<List<ChatMessage>>? _streamSub;
   final List<int> _clientSeqs = [];
 
   ChatMessagesNotifier(this.manager, this.roomId)
     : super(ChatMessagesModel.initial()) {
+    _refreshSub = sc.eventBus.on<ChatRefreshEvent>().listen(_onRefreshEvent);
     _streamSub = manager.stream.listen(_onChatMessages);
     manager.initialLoad(roomId, _loadBatchSize);
   }
@@ -90,7 +93,25 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
   void dispose() {
     _streamSub?.cancel();
     _streamSub = null;
+
+    _refreshSub?.cancel();
+    _refreshSub = null;
+
     super.dispose();
+  }
+
+  void _onRefreshEvent(ChatRefreshEvent event) {
+    switch (event.status) {
+      case ChatRefreshStatus.refreshing:
+        state = state.copyWith(status: ChatMessagesStatus.refreshing);
+        break;
+      case ChatRefreshStatus.success:
+        state = state.copyWith(status: ChatMessagesStatus.idle);
+        break;
+      case ChatRefreshStatus.error:
+        state = state.copyWith(status: ChatMessagesStatus.refreshError);
+        break;
+    }
   }
 
   void _onChatMessages(List<ChatMessage> messages) {

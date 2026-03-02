@@ -14,7 +14,7 @@ import 'package:scene_hub/gen/res_receive_friend_chat_messages.dart';
 import 'package:scene_hub/gen/res_send_friend_chat.dart';
 import 'package:scene_hub/gen/res_set_friend_chat_read_seq.dart';
 import 'package:scene_hub/gen/res_set_friend_chat_received_seq.dart';
-import 'package:scene_hub/logic/events/friend_chat_refresh_event.dart';
+import 'package:scene_hub/logic/events/chat_refresh_event.dart';
 import 'package:scene_hub/logic/events/login_event.dart';
 import 'package:scene_hub/logic/managers/chat_message_manager.dart';
 import 'package:scene_hub/sc.dart';
@@ -29,9 +29,7 @@ class FriendChatMessageManager extends ChatMessageManager {
     await _requestReceiveFriendChatMessages();
   }
 
-  Future<void> onQuit() async {
-
-  }
+  Future<void> onQuit() async {}
 
   void _onLogin(LoginEvent event) async {
     if (event.count > 1) {
@@ -41,7 +39,7 @@ class FriendChatMessageManager extends ChatMessageManager {
 
   Future<void> _requestReceiveFriendChatMessages() async {
     sc.eventBus.emit(
-      FriendChatRefreshEvent(FriendChatRefreshStatus.refreshing),
+      ChatRefreshEvent(ChatRefreshStatus.refreshing),
     );
 
     final r = await sc.server.request(
@@ -55,11 +53,11 @@ class FriendChatMessageManager extends ChatMessageManager {
         sc.chatMessageStorage.upsertMessages(res.messages);
         controllerAdd(res.messages);
         sc.eventBus.emit(
-          FriendChatRefreshEvent(FriendChatRefreshStatus.success),
+          ChatRefreshEvent(ChatRefreshStatus.success),
         );
       }
     } else {
-      sc.eventBus.emit(FriendChatRefreshEvent(FriendChatRefreshStatus.error));
+      sc.eventBus.emit(ChatRefreshEvent(ChatRefreshStatus.error));
     }
   }
 
@@ -69,9 +67,7 @@ class FriendChatMessageManager extends ChatMessageManager {
       roomId,
       limit: count,
     );
-    if (messages.isNotEmpty) {
-      controllerAdd(messages);
-    }
+    controllerAdd(messages);
   }
 
   @override
@@ -81,9 +77,7 @@ class FriendChatMessageManager extends ChatMessageManager {
       beforeSeq,
       limit: count,
     );
-    if (messages.isNotEmpty) {
-      controllerAdd(messages);
-    }
+    controllerAdd(messages);
   }
 
   @override
@@ -93,9 +87,7 @@ class FriendChatMessageManager extends ChatMessageManager {
       afterSeq,
       limit: count,
     );
-    if (messages.isNotEmpty) {
-      controllerAdd(messages);
-    }
+    controllerAdd(messages);
   }
 
   @override
@@ -128,7 +120,7 @@ class FriendChatMessageManager extends ChatMessageManager {
   }
 
   // 收到服务器主动推送的消息
-  final Map<int, int> _receivedSeqMap = {};
+  final Map<int, int> _toReportReceivedSeqMap = {};
   void onMsgAChatMessage(MsgAChatMessage msg, FriendInfo friendInfo) {
     ChatMessage message = msg.message;
 
@@ -138,9 +130,9 @@ class FriendChatMessageManager extends ChatMessageManager {
     int friendUserId = friendInfo.userId;
     int seq = message.seq;
     if (seq > friendInfo.receivedSeq) {
-      if (_receivedSeqMap[friendUserId] == null ||
-          seq > _receivedSeqMap[friendUserId]!) {
-        _receivedSeqMap[friendUserId] = seq;
+      if (_toReportReceivedSeqMap[friendUserId] == null ||
+          seq > _toReportReceivedSeqMap[friendUserId]!) {
+        _toReportReceivedSeqMap[friendUserId] = seq;
         _tryRegisterPostFrameCallback();
       }
     }
@@ -161,16 +153,18 @@ class FriendChatMessageManager extends ChatMessageManager {
     _registeredPostFrameCallback = false;
 
     //
-    _receivedSeqMap.forEach((friendUserId, receivedSeq) {
-      _requestSetReceivedSeq(friendUserId, receivedSeq);
-    });
-    _receivedSeqMap.clear();
+    if (_toReportReceivedSeqMap.isNotEmpty) {
+      _toReportReceivedSeqMap.forEach((friendUserId, receivedSeq) {
+        _requestSetReceivedSeq(friendUserId, receivedSeq);
+      });
+    }
 
     //
-    _readSeqMap.forEach((friendUserId, readSeq) {
-      _requestSetReadSeq(friendUserId, readSeq);
-    });
-    _readSeqMap.clear();
+    if (_toReportReadSeqMap.isNotEmpty) {
+      _toReportReadSeqMap.forEach((friendUserId, readSeq) {
+        _requestSetReadSeq(friendUserId, readSeq);
+      });
+    }
   }
 
   void _requestSetReceivedSeq(int friendUserId, int receivedSeq) async {
@@ -185,6 +179,15 @@ class FriendChatMessageManager extends ChatMessageManager {
     if (r.e == ECode.success) {
       final res = ResSetFriendChatReceivedSeq.fromMsgPack(r.res!);
       sc.friendManager.getFriend(friendUserId)?.receivedSeq = res.receivedSeq;
+
+      final rrs = _toReportReceivedSeqMap[friendUserId];
+      if (rrs == null) {
+        sc.logger.e(
+          "上报 received seq 成功，但本地没有缓存的待上报 received seq，friendUserId: $friendUserId, receivedSeq: ${res.receivedSeq}",
+        );
+      } else if (res.receivedSeq >= rrs) {
+        _toReportReceivedSeqMap.remove(friendUserId);
+      }
     }
   }
 
@@ -196,19 +199,28 @@ class FriendChatMessageManager extends ChatMessageManager {
     if (r.e == ECode.success) {
       final res = ResSetFriendChatReadSeq.fromMsgPack(r.res!);
       sc.friendManager.getFriend(friendUserId)?.readSeq = res.readSeq;
+
+      final rrs = _toReportReadSeqMap[friendUserId];
+      if (rrs == null) {
+        sc.logger.e(
+          "上报 read seq 成功，但本地没有缓存的待上报 read seq，friendUserId: $friendUserId, readSeq: ${res.readSeq}",
+        );
+      } else if (res.readSeq >= rrs) {
+        _toReportReadSeqMap.remove(friendUserId);
+      }
     }
   }
 
   // 上报 read seq
 
-  final Map<int, int> _readSeqMap = {};
+  final Map<int, int> _toReportReadSeqMap = {};
   void onMessageViewed(int roomId, int seq) {
     final FriendInfo? friendInfo = sc.friendManager.getFriendByRoomId(roomId);
     if (friendInfo != null && seq > friendInfo.readSeq) {
       int friendUserId = friendInfo.userId;
-      if (_readSeqMap[friendUserId] == null ||
-          seq > _readSeqMap[friendUserId]!) {
-        _readSeqMap[friendUserId] = seq;
+      if (_toReportReadSeqMap[friendUserId] == null ||
+          seq > _toReportReadSeqMap[friendUserId]!) {
+        _toReportReadSeqMap[friendUserId] = seq;
         _tryRegisterPostFrameCallback();
       }
     }
