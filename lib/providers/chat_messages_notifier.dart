@@ -80,13 +80,12 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
   final int roomId;
   StreamSubscription<ChatRefreshEvent>? _refreshSub;
   StreamSubscription<List<ChatMessage>>? _streamSub;
-  final List<int> _clientSeqs = [];
 
   ChatMessagesNotifier(this.manager, this.roomId)
     : super(ChatMessagesModel.initial()) {
     _refreshSub = sc.eventBus.on<ChatRefreshEvent>().listen(_onRefreshEvent);
     _streamSub = manager.stream.listen(_onChatMessages);
-    manager.initialLoad(roomId, _loadBatchSize);
+    manager.initialLoadMessages(roomId, _loadBatchSize);
   }
 
   @override
@@ -96,6 +95,8 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
 
     _refreshSub?.cancel();
     _refreshSub = null;
+
+    manager.unloadMessages(roomId);
 
     super.dispose();
   }
@@ -260,7 +261,6 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
       imageContent,
       replyTo: replyTo,
     );
-    _clientSeqs.add(message.clientSeq);
     _addMessage(message);
 
     bool success = await requestSendChat(message);

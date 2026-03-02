@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/logic/conversation.dart';
 import 'package:scene_hub/sc.dart';
 
@@ -28,6 +29,29 @@ class ConversationManager {
     _conversationMap.clear();
     for (final conv in _conversationList!) {
       _conversationMap[conv.roomId] = conv;
+    }
+
+    sc.friendChatMessageManager.stream.listen(_onFriendChatMessage);
+  }
+
+  void _onFriendChatMessage(List<ChatMessage> messages) {
+    for (final message in messages) {
+      final roomId = message.roomId;
+      final conversation = _conversationMap[roomId];
+      if (conversation == null) {
+        conversation = Conversation(
+          roomId: roomId,
+          targetUserId: targetUserId,
+          title: title,
+          avatarIndex: avatarIndex,
+        );
+      }
+      if (conversation != null) {
+        conversation.lastMessage = message.content;
+        conversation.lastMessageTime = message.timestamp;
+        _notifyListeners();
+        _storage.upsert(conversation);
+      }
     }
   }
 

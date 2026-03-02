@@ -21,7 +21,8 @@ class ConversationStorage {
             avatar_index INTEGER NOT NULL DEFAULT 0,
             last_message TEXT NOT NULL DEFAULT '',
             last_message_time INTEGER NOT NULL DEFAULT 0,
-            unread_count INTEGER NOT NULL DEFAULT 0,
+            read_seq INTEGER NOT NULL DEFAULT 0,
+            max_seq INTEGER NOT NULL DEFAULT 0,
             type INTEGER NOT NULL DEFAULT 0
           )
         ''');
@@ -86,11 +87,35 @@ class ConversationStorage {
     });
   }
 
-  /// 清除未读数
-  Future<void> clearUnread(int roomId) async {
+  Future<void> setReadSeqAndMaxSeq(int roomId, int readSeq, int maxSeq) async {
     await _database.update(
       'conversations',
-      {'unread_count': 0},
+      {
+        'read_seq': readSeq,
+        'max_seq': maxSeq,
+      },
+      where: 'room_id = ?',
+      whereArgs: [roomId],
+    );
+  }
+
+  Future<void> setReadSeq(int roomId, int readSeq) async {
+    await _database.update(
+      'conversations',
+      {
+        'read_seq': readSeq
+      },
+      where: 'room_id = ?',
+      whereArgs: [roomId],
+    );
+  }
+
+  Future<void> setMaxSeq(int roomId, int maxSeq) async {
+    await _database.update(
+      'conversations',
+      {
+        'max_seq': maxSeq
+      },
       where: 'room_id = ?',
       whereArgs: [roomId],
     );

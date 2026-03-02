@@ -23,7 +23,8 @@ abstract class ChatMessageManager {
     _controller.add(messages);
   }
 
-  Future<void> initialLoad(int roomId, int count);
+  Future<void> initialLoadMessages(int roomId, int count);
+  Future<void> unloadMessages(int roomId);
   Future<void> loadOlderMessages(int roomId, int beforeSeq, int count);
   Future<void> loadNewerMessages(int roomId, int afterSeq, int count);
   Future<bool> requestSendChat(ChatMessage message);

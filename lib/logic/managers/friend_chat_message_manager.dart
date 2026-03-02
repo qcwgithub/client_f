@@ -38,9 +38,7 @@ class FriendChatMessageManager extends ChatMessageManager {
   }
 
   Future<void> _requestReceiveFriendChatMessages() async {
-    sc.eventBus.emit(
-      ChatRefreshEvent(ChatRefreshStatus.refreshing),
-    );
+    sc.eventBus.emit(ChatRefreshEvent(ChatRefreshStatus.refreshing));
 
     final r = await sc.server.request(
       MsgType.receiveFriendChatMessages,
@@ -52,9 +50,7 @@ class FriendChatMessageManager extends ChatMessageManager {
       if (res.messages.isNotEmpty) {
         sc.chatMessageStorage.upsertMessages(res.messages);
         controllerAdd(res.messages);
-        sc.eventBus.emit(
-          ChatRefreshEvent(ChatRefreshStatus.success),
-        );
+        sc.eventBus.emit(ChatRefreshEvent(ChatRefreshStatus.success));
       }
     } else {
       sc.eventBus.emit(ChatRefreshEvent(ChatRefreshStatus.error));
@@ -62,13 +58,16 @@ class FriendChatMessageManager extends ChatMessageManager {
   }
 
   @override
-  Future<void> initialLoad(int roomId, int count) async {
+  Future<void> initialLoadMessages(int roomId, int count) async {
     final messages = await sc.chatMessageStorage.getMessages(
       roomId,
       limit: count,
     );
     controllerAdd(messages);
   }
+
+  @override
+  Future<void> unloadMessages(int roomId) async {}
 
   @override
   Future<void> loadOlderMessages(int roomId, int beforeSeq, int count) async {
@@ -120,7 +119,7 @@ class FriendChatMessageManager extends ChatMessageManager {
   }
 
   // 收到服务器主动推送的消息
-  final Map<int, int> _toReportReceivedSeqMap = {};
+  final Map<int, int> _toReportReceivedSeqs = {};
   void onMsgAChatMessage(MsgAChatMessage msg, FriendInfo friendInfo) {
     ChatMessage message = msg.message;
 
@@ -130,9 +129,9 @@ class FriendChatMessageManager extends ChatMessageManager {
     int friendUserId = friendInfo.userId;
     int seq = message.seq;
     if (seq > friendInfo.receivedSeq) {
-      if (_toReportReceivedSeqMap[friendUserId] == null ||
-          seq > _toReportReceivedSeqMap[friendUserId]!) {
-        _toReportReceivedSeqMap[friendUserId] = seq;
+      if (_toReportReceivedSeqs[friendUserId] == null ||
+          seq > _toReportReceivedSeqs[friendUserId]!) {
+        _toReportReceivedSeqs[friendUserId] = seq;
         _tryRegisterPostFrameCallback();
       }
     }
@@ -153,15 +152,15 @@ class FriendChatMessageManager extends ChatMessageManager {
     _registeredPostFrameCallback = false;
 
     //
-    if (_toReportReceivedSeqMap.isNotEmpty) {
-      _toReportReceivedSeqMap.forEach((friendUserId, receivedSeq) {
+    if (_toReportReceivedSeqs.isNotEmpty) {
+      _toReportReceivedSeqs.forEach((friendUserId, receivedSeq) {
         _requestSetReceivedSeq(friendUserId, receivedSeq);
       });
     }
 
     //
-    if (_toReportReadSeqMap.isNotEmpty) {
-      _toReportReadSeqMap.forEach((friendUserId, readSeq) {
+    if (_toReportReadSeqs.isNotEmpty) {
+      _toReportReadSeqs.forEach((friendUserId, readSeq) {
         _requestSetReadSeq(friendUserId, readSeq);
       });
     }
@@ -180,13 +179,13 @@ class FriendChatMessageManager extends ChatMessageManager {
       final res = ResSetFriendChatReceivedSeq.fromMsgPack(r.res!);
       sc.friendManager.getFriend(friendUserId)?.receivedSeq = res.receivedSeq;
 
-      final rrs = _toReportReceivedSeqMap[friendUserId];
+      final rrs = _toReportReceivedSeqs[friendUserId];
       if (rrs == null) {
         sc.logger.e(
           "上报 received seq 成功，但本地没有缓存的待上报 received seq，friendUserId: $friendUserId, receivedSeq: ${res.receivedSeq}",
         );
       } else if (res.receivedSeq >= rrs) {
-        _toReportReceivedSeqMap.remove(friendUserId);
+        _toReportReceivedSeqs.remove(friendUserId);
       }
     }
   }
@@ -200,27 +199,27 @@ class FriendChatMessageManager extends ChatMessageManager {
       final res = ResSetFriendChatReadSeq.fromMsgPack(r.res!);
       sc.friendManager.getFriend(friendUserId)?.readSeq = res.readSeq;
 
-      final rrs = _toReportReadSeqMap[friendUserId];
+      final rrs = _toReportReadSeqs[friendUserId];
       if (rrs == null) {
         sc.logger.e(
           "上报 read seq 成功，但本地没有缓存的待上报 read seq，friendUserId: $friendUserId, readSeq: ${res.readSeq}",
         );
       } else if (res.readSeq >= rrs) {
-        _toReportReadSeqMap.remove(friendUserId);
+        _toReportReadSeqs.remove(friendUserId);
       }
     }
   }
 
   // 上报 read seq
 
-  final Map<int, int> _toReportReadSeqMap = {};
+  final Map<int, int> _toReportReadSeqs = {};
   void onMessageViewed(int roomId, int seq) {
     final FriendInfo? friendInfo = sc.friendManager.getFriendByRoomId(roomId);
     if (friendInfo != null && seq > friendInfo.readSeq) {
       int friendUserId = friendInfo.userId;
-      if (_toReportReadSeqMap[friendUserId] == null ||
-          seq > _toReportReadSeqMap[friendUserId]!) {
-        _toReportReadSeqMap[friendUserId] = seq;
+      if (_toReportReadSeqs[friendUserId] == null ||
+          seq > _toReportReadSeqs[friendUserId]!) {
+        _toReportReadSeqs[friendUserId] = seq;
         _tryRegisterPostFrameCallback();
       }
     }

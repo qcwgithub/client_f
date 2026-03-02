@@ -1,6 +1,5 @@
 class Conversation {
   int roomId;
-  int targetUserId;
   String title;
   int avatarIndex;
   String lastMessage;
@@ -12,7 +11,6 @@ class Conversation {
 
   Conversation({
     required this.roomId,
-    required this.targetUserId,
     required this.title,
     required this.avatarIndex,
     this.lastMessage = '',
@@ -24,7 +22,6 @@ class Conversation {
   Map<String, dynamic> toMap() {
     return {
       'room_id': roomId,
-      'target_user_id': targetUserId,
       'title': title,
       'avatar_index': avatarIndex,
       'last_message': lastMessage,
@@ -37,7 +34,6 @@ class Conversation {
   factory Conversation.fromMap(Map<String, dynamic> map) {
     return Conversation(
       roomId: map['room_id'] as int,
-      targetUserId: map['target_user_id'] as int,
       title: map['title'] as String,
       avatarIndex: map['avatar_index'] as int,
       lastMessage: map['last_message'] as String,

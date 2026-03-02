@@ -20,7 +20,7 @@ class SceneChatMessageManager extends ChatMessageManager {
   }
 
   @override
-  Future<void> initialLoad(int roomId, int count) async {
+  Future<void> initialLoadMessages(int roomId, int count) async {
     List<ChatMessage>? messages = _sceneMessages[roomId];
     if (messages == null) {
       return;
@@ -31,6 +31,9 @@ class SceneChatMessageManager extends ChatMessageManager {
     );
     controllerAdd(result);
   }
+
+  @override
+  Future<void> unloadMessages(int roomId) async {}
 
   @override
   Future<void> loadOlderMessages(int roomId, int beforeSeq, int count) async {
