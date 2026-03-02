@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/pages/avatar_pick_page.dart';
 import 'package:scene_hub/pages/friend_list_page.dart';
 import 'package:scene_hub/pages/friend_requests_page.dart';
 import 'package:scene_hub/pages/profile_edit_page.dart';
 import 'package:scene_hub/sc.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends ConsumerState<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final me = sc.me;
@@ -31,9 +32,7 @@ class _ProfilePageState extends State<ProfilePage> {
               radius: 30,
               backgroundColor: avatarColorFor(me.userInfo.avatarIndex),
               child: Text(
-                me.userName.isNotEmpty
-                    ? me.userName[0].toUpperCase()
-                    : '?',
+                me.userName.isNotEmpty ? me.userName[0].toUpperCase() : '?',
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -43,10 +42,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             title: Text(
               me.userName,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             subtitle: Text('ID: ${me.userId}'),
             trailing: const Icon(Icons.chevron_right),
@@ -117,34 +113,33 @@ class _ProfilePageState extends State<ProfilePage> {
           // ── 退出登录 ──
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text(
-              'Log Out',
-              style: TextStyle(color: Colors.red),
-            ),
+            title: const Text('Log Out', style: TextStyle(color: Colors.red)),
             onTap: () async {
-              final ok = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Log Out'),
-                  content: const Text('Are you sure you want to log out?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(false),
-                      child: const Text('Cancel'),
+              final ok =
+                  await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Log Out'),
+                      content: const Text('Are you sure you want to log out?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                          child: const Text(
+                            'Log Out',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(true),
-                      child: const Text(
-                        'Log Out',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
-                ),
-              ) ?? false;
+                  ) ??
+                  false;
 
               if (!ok || !context.mounted) return;
-              await sc.lifecycleManager.quit();
+              await sc.lifecycleManager.quit(context, ref);
             },
           ),
         ],

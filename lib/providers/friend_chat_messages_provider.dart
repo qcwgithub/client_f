@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/logic/events/friend_chat_refresh_event.dart';
 import 'package:scene_hub/providers/chat_messages_notifier.dart';
 import 'package:scene_hub/sc.dart';
@@ -38,11 +37,6 @@ class FriendChatMessagesNotifier extends ChatMessagesNotifier {
         state = state.copyWith(status: ChatMessagesStatus.refreshError);
         break;
     }
-  }
-
-  @override
-  Future<bool> requestSendChat(ClientChatMessage message) {
-    return manager.requestSendChat(message.inner);
   }
 }
 

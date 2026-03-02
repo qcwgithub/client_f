@@ -81,13 +81,19 @@ class Server {
     }
   }
 
-  void _onDisconnected() {
+  void _timeoutAllPendingRequests() {
     for (final c in _pending.values) {
       c.completer.complete(MyResponse(e: ECode.timeout, res: null));
     }
     _pending.clear();
+  }
+
+  void _onDisconnected() {
+    sc.logger.d('disconnected');
+    _timeoutAllPendingRequests();
 
     _setState(NetworkStatus.init);
+    client = null;
   }
 
   Future<bool> _loginOnce() async {
@@ -143,6 +149,7 @@ class Server {
     if (_running) {
       return;
     }
+    _running = true;
 
     while (_running) {
       switch (_state) {
@@ -194,6 +201,9 @@ class Server {
     if (client == null) {
       return MyResponse(e: ECode.notConnected, res: null);
     }
+    if (_state != NetworkStatus.logining && _state != NetworkStatus.online) {
+      return MyResponse(e: ECode.notConnected, res: null);
+    }
 
     int seq = nextSeq++;
     sc.logger.d('request $msgType seq $seq');
@@ -238,5 +248,7 @@ class Server {
     if (client != null) {
       client!.close();
     }
+
+    _loginCount = 0;
   }
 }

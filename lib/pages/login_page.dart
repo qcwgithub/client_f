@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:scene_hub/network/network_status.dart';
+import 'package:scene_hub/pages/home_page.dart';
 import 'package:scene_hub/sc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
@@ -56,6 +57,12 @@ class _LoginState extends State<LoginPage> {
     if (await server.connectAndLoginOnce()) {
       _saveChannelUserId(channelUserId);
       server.startLoop();
+
+      // 4. 重置页面
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomePage()),
+        (_) => false,
+      );
     } else {
       setState(() {
         _isLoggingIn = false;

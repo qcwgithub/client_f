@@ -1,9 +1,17 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/logic/events/login_event.dart';
-import 'package:scene_hub/main.dart';
 import 'package:scene_hub/network/network_status.dart';
-import 'package:scene_hub/providers/nav_provider.dart';
+import 'package:scene_hub/pages/login_page.dart';
+import 'package:scene_hub/providers/enter_scene_provider.dart';
+import 'package:scene_hub/providers/friend_chat_message_provider.dart';
+import 'package:scene_hub/providers/friend_chat_messages_provider.dart';
+import 'package:scene_hub/providers/scene_chat_message_provider.dart';
+import 'package:scene_hub/providers/scene_chat_messages_provider.dart';
+import 'package:scene_hub/providers/scene_list_provider.dart';
+import 'package:scene_hub/providers/search_keyword_provider.dart';
 import 'package:scene_hub/sc.dart';
 
 class LifecycleManager {
@@ -19,16 +27,11 @@ class LifecycleManager {
 
       // bussiness
       await sc.friendChatMessageManager.firstLoginReceive();
-
-      // 都搞定了才进去
-      globalContainer.read(navProvider.notifier).state = 1;
     }
   }
 
-  Future<void> quit() async {
-    _loginSub?.cancel();
-    _loginSub = null;
-
+  // 退出到登录页
+  Future<void> quit(BuildContext context, WidgetRef ref) async {
     sc.server.stopRunningAndClose();
     while (sc.server.state != NetworkStatus.init) {
       await Future.delayed(Duration(milliseconds: 100));
@@ -39,7 +42,17 @@ class LifecycleManager {
     await sc.conversationManager.onQuit();
     await sc.chatMessageStorage.onQuit();
 
-    // TEMP
-    globalContainer.read(navProvider.notifier).state = 0;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (_) => false,
+    );
+
+    ref.invalidate(friendChatMessageProvider);
+    ref.invalidate(friendChatMessagesProvider);
+    ref.invalidate(sceneChatMessageProvider);
+    ref.invalidate(sceneChatMessagesProvider);
+    ref.invalidate(enterSceneProvider);
+    ref.invalidate(sceneListProvider);
+    ref.invalidate(searchKeywordProvider);
   }
 }

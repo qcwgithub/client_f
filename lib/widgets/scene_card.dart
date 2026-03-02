@@ -41,11 +41,10 @@ class SceneCard extends ConsumerWidget {
                 return;
               }
 
-              ref
-                  .read(sceneChatMessagesProvider(roomInfo.roomId).notifier)
-                  .setInitialMessages(
-                    ref.read(enterSceneProvider).recentMessages,
-                  );
+              sc.sceneChatMessageManager.onEnterSceneSuccess(
+                roomInfo.roomId,
+                ref.read(enterSceneProvider).recentMessages,
+              );
 
               Navigator.push(
                 context,

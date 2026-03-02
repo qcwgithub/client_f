@@ -3,7 +3,7 @@ import 'package:scene_hub/gen/msg_leave_scene.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/scene_room_info.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
-import 'package:scene_hub/pages/scene_info_page.dart';
+import 'package:scene_hub/pages/chat_page.dart';
 import 'package:scene_hub/providers/chat_messages_notifier.dart';
 import 'package:scene_hub/providers/scene_chat_messages_provider.dart';
 import 'package:scene_hub/sc.dart';
@@ -23,68 +23,29 @@ class SceneChatPage extends ConsumerStatefulWidget {
   }
 }
 
-class _ChatPageState extends ConsumerState<SceneChatPage> {
-  final ScrollController _scrollController = ScrollController();
-  final _inputController = TextEditingController();
+class _ChatPageState extends ChatPageState<SceneChatPage> {
+  @override
+  Future<void> onScrollNearTop() async {
+    await ref
+        .read(sceneChatMessagesProvider(widget.roomId).notifier)
+        .loadOlderMessages();
+  }
 
   @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToBottom();
-    });
-
-    _scrollController.addListener(() async {
-      bool isTop =
-          _scrollController.position.atEdge &&
-          _scrollController.position.pixels != 0;
-
-      if (isTop) {
-        // print("isTop!");
-        // double beforePixels = _scrollController.position.pixels;
-        // double beforeExtent = 0;
-        bool loaded = await ref
-            .read(sceneChatMessagesProvider(widget.roomId).notifier)
-            .requestHistory(() {
-              // beforeExtent = _scrollController.position.maxScrollExtent;
-            });
-
-        // if (loaded) {
-        //   WidgetsBinding.instance.addPostFrameCallback((_) {
-        //     double afterExtent = _scrollController.position.maxScrollExtent;
-        //     double diff = afterExtent - beforeExtent;
-        //     _scrollController.jumpTo(beforePixels + diff);
-        //     print(
-        //       "extent ${beforeExtent} -> ${afterExtent} jumpTo ${beforePixels + diff}",
-        //     );
-        //   });
-        // }
-      }
-    });
+  Future<void> onScrollNearBottom() async {
+    await ref
+        .read(sceneChatMessagesProvider(widget.roomId).notifier)
+        .loadNewerMessages();
   }
 
-  void _scrollToTop() {
-    if (!_scrollController.hasClients) {
-      return;
-    }
-
-    _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
-      duration: Duration(milliseconds: 0),
-      curve: Curves.linear,
-    );
-  }
-
-  void _scrollToBottom() {
-    if (!_scrollController.hasClients) {
-      return;
-    }
-
-    _scrollController.animateTo(
-      _scrollController.position.minScrollExtent,
-      duration: Duration(milliseconds: 250),
-      curve: Curves.easeOut,
+  @override
+  Widget buildMessageItem(ClientChatMessage message, bool showTime) {
+    return SceneChatMessageItem(
+      key: ValueKey(message.useClientSeq ? message.clientSeq : message.seq),
+      roomId: widget.roomId,
+      useClientId: message.useClientSeq,
+      seq: message.useClientSeq ? message.clientSeq : message.seq,
+      showTime: showTime,
     );
   }
 
@@ -96,73 +57,29 @@ class _ChatPageState extends ConsumerState<SceneChatPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.roomInfo.title),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SceneInfoPage(sceneRoomInfo: widget.roomInfo),
-                ),
-              );
-            },
-            icon: Icon(Icons.more_vert),
-          ),
-        ],
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.roomInfo.title),
+            if (model.status == ChatMessagesStatus.refreshing)
+              buildRefreshing(model.status),
+            if (model.status == ChatMessagesStatus.refreshError)
+              buildRefreshError(model.status),
+          ],
+        ),
       ),
-
       body: Column(
         children: [
-          _buildChatList(model),
+          buildChatList(model.messages),
           ChatInput(
-            controller: _inputController,
+            controller: inputController,
             callback: (type, content, imageContent) {
               ref
                   .read(sceneChatMessagesProvider(widget.roomId).notifier)
-                  .sendChat(type, content, 0, imageContent);
-              // messageProvider.sendMessage(type, content);
-
-              // WidgetsBinding.instance.addPostFrameCallback((_) {
-              //   _scrollToBottom();
-              // });
+                  .sendChat(type, content, imageContent);
             },
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildChatList(ChatMessagesModel model) {
-    return Expanded(
-      child: ListView.builder(
-        controller: _scrollController,
-        reverse: true, // !
-        itemCount: model.messages.length,
-        itemBuilder: (context, index) {
-          int L = model.messages.length;
-          int itemIndex = L - 1 - index;
-          ClientChatMessage message = model.messages[itemIndex];
-          bool showTime = true;
-
-          if (itemIndex < L - 1) {
-            var prev = model.messages[itemIndex + 1];
-            if (sc.me.isMe(message.senderId) == sc.me.isMe(prev.senderId) &&
-                message.timestamp - prev.timestamp < 300000) {
-              showTime = false;
-            }
-          }
-
-          return SceneChatMessageItem(
-            key: ValueKey(
-              message.useClientSeq ? message.clientSeq : message.seq,
-            ),
-            roomId: widget.roomId,
-            useClientId: message.useClientSeq,
-            seq: message.useClientSeq ? message.clientSeq : message.seq,
-            showTime: showTime,
-          );
-        },
       ),
     );
   }

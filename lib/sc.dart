@@ -17,8 +17,8 @@ class Sc {
   final Logger logger = Logger(
     filter: null,
     printer: PrettyPrinter(
-      methodCount: 0,
-      errorMethodCount: 8,
+      // methodCount: 8,
+      // errorMethodCount: 8,
       lineLength: 120,
       colors: true,
       printEmojis: true,
@@ -38,7 +38,8 @@ class Sc {
   final SceneChatMessageManager sceneChatMessageManager =
       SceneChatMessageManager();
   final ConversationManager conversationManager = ConversationManager();
-  Sc() {
+
+  void init() {
     lifecycleManager.init();
     friendChatMessageManager.init();
     sceneChatMessageManager.init();

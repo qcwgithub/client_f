@@ -30,8 +30,7 @@ class FriendChatMessageManager extends ChatMessageManager {
   }
 
   Future<void> onQuit() async {
-    await _loginSub?.cancel();
-    _loginSub = null;
+
   }
 
   void _onLogin(LoginEvent event) async {
@@ -103,7 +102,7 @@ class FriendChatMessageManager extends ChatMessageManager {
   Future<bool> requestSendChat(ChatMessage message) async {
     final friendInfo = sc.friendManager.getFriendByRoomId(message.roomId);
     if (friendInfo == null) {
-      sc.logger.d("未找到好友信息，无法发送消息，roomId: ${message.roomId}");
+      sc.logger.e("未找到好友信息，无法发送消息，roomId: ${message.roomId}");
       return false;
     }
 

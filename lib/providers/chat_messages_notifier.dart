@@ -22,14 +22,16 @@ class ChatMessagesModel {
   // 索引：seq -> list index
   final Map<int, int> _seqIndex = {};
   // 索引：clientSeq -> list index
-  final Map<int, int> _clientIdIndex = {};
+  final Map<int, int> _clientSeqIndex = {};
 
   ChatMessagesModel({required this.messages, required this.status}) {
     for (int i = 0; i < messages.length; i++) {
       final message = messages[i];
-      if (message.useClientSeq) {
-        _clientIdIndex[message.clientSeq] = i;
-      } else {
+
+      // 不论是否自己
+      _clientSeqIndex[message.clientSeq] = i;
+
+      if (message.seq > 0) {
         _seqIndex[message.seq] = i;
 
         if (minSeq == 0) {
@@ -59,7 +61,7 @@ class ChatMessagesModel {
   }
 
   int findMessageIndex(bool useClientId, int seq, bool logErrorIfNotExist) {
-    final index = useClientId ? _clientIdIndex[seq] : _seqIndex[seq];
+    final index = useClientId ? _clientSeqIndex[seq] : _seqIndex[seq];
     if (index != null) return index;
     if (logErrorIfNotExist) {
       sc.logger.e("findMessage failed, useClientId $useClientId seq $seq");
@@ -220,8 +222,9 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
     );
   }
 
-  /// 子类实现，调用对应 manager 的发送方法
-  Future<bool> requestSendChat(ClientChatMessage message);
+  Future<bool> requestSendChat(ClientChatMessage message) {
+    return manager.requestSendChat(message.inner);
+  }
 
   Future<void> sendChat(
     ChatMessageType type,

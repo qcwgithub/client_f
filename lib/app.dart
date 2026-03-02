@@ -3,7 +3,6 @@ import 'package:scene_hub/pages/home_page.dart';
 
 import 'package:flutter/material.dart';
 import 'package:scene_hub/pages/login_page.dart';
-import 'package:scene_hub/providers/nav_provider.dart';
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
@@ -11,8 +10,6 @@ class MyApp extends ConsumerWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    int navState = ref.watch(navProvider);
-
     return MaterialApp(
       debugShowCheckedModeBanner: false, // 去掉 DEBUG 横幅
       title: 'Scene Hub',
@@ -38,7 +35,7 @@ class MyApp extends ConsumerWidget {
         // tested with just a hot reload.
         // colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: navState == 0 ? const LoginPage() : const HomePage(),
+      home: const LoginPage(),
     );
   }
 }

@@ -10,7 +10,7 @@ import 'package:scene_hub/sc.dart';
 enum EnterSceneStatus { idle, loading }
 
 class EnterSceneModel {
-  final List<ClientChatMessage> recentMessages;
+  final List<ChatMessage> recentMessages;
   final EnterSceneStatus status;
 
   const EnterSceneModel({required this.recentMessages, required this.status});
@@ -23,7 +23,7 @@ class EnterSceneModel {
   }
 
   EnterSceneModel copyWith({
-    List<ClientChatMessage>? recentMessages,
+    List<ChatMessage>? recentMessages,
     EnterSceneStatus? status,
   }) {
     return EnterSceneModel(
@@ -55,30 +55,8 @@ class EnterSceneNotifier extends StateNotifier<EnterSceneModel> {
 
     var res = ResEnterScene.fromMsgPack(r.res!);
 
-    int min = -1;
-    int max = -1;
-
-    var recentMessages = <ClientChatMessage>[];
-    for (int i = 0; i < res.recentMessages.length; i++) {
-      ChatMessage m = res.recentMessages[i];
-      if (min == -1 || m.seq < min) {
-        min = m.seq;
-      }
-      if (max == -1 || m.seq > max) {
-        max = m.seq;
-      }
-      recentMessages.add(
-        ClientChatMessage(
-          inner: m,
-          clientStatus: ClientChatMessageStatus.normal,
-          useClientSeq: false,
-        ),
-      );
-    }
-    sc.logger.d("enterScene ok, recentMessages seq range [$min, $max]");
-
     state = state.copyWith(
-      recentMessages: recentMessages,
+      recentMessages: res.recentMessages,
       status: EnterSceneStatus.idle,
     );
 

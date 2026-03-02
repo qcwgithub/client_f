@@ -48,7 +48,7 @@ class _MainPageState extends ConsumerState<MainPage> {
           ),
           IconButton(
             onPressed: () async {
-              await sc.lifecycleManager.quit();
+              await sc.lifecycleManager.quit(context, ref);
             },
             icon: Icon(Icons.exit_to_app),
           ),
@@ -118,8 +118,7 @@ class _MainPageState extends ConsumerState<MainPage> {
   }
 
   Widget _buildList(SceneListModel model) {
-    if (model.status == SceneListStatus.refreshing &&
-        model.roomInfos.isEmpty) {
+    if (model.status == SceneListStatus.refreshing && model.roomInfos.isEmpty) {
       return ListView(
         children: const [
           SizedBox(height: 200),
