@@ -202,9 +202,10 @@ class FriendChatMessageManager extends ChatMessageManager {
   // 上报 read seq
 
   final Map<int, int> _readSeqMap = {};
-  void onMessageViewed(int friendUserId, int seq) {
-    final FriendInfo? friendInfo = sc.friendManager.getFriend(friendUserId);
+  void onMessageViewed(int roomId, int seq) {
+    final FriendInfo? friendInfo = sc.friendManager.getFriendByRoomId(roomId);
     if (friendInfo != null && seq > friendInfo.readSeq) {
+      int friendUserId = friendInfo.userId;
       if (_readSeqMap[friendUserId] == null ||
           seq > _readSeqMap[friendUserId]!) {
         _readSeqMap[friendUserId] = seq;

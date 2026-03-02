@@ -25,19 +25,17 @@ class FriendChatPage extends ConsumerStatefulWidget {
 }
 
 class _FriendChatPageState extends ChatPageState<FriendChatPage> {
-  (int, int) get _providerKey => (widget.friendUserId, widget.roomId);
-
   @override
   Future<void> onScrollNearTop() async {
     await ref
-        .read(friendChatMessagesProvider(_providerKey).notifier)
+        .read(friendChatMessagesProvider(widget.roomId).notifier)
         .loadOlderMessages();
   }
 
   @override
   Future<void> onScrollNearBottom() async {
     await ref
-        .read(friendChatMessagesProvider(_providerKey).notifier)
+        .read(friendChatMessagesProvider(widget.roomId).notifier)
         .loadNewerMessages();
   }
 
@@ -56,7 +54,7 @@ class _FriendChatPageState extends ChatPageState<FriendChatPage> {
   @override
   Widget build(BuildContext context) {
     final ChatMessagesModel model = ref.watch(
-      friendChatMessagesProvider(_providerKey),
+      friendChatMessagesProvider(widget.roomId),
     );
 
     return Scaffold(
@@ -79,7 +77,7 @@ class _FriendChatPageState extends ChatPageState<FriendChatPage> {
             controller: inputController,
             callback: (type, content, imageContent) {
               ref
-                  .read(friendChatMessagesProvider(_providerKey).notifier)
+                  .read(friendChatMessagesProvider(widget.roomId).notifier)
                   .sendChat(type, content, imageContent);
             },
           ),

@@ -8,10 +8,9 @@ import 'package:scene_hub/sc.dart';
 export 'package:scene_hub/providers/chat_messages_notifier.dart';
 
 class FriendChatMessagesNotifier extends ChatMessagesNotifier {
-  final int friendUserId;
   StreamSubscription<FriendChatRefreshEvent>? _refreshSub;
 
-  FriendChatMessagesNotifier(this.friendUserId, int roomId)
+  FriendChatMessagesNotifier(int roomId)
     : super(sc.friendChatMessageManager, roomId) {
     _refreshSub = sc.eventBus.on<FriendChatRefreshEvent>().listen(
       _onRefreshEvent,
@@ -45,8 +44,7 @@ final friendChatMessagesProvider =
     StateNotifierProvider.family<
       FriendChatMessagesNotifier,
       ChatMessagesModel,
-      (int, int)
-    >((ref, params) {
-      final (int friendUserId, int roomId) = params;
-      return FriendChatMessagesNotifier(friendUserId, roomId);
+      int
+    >((ref, roomId) {
+      return FriendChatMessagesNotifier(roomId);
     });
