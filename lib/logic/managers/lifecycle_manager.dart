@@ -3,15 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/logic/events/login_event.dart';
+import 'package:scene_hub/my_app.dart';
 import 'package:scene_hub/network/network_status.dart';
 import 'package:scene_hub/pages/login_page.dart';
-import 'package:scene_hub/providers/enter_scene_provider.dart';
-import 'package:scene_hub/providers/friend_chat_message_provider.dart';
-import 'package:scene_hub/providers/friend_chat_messages_provider.dart';
-import 'package:scene_hub/providers/scene_chat_message_provider.dart';
-import 'package:scene_hub/providers/scene_chat_messages_provider.dart';
-import 'package:scene_hub/providers/scene_list_provider.dart';
-import 'package:scene_hub/providers/search_keyword_provider.dart';
 import 'package:scene_hub/sc.dart';
 
 class LifecycleManager {
@@ -49,12 +43,7 @@ class LifecycleManager {
       (_) => false,
     );
 
-    ref.invalidate(friendChatMessageProvider);
-    ref.invalidate(friendChatMessagesProvider);
-    ref.invalidate(sceneChatMessageProvider);
-    ref.invalidate(sceneChatMessagesProvider);
-    ref.invalidate(enterSceneProvider);
-    ref.invalidate(sceneListProvider);
-    ref.invalidate(searchKeywordProvider);
+    // 销毁内层 ProviderScope 下的所有 provider
+    ref.read(appScopeKeyProvider.notifier).state = UniqueKey();
   }
 }
