@@ -25,19 +25,15 @@ class FriendChatMessageManager extends ChatMessageManager {
     _loginSub = sc.eventBus.on<LoginEvent>().listen(_onLogin);
   }
 
-  Future<void> firstLoginReceive() async {
-    await _requestReceiveFriendChatMessages();
-  }
-
   Future<void> onQuit() async {}
 
   void _onLogin(LoginEvent event) async {
     if (event.count > 1) {
-      await _requestReceiveFriendChatMessages();
+      await requestReceiveFriendChatMessages();
     }
   }
 
-  Future<void> _requestReceiveFriendChatMessages() async {
+  Future<void> requestReceiveFriendChatMessages() async {
     sc.eventBus.emit(ChatRefreshEvent(ChatRefreshStatus.refreshing));
 
     final r = await sc.server.request(
