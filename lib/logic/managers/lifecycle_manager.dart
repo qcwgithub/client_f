@@ -23,10 +23,12 @@ class LifecycleManager {
   void _onLogin(LoginEvent event) async {
     if (event.count == 1) {
       await sc.chatMessageStorage.open();
-      await sc.conversationManager.openStorageAndInitialLoad();
+      await sc.conversationManager.openStorage();
+      await sc.conversationManager.initialLoad();
+      sc.conversationManager.listenForFriendChatMessages();
 
       // bussiness
-      await sc.friendChatMessageManager.firstLoginReceive();
+      await sc.friendChatMessageManager.requestReceiveFriendChatMessages();
     }
   }
 

@@ -1,6 +1,19 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
-import '../conversation.dart';
+
+class ConversationStorageConversation {
+  int roomId;
+
+  ConversationStorageConversation({required this.roomId});
+
+  Map<String, dynamic> toMap() {
+    return {'room_id': roomId};
+  }
+
+  factory ConversationStorageConversation.fromMap(Map<String, dynamic> map) {
+    return ConversationStorageConversation(roomId: map['room_id'] as int);
+  }
+}
 
 class ConversationStorage {
   Database? _db;
@@ -16,14 +29,6 @@ class ConversationStorage {
         await db.execute('''
           CREATE TABLE conversations (
             room_id INTEGER PRIMARY KEY,
-            target_user_id INTEGER NOT NULL,
-            title TEXT NOT NULL,
-            avatar_index INTEGER NOT NULL DEFAULT 0,
-            last_message TEXT NOT NULL DEFAULT '',
-            last_message_time INTEGER NOT NULL DEFAULT 0,
-            read_seq INTEGER NOT NULL DEFAULT 0,
-            max_seq INTEGER NOT NULL DEFAULT 0,
-            type INTEGER NOT NULL DEFAULT 0
           )
         ''');
       },
@@ -43,29 +48,17 @@ class ConversationStorage {
   // ── 读取 ──
 
   /// 获取所有会话，按最后消息时间倒序
-  Future<List<Conversation>> getAll() async {
+  Future<List<ConversationStorageConversation>> getAll() async {
     final rows = await _database.query(
       'conversations',
-      orderBy: 'last_message_time DESC',
     );
-    return rows.map(Conversation.fromMap).toList();
-  }
-
-  /// 根据 roomId 获取
-  Future<Conversation?> get(int roomId) async {
-    final rows = await _database.query(
-      'conversations',
-      where: 'room_id = ?',
-      whereArgs: [roomId],
-    );
-    if (rows.isEmpty) return null;
-    return Conversation.fromMap(rows.first);
+    return rows.map(ConversationStorageConversation.fromMap).toList();
   }
 
   // ── 写入 ──
 
   /// 新增或更新会话
-  Future<void> upsert(Conversation conversation) async {
+  Future<void> upsert(ConversationStorageConversation conversation) async {
     await _database.insert(
       'conversations',
       conversation.toMap(),
@@ -74,7 +67,7 @@ class ConversationStorage {
   }
 
   /// 批量新增或更新
-  Future<void> upsertAll(List<Conversation> conversations) async {
+  Future<void> upsertAll(List<ConversationStorageConversation> conversations) async {
     if (conversations.isEmpty) return;
     await _database.transaction((txn) async {
       for (final c in conversations) {
@@ -85,40 +78,6 @@ class ConversationStorage {
         );
       }
     });
-  }
-
-  Future<void> setReadSeqAndMaxSeq(int roomId, int readSeq, int maxSeq) async {
-    await _database.update(
-      'conversations',
-      {
-        'read_seq': readSeq,
-        'max_seq': maxSeq,
-      },
-      where: 'room_id = ?',
-      whereArgs: [roomId],
-    );
-  }
-
-  Future<void> setReadSeq(int roomId, int readSeq) async {
-    await _database.update(
-      'conversations',
-      {
-        'read_seq': readSeq
-      },
-      where: 'room_id = ?',
-      whereArgs: [roomId],
-    );
-  }
-
-  Future<void> setMaxSeq(int roomId, int maxSeq) async {
-    await _database.update(
-      'conversations',
-      {
-        'max_seq': maxSeq
-      },
-      where: 'room_id = ?',
-      whereArgs: [roomId],
-    );
   }
 
   // ── 删除 ──

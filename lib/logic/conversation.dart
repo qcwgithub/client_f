@@ -1,45 +1,16 @@
+import 'package:scene_hub/gen/chat_message.dart';
+
 class Conversation {
   int roomId;
-  String title;
-  int avatarIndex;
-  String lastMessage;
-  int lastMessageTime;
-  int unreadCount;
-
-  /// 会话类型：0=好友聊天，1=场景房间聊天
-  int type;
+  ChatMessage lastMessage;
+  int readSeq;
+  int get unreadCount {
+    return lastMessage.seq - readSeq;
+  }
 
   Conversation({
     required this.roomId,
-    required this.title,
-    required this.avatarIndex,
-    this.lastMessage = '',
-    this.lastMessageTime = 0,
-    this.unreadCount = 0,
-    this.type = 0,
+    required this.lastMessage,
+    required this.readSeq,
   });
-
-  Map<String, dynamic> toMap() {
-    return {
-      'room_id': roomId,
-      'title': title,
-      'avatar_index': avatarIndex,
-      'last_message': lastMessage,
-      'last_message_time': lastMessageTime,
-      'unread_count': unreadCount,
-      'type': type,
-    };
-  }
-
-  factory Conversation.fromMap(Map<String, dynamic> map) {
-    return Conversation(
-      roomId: map['room_id'] as int,
-      title: map['title'] as String,
-      avatarIndex: map['avatar_index'] as int,
-      lastMessage: map['last_message'] as String,
-      lastMessageTime: map['last_message_time'] as int,
-      unreadCount: map['unread_count'] as int,
-      type: map['type'] as int,
-    );
-  }
 }

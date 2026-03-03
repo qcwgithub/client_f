@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:scene_hub/gen/friend_info.dart';
 import 'package:scene_hub/logic/conversation.dart';
 import 'package:scene_hub/pages/avatar_pick_page.dart';
 import 'package:scene_hub/pages/friend_chat_page.dart';
@@ -65,15 +66,18 @@ class _ConversationListPageState extends State<ConversationListPage> {
   }
 
   void _onTap(Conversation conversation) async {
-    if (conversation.type == 0) {
+    final FriendInfo? friendInfo = sc.friendManager.getFriendByRoomId(
+      conversation.roomId,
+    );
+    if (friendInfo != null) {
       // 好友聊天
       await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => FriendChatPage(
-            friendUserId: conversation.targetUserId,
-            friendName: conversation.title,
-            friendAvatarIndex: conversation.avatarIndex,
+            friendUserId: friendInfo.userId,
+            friendName: "",
+            friendAvatarIndex: 0,
             roomId: conversation.roomId,
           ),
         ),
@@ -105,10 +109,8 @@ class _ConversationListPageState extends State<ConversationListPage> {
   }
 
   Widget _buildItem(Conversation conversation) {
-    final color = avatarColorFor(conversation.avatarIndex);
-    final initial = conversation.title.isNotEmpty
-        ? conversation.title[0].toUpperCase()
-        : '?';
+    final color = avatarColorFor(0);
+    final initial = "";
 
     return Dismissible(
       key: ValueKey(conversation.roomId),
@@ -135,13 +137,13 @@ class _ConversationListPageState extends State<ConversationListPage> {
           children: [
             Expanded(
               child: Text(
-                conversation.title,
+                conversation.lastMessage.content,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
             ),
             Text(
-              _formatTime(conversation.lastMessageTime),
+              _formatTime(conversation.lastMessage.timestamp),
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
@@ -150,7 +152,7 @@ class _ConversationListPageState extends State<ConversationListPage> {
           children: [
             Expanded(
               child: Text(
-                conversation.lastMessage,
+                conversation.lastMessage.content,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
                 style: const TextStyle(color: Colors.grey),

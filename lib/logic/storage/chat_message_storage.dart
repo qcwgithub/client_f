@@ -133,6 +133,27 @@ class ChatMessageStorage {
     return (result.first['max_seq'] as int?) ?? 0;
   }
 
+  /// 批量获取多个房间各自 max seq 对应的那条消息
+  Future<Map<int, ChatMessage>> getLatestMessages(List<int> roomIds) async {
+    if (roomIds.isEmpty) return {};
+    final placeholders = roomIds.map((_) => '?').join(',');
+    final rows = await _database.rawQuery('''
+      SELECT m.* FROM messages m
+      INNER JOIN (
+        SELECT room_id, MAX(seq) as max_seq
+        FROM messages
+        WHERE room_id IN ($placeholders)
+        GROUP BY room_id
+      ) t ON m.room_id = t.room_id AND m.seq = t.max_seq
+    ''', roomIds);
+    final map = <int, ChatMessage>{};
+    for (final row in rows) {
+      final msg = _fromRow(row);
+      map[msg.roomId] = msg;
+    }
+    return map;
+  }
+
   // ── 删除 ──
 
   /// 删除某个房间的所有消息

@@ -19,39 +19,71 @@ class ConversationManager {
     }
   }
 
-  List<Conversation>? _conversationList;
-  final Map<int, Conversation> _conversationMap = {};
+  final List<Conversation> _list = [];
+  final Map<int, Conversation> _map = {};
 
-  Future<void> openStorageAndInitialLoad() async {
+  Future<void> openStorage() async {
     await _storage.open(sc.me.userId);
+  }
 
-    _conversationList = await _storage.getAll();
-    _conversationMap.clear();
-    for (final conv in _conversationList!) {
-      _conversationMap[conv.roomId] = conv;
+  Future<void> initialLoad() async {
+    _list.clear();
+    _map.clear();
+
+    final list = await _storage.getAll();
+    if (list.isNotEmpty) {
+      final roomIds = list.map((conv) => conv.roomId).toList();
+      final latestMessages = await sc.chatMessageStorage.getLatestMessages(
+        roomIds,
+      );
+      for (final conv in list) {
+        final latestMessage = latestMessages[conv.roomId];
+        if (latestMessage == null) {
+          sc.logger.e(
+            'ConversationManager: No messages found for roomId ${conv.roomId}',
+          );
+        } else {
+          final ex = Conversation(
+            roomId: conv.roomId,
+            lastMessage: latestMessage,
+            readSeq: 0,
+          );
+          _list.add(ex);
+          _map[conv.roomId] = ex;
+        }
+      }
     }
+  }
 
+  void listenForFriendChatMessages() {
     sc.friendChatMessageManager.stream.listen(_onFriendChatMessage);
   }
 
   void _onFriendChatMessage(List<ChatMessage> messages) {
     for (final message in messages) {
-      final roomId = message.roomId;
-      final conversation = _conversationMap[roomId];
-      if (conversation == null) {
-        conversation = Conversation(
-          roomId: roomId,
-          targetUserId: targetUserId,
-          title: title,
-          avatarIndex: avatarIndex,
+      Conversation? conv = _map[message.roomId];
+      if (conv == null) {
+        conv = Conversation(
+          roomId: message.roomId,
+          lastMessage: message,
+          readSeq: 0,
         );
+
+        _list.add(conv);
+        _map[message.roomId] = conv;
+      } else {
+        if (message.seq > conv.lastMessage.seq) {
+          conv.lastMessage = message;
+        }
       }
-      if (conversation != null) {
-        conversation.lastMessage = message.content;
-        conversation.lastMessageTime = message.timestamp;
-        _notifyListeners();
-        _storage.upsert(conversation);
-      }
+    }
+  }
+
+  void tryUpdateReadSeq(int roomId, int seq) {
+    Conversation? conv = _map[roomId];
+    if (conv != null && seq > conv.readSeq) {
+      conv.readSeq = seq;
+      _notifyListeners();
     }
   }
 
@@ -63,34 +95,13 @@ class ConversationManager {
 
   /// 同步获取内存中的列表（已加载后使用）
   List<Conversation> getAll() {
-    return _conversationList ?? [];
+    return _list;
   }
 
-  void delete(int roomId) async {
-    _conversationList?.removeWhere((conv) => conv.roomId == roomId);
-    _conversationMap.remove(roomId);
+  Future<void> delete(int roomId) async {
+    _list.removeWhere((conv) => conv.roomId == roomId);
+    _map.remove(roomId);
     _notifyListeners();
     await _storage.delete(roomId);
-  }
-
-  void clearUnread(int roomId) async {
-    final conversation = _conversationMap[roomId];
-    if (conversation != null) {
-      conversation.unreadCount = 0;
-      _notifyListeners();
-      await _storage.clearUnread(roomId);
-    }
-  }
-
-  void upsert(Conversation conv) {
-    final index = _conversationList!.indexWhere((c) => c.roomId == conv.roomId);
-    if (index != -1) {
-      _conversationList![index] = conv;
-    } else {
-      _conversationList?.add(conv);
-    }
-    _conversationMap[conv.roomId] = conv;
-    _notifyListeners();
-    _storage.upsert(conv);
   }
 }
