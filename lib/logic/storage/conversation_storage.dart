@@ -28,7 +28,7 @@ class ConversationStorage {
 
   Future<void> open(int userId) async {
     final dbPath = await getDatabasesPath();
-    final path = p.join(dbPath, 'conversations_$userId.db');
+    final path = p.join(dbPath, 'conversations_${userId}_2.db');
 
     _db = await openDatabase(
       path,

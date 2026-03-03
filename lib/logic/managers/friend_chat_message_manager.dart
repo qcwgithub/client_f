@@ -161,6 +161,11 @@ class FriendChatMessageManager extends ChatMessageManager {
     if (_toReportReadSeqs.isNotEmpty) {
       _toReportReadSeqs.forEach((friendUserId, readSeq) {
         _requestSetReadSeq(friendUserId, readSeq);
+
+        final friendInfo = sc.friendManager.getFriend(friendUserId);
+        if (friendInfo != null) {
+          sc.conversationManager.tryUpdateReadSeq(friendInfo.roomId, readSeq);
+        }
       });
     }
   }
@@ -212,7 +217,7 @@ class FriendChatMessageManager extends ChatMessageManager {
   // 上报 read seq
 
   final Map<int, int> _toReportReadSeqs = {};
-  Future<void> onMessageViewed(int roomId, int seq) async {
+  void onMessageViewed(int roomId, int seq) {
     final FriendInfo? friendInfo = sc.friendManager.getFriendByRoomId(roomId);
     if (friendInfo != null && seq > friendInfo.readSeq) {
       int friendUserId = friendInfo.userId;
@@ -220,8 +225,6 @@ class FriendChatMessageManager extends ChatMessageManager {
           seq > _toReportReadSeqs[friendUserId]!) {
         _toReportReadSeqs[friendUserId] = seq;
         _tryRegisterPostFrameCallback();
-
-        await sc.conversationManager.tryUpdateReadSeq(roomId, seq);
       }
     }
   }
