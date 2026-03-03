@@ -1,17 +1,25 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 
-class ConversationStorageConversation {
+class StorageConversation {
   int roomId;
+  // 也存一下，有时候上报到服务器失败了，就以本地为准，避免消息一直读
+  int readSeq;
 
-  ConversationStorageConversation({required this.roomId});
+  StorageConversation({
+    required this.roomId,
+    required this.readSeq,
+  });
 
   Map<String, dynamic> toMap() {
-    return {'room_id': roomId};
+    return {'room_id': roomId, 'read_seq': readSeq};
   }
 
-  factory ConversationStorageConversation.fromMap(Map<String, dynamic> map) {
-    return ConversationStorageConversation(roomId: map['room_id'] as int);
+  factory StorageConversation.fromMap(Map<String, dynamic> map) {
+    return StorageConversation(
+      roomId: map['room_id'] as int,
+      readSeq: map['read_seq'] as int,
+    );
   }
 }
 
@@ -29,6 +37,7 @@ class ConversationStorage {
         await db.execute('''
           CREATE TABLE conversations (
             room_id INTEGER PRIMARY KEY,
+            read_seq INTEGER NOT NULL DEFAULT 0
           )
         ''');
       },
@@ -48,17 +57,15 @@ class ConversationStorage {
   // ── 读取 ──
 
   /// 获取所有会话，按最后消息时间倒序
-  Future<List<ConversationStorageConversation>> getAll() async {
-    final rows = await _database.query(
-      'conversations',
-    );
-    return rows.map(ConversationStorageConversation.fromMap).toList();
+  Future<List<StorageConversation>> getAll() async {
+    final rows = await _database.query('conversations');
+    return rows.map(StorageConversation.fromMap).toList();
   }
 
   // ── 写入 ──
 
   /// 新增或更新会话
-  Future<void> upsert(ConversationStorageConversation conversation) async {
+  Future<void> upsert(StorageConversation conversation) async {
     await _database.insert(
       'conversations',
       conversation.toMap(),
@@ -67,7 +74,9 @@ class ConversationStorage {
   }
 
   /// 批量新增或更新
-  Future<void> upsertAll(List<ConversationStorageConversation> conversations) async {
+  Future<void> upsertMany(
+    List<StorageConversation> conversations,
+  ) async {
     if (conversations.isEmpty) return;
     await _database.transaction((txn) async {
       for (final c in conversations) {
@@ -91,8 +100,14 @@ class ConversationStorage {
     );
   }
 
-  /// 删除全部
-  Future<void> deleteAll() async {
-    await _database.delete('conversations');
+  /// 批量删除会话
+  Future<void> deleteMany(List<int> roomIds) async {
+    if (roomIds.isEmpty) return;
+    final placeholders = roomIds.map((_) => '?').join(',');
+    await _database.delete(
+      'conversations',
+      where: 'room_id IN ($placeholders)',
+      whereArgs: roomIds,
+    );
   }
 }

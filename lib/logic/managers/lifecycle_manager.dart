@@ -9,9 +9,8 @@ import 'package:scene_hub/pages/login_page.dart';
 import 'package:scene_hub/sc.dart';
 
 class LifecycleManager {
-  StreamSubscription<LoginEvent>? _loginSub;
   void init() {
-    _loginSub = sc.eventBus.on<LoginEvent>().listen(_onLogin);
+    sc.eventBus.on<LoginEvent>().listen(_onLogin);
   }
 
   void _onLogin(LoginEvent event) async {

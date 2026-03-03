@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:scene_hub/gen/chat_message.dart';
+import 'package:scene_hub/gen/friend_info.dart';
 import 'package:scene_hub/logic/conversation.dart';
 import 'package:scene_hub/sc.dart';
 
@@ -26,76 +28,151 @@ class ConversationManager {
     await _storage.open(sc.me.userId);
   }
 
+  void _sortList() {
+    if (_list.isNotEmpty) {
+      _list.sort(
+        (a, b) => b.lastMessage.timestamp.compareTo(a.lastMessage.timestamp),
+      );
+    }
+  }
+
   Future<void> initialLoad() async {
     _list.clear();
     _map.clear();
 
-    final list = await _storage.getAll();
-    if (list.isNotEmpty) {
-      final roomIds = list.map((conv) => conv.roomId).toList();
-      final latestMessages = await sc.chatMessageStorage.getLatestMessages(
-        roomIds,
+    final List<StorageConversation> list = await _storage.getAll();
+    if (list.isEmpty) {
+      return;
+    }
+
+    List<int>? deletes;
+
+    final latestMessages = await sc.chatMessageStorage.getLatestMessages(
+      list.map((conv) => conv.roomId).toList(),
+    );
+
+    for (final StorageConversation conv in list) {
+      // 移除不是好友的
+      final FriendInfo? friendInfo = sc.friendManager.getFriendByRoomId(
+        conv.roomId,
       );
-      for (final conv in list) {
-        final latestMessage = latestMessages[conv.roomId];
-        if (latestMessage == null) {
-          sc.logger.e(
-            'ConversationManager: No messages found for roomId ${conv.roomId}',
-          );
-        } else {
-          final ex = Conversation(
-            roomId: conv.roomId,
-            lastMessage: latestMessage,
-            readSeq: 0,
-          );
-          _list.add(ex);
-          _map[conv.roomId] = ex;
-        }
+      if (friendInfo == null) {
+        deletes ??= [];
+        deletes.add(conv.roomId);
+        continue;
       }
+
+      // 移除没有任何消息的
+      final latestMessage = latestMessages[conv.roomId];
+      if (latestMessage == null) {
+        deletes ??= [];
+        deletes.add(conv.roomId);
+        continue;
+      }
+
+      final ex = Conversation(
+        roomId: conv.roomId,
+        lastMessage: latestMessage,
+        readSeq: max(conv.readSeq, friendInfo.readSeq),
+      );
+      _list.add(ex);
+      _map[conv.roomId] = ex;
+    }
+
+    _sortList();
+
+    if (deletes != null) {
+      await _storage.deleteMany(deletes);
     }
   }
 
+  StreamSubscription<List<ChatMessage>>? _friendChatSub;
   void listenForFriendChatMessages() {
-    sc.friendChatMessageManager.stream.listen(_onFriendChatMessage);
+    _friendChatSub = sc.friendChatMessageManager.stream.listen(
+      _onFriendChatMessage,
+    );
   }
 
-  void _onFriendChatMessage(List<ChatMessage> messages) {
+  Future<void> _onFriendChatMessage(List<ChatMessage> messages) async {
+    bool needNotify = false;
+    bool needSort = false;
+    List<StorageConversation>? upserts;
+
     for (final message in messages) {
       Conversation? conv = _map[message.roomId];
       if (conv == null) {
         conv = Conversation(
           roomId: message.roomId,
           lastMessage: message,
-          readSeq: 0,
+          // 当出现新会话时，仅当前消息为未读
+          readSeq: sc.me.isMe(message.senderId)
+              ? message.seq
+              : max(0, message.seq - 1),
         );
 
         _list.add(conv);
         _map[message.roomId] = conv;
+        needSort = true;
+        needNotify = true;
+
+        upserts ??= [];
+        upserts.add(
+          StorageConversation(roomId: message.roomId, readSeq: conv.readSeq),
+        );
       } else {
         if (message.seq > conv.lastMessage.seq) {
           conv.lastMessage = message;
+          needSort = true;
+          needNotify = true;
+
+          // 自己发的消息，readSeq 跟进
+          if (sc.me.isMe(message.senderId) && message.seq > conv.readSeq) {
+            conv.readSeq = message.seq;
+            upserts ??= [];
+            upserts.add(
+              StorageConversation(roomId: conv.roomId, readSeq: conv.readSeq),
+            );
+          }
         }
       }
     }
+
+    if (needSort) {
+      _sortList();
+    }
+
+    if (needNotify) {
+      _notifyListeners();
+    }
+
+    if (upserts != null) {
+      await _storage.upsertMany(upserts);
+    }
   }
 
-  void tryUpdateReadSeq(int roomId, int seq) {
+  Future<void> tryUpdateReadSeq(int roomId, int seq) async {
     Conversation? conv = _map[roomId];
     if (conv != null && seq > conv.readSeq) {
       conv.readSeq = seq;
       _notifyListeners();
+
+      await _storage.upsert(
+        StorageConversation(roomId: conv.roomId, readSeq: conv.readSeq),
+      );
     }
   }
 
   Future<void> onQuit() async {
+    _friendChatSub?.cancel();
+    _friendChatSub = null;
+    _list.clear();
+    _map.clear();
     await _storage.close();
   }
 
-  void init() {}
-
   /// 同步获取内存中的列表（已加载后使用）
   List<Conversation> getAll() {
-    return _list;
+    return List.unmodifiable(_list);
   }
 
   Future<void> delete(int roomId) async {

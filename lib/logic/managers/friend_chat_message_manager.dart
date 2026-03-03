@@ -20,12 +20,15 @@ import 'package:scene_hub/logic/managers/chat_message_manager.dart';
 import 'package:scene_hub/sc.dart';
 
 class FriendChatMessageManager extends ChatMessageManager {
-  StreamSubscription<LoginEvent>? _loginSub;
   void init() {
-    _loginSub = sc.eventBus.on<LoginEvent>().listen(_onLogin);
+    sc.eventBus.on<LoginEvent>().listen(_onLogin);
   }
 
-  Future<void> onQuit() async {}
+  Future<void> onQuit() async {
+    _toReportReceivedSeqs.clear();
+    _toReportReadSeqs.clear();
+    _registeredPostFrameCallback = false;
+  }
 
   void _onLogin(LoginEvent event) async {
     if (event.count > 1) {
@@ -209,7 +212,7 @@ class FriendChatMessageManager extends ChatMessageManager {
   // 上报 read seq
 
   final Map<int, int> _toReportReadSeqs = {};
-  void onMessageViewed(int roomId, int seq) {
+  Future<void> onMessageViewed(int roomId, int seq) async {
     final FriendInfo? friendInfo = sc.friendManager.getFriendByRoomId(roomId);
     if (friendInfo != null && seq > friendInfo.readSeq) {
       int friendUserId = friendInfo.userId;
@@ -217,6 +220,8 @@ class FriendChatMessageManager extends ChatMessageManager {
           seq > _toReportReadSeqs[friendUserId]!) {
         _toReportReadSeqs[friendUserId] = seq;
         _tryRegisterPostFrameCallback();
+
+        await sc.conversationManager.tryUpdateReadSeq(roomId, seq);
       }
     }
   }
