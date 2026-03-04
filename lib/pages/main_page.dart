@@ -21,7 +21,7 @@ class _MainPageState extends ConsumerState<MainPage> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((Duration timeStamp) {
+    sc.postFrameCallbackManager.register(() {
       ref.read(sceneListProvider.notifier).getRecommendedScenes();
     });
   }

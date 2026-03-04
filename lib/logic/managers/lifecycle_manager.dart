@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/logic/events/login_event.dart';
-import 'package:scene_hub/my_app.dart';
 import 'package:scene_hub/network/network_status.dart';
 import 'package:scene_hub/pages/login_page.dart';
 import 'package:scene_hub/sc.dart';
@@ -37,12 +36,11 @@ class LifecycleManager {
     await sc.conversationManager.onQuit();
     await sc.chatMessageStorage.onQuit();
 
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-      (_) => false,
-    );
-
-    // 销毁内层 ProviderScope 下的所有 provider
-    ref.read(appScopeKeyProvider.notifier).state = UniqueKey();
+    if (context.mounted) {
+      await Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (_) => false,
+      );
+    }
   }
 }

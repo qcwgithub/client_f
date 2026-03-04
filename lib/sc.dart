@@ -9,6 +9,7 @@ import 'package:scene_hub/logic/managers/friend_manager.dart';
 import 'package:scene_hub/logic/managers/msg_handler.dart';
 import 'package:scene_hub/logic/managers/scene_chat_message_manager.dart';
 import 'package:scene_hub/logic/managers/conversation_manager.dart';
+import 'package:scene_hub/logic/managers/post_frame_callback_manager.dart';
 import 'package:scene_hub/me.dart';
 import 'package:scene_hub/network/server.dart';
 
@@ -38,6 +39,8 @@ class Sc {
   final SceneChatMessageManager sceneChatMessageManager =
       SceneChatMessageManager();
   final ConversationManager conversationManager = ConversationManager();
+  final PostFrameCallbackManager postFrameCallbackManager =
+      PostFrameCallbackManager();
 
   void init() {
     lifecycleManager.init();

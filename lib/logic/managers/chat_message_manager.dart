@@ -7,7 +7,7 @@ import 'package:scene_hub/sc.dart';
 abstract class ChatMessageManager {
   UserInfo get userInfo => sc.me.userInfo;
 
-  final _controller = StreamController<List<ChatMessage>>.broadcast();
+  final _controller = StreamController<List<ChatMessage>>.broadcast(sync: true);
   Stream<List<ChatMessage>> get stream => _controller.stream;
 
   void controllerAdd(List<ChatMessage> messages) {
@@ -20,6 +20,7 @@ abstract class ChatMessageManager {
         sc.logger.d("消息 seq 不递增！${messages[i].seq} >= ${messages[i + 1].seq}");
       }
     }
+    sc.logger.d("controllerAdd seq range [${messages.first.seq}, ${messages.last.seq}]");
     _controller.add(messages);
   }
 

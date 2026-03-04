@@ -27,7 +27,6 @@ class FriendChatMessageManager extends ChatMessageManager {
   Future<void> onQuit() async {
     _toReportReceivedSeqs.clear();
     _toReportReadSeqs.clear();
-    _registeredPostFrameCallback = false;
   }
 
   void _onLogin(LoginEvent event) async {
@@ -131,25 +130,14 @@ class FriendChatMessageManager extends ChatMessageManager {
       if (_toReportReceivedSeqs[friendUserId] == null ||
           seq > _toReportReceivedSeqs[friendUserId]!) {
         _toReportReceivedSeqs[friendUserId] = seq;
-        _tryRegisterPostFrameCallback();
+        sc.postFrameCallbackManager.register(_postFrameCallback);
       }
     }
   }
 
   // Post Frame Callback
 
-  bool _registeredPostFrameCallback = false;
-  void _tryRegisterPostFrameCallback() {
-    if (_registeredPostFrameCallback) {
-      return;
-    }
-    _registeredPostFrameCallback = true;
-    SchedulerBinding.instance.addPostFrameCallback(_postFrameCallback);
-  }
-
-  void _postFrameCallback(Duration timeStamp) {
-    _registeredPostFrameCallback = false;
-
+  void _postFrameCallback() {
     //
     if (_toReportReceivedSeqs.isNotEmpty) {
       _toReportReceivedSeqs.forEach((friendUserId, receivedSeq) {
@@ -224,7 +212,7 @@ class FriendChatMessageManager extends ChatMessageManager {
       if (_toReportReadSeqs[friendUserId] == null ||
           seq > _toReportReadSeqs[friendUserId]!) {
         _toReportReadSeqs[friendUserId] = seq;
-        _tryRegisterPostFrameCallback();
+        sc.postFrameCallbackManager.register(_postFrameCallback);
       }
     }
   }
