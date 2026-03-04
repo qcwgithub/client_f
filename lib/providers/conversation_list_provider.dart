@@ -38,7 +38,6 @@ class ConversationListNotifier extends StateNotifier<ConversationListModel> {
 
   @override
   void dispose() {
-    sc.logger.e("ConversationListNotifier disposed!");
     sc.conversationManager.removeListener(_onChanged);
     super.dispose();
   }

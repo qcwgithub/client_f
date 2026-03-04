@@ -80,6 +80,7 @@ class ConversationManager {
     }
 
     _sortList();
+    _notifyListeners();
 
     if (deletes != null) {
       await _storage.deleteMany(deletes);

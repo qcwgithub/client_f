@@ -8,7 +8,7 @@ class SceneChatMessagesNotifier extends ChatMessagesNotifier {
 }
 
 final sceneChatMessagesProvider =
-    StateNotifierProvider.family<
+    StateNotifierProvider.autoDispose.family<
       SceneChatMessagesNotifier,
       ChatMessagesModel,
       int

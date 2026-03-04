@@ -1,10 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/logic/events/login_event.dart';
 import 'package:scene_hub/network/network_status.dart';
-import 'package:scene_hub/pages/login_page.dart';
 import 'package:scene_hub/sc.dart';
 
 class LifecycleManager {
@@ -25,22 +22,17 @@ class LifecycleManager {
   }
 
   // 退出到登录页
-  Future<void> quit(BuildContext context, WidgetRef ref) async {
+  Future<void> quit() async {
     sc.server.stopRunningAndClose();
     while (sc.server.state != NetworkStatus.init) {
       await Future.delayed(Duration(milliseconds: 100));
     }
 
     await sc.friendChatMessageManager.onQuit();
-
     await sc.conversationManager.onQuit();
     await sc.chatMessageStorage.onQuit();
 
-    if (context.mounted) {
-      await Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-        (_) => false,
-      );
-    }
+    // 销毁所有 provider + 重建整个 app（回到 LoginPage）
+    sc.resetProviders();
   }
 }

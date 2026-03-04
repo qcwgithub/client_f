@@ -24,7 +24,23 @@ void main() {
 
   sc.init();
 
-  runApp(
-    const ProviderScope(child: MyApp()),
-  );
+  runApp(const AppRoot()); // uses UncontrolledProviderScope instead of ProviderScope
+}
+
+class AppRoot extends StatelessWidget {
+  const AppRoot({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: appRebuildNotifier,
+      builder: (context, value, __) {
+        return UncontrolledProviderScope(
+          key: ValueKey(value),
+          container: sc.container,
+          child: const MyApp(),
+        );
+      },
+    );
+  }
 }

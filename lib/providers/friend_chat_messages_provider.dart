@@ -11,7 +11,7 @@ class FriendChatMessagesNotifier extends ChatMessagesNotifier {
 
 /// key: (friendUserId, roomId)
 final friendChatMessagesProvider =
-    StateNotifierProvider.family<
+    StateNotifierProvider.autoDispose.family<
       FriendChatMessagesNotifier,
       ChatMessagesModel,
       int

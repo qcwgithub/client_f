@@ -139,7 +139,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   false;
 
               if (!ok || !context.mounted) return;
-              await sc.lifecycleManager.quit(context, ref);
+              await sc.lifecycleManager.quit();
             },
           ),
         ],
