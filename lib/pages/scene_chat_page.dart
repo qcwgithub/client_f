@@ -1,4 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:scene_hub/gen/chat_message_image_content.dart';
+import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/gen/msg_leave_scene.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/scene_room_info.dart';
@@ -7,9 +10,7 @@ import 'package:scene_hub/pages/chat_page.dart';
 import 'package:scene_hub/providers/chat_messages_notifier.dart';
 import 'package:scene_hub/providers/scene_chat_messages_provider.dart';
 import 'package:scene_hub/sc.dart';
-import 'package:scene_hub/widgets/chat_input.dart';
 import 'package:scene_hub/widgets/scene_chat_message_item.dart';
-import 'package:flutter/material.dart';
 
 class SceneChatPage extends ConsumerStatefulWidget {
   final SceneRoomInfo roomInfo;
@@ -24,6 +25,24 @@ class SceneChatPage extends ConsumerStatefulWidget {
 }
 
 class _ChatPageState extends ChatPageState<SceneChatPage> {
+  @override
+  String get chatTitle => widget.roomInfo.title;
+
+  @override
+  ChatMessagesModel watchChatModel() =>
+      ref.watch(sceneChatMessagesProvider(widget.roomId));
+
+  @override
+  void sendChat(
+    ChatMessageType type,
+    String content,
+    ChatMessageImageContent? imageContent,
+  ) {
+    ref
+        .read(sceneChatMessagesProvider(widget.roomId).notifier)
+        .sendChat(type, content, imageContent);
+  }
+
   @override
   Future<void> onScrollNearTop() async {
     await ref
@@ -46,41 +65,6 @@ class _ChatPageState extends ChatPageState<SceneChatPage> {
       useClientId: message.useClientSeq,
       seq: message.useClientSeq ? message.clientSeq : message.seq,
       showTime: showTime,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final ChatMessagesModel model = ref.watch(
-      sceneChatMessagesProvider(widget.roomId),
-    );
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.roomInfo.title),
-            if (model.status == ChatMessagesStatus.refreshing)
-              buildRefreshing(model.status),
-            if (model.status == ChatMessagesStatus.refreshError)
-              buildRefreshError(model.status),
-          ],
-        ),
-      ),
-      body: Column(
-        children: [
-          buildChatList(model.messages),
-          ChatInput(
-            controller: inputController,
-            callback: (type, content, imageContent) {
-              ref
-                  .read(sceneChatMessagesProvider(widget.roomId).notifier)
-                  .sendChat(type, content, imageContent);
-            },
-          ),
-        ],
-      ),
     );
   }
 

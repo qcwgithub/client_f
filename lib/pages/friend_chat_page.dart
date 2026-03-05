@@ -1,10 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:scene_hub/gen/chat_message_image_content.dart';
+import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/pages/chat_page.dart';
 import 'package:scene_hub/providers/friend_chat_messages_provider.dart';
-import 'package:scene_hub/widgets/chat_input.dart';
 import 'package:scene_hub/widgets/friend_chat_message_item.dart';
-import 'package:flutter/material.dart';
 
 class FriendChatPage extends ConsumerStatefulWidget {
   final int friendUserId;
@@ -25,6 +26,24 @@ class FriendChatPage extends ConsumerStatefulWidget {
 }
 
 class _FriendChatPageState extends ChatPageState<FriendChatPage> {
+  @override
+  String get chatTitle => widget.friendName;
+
+  @override
+  ChatMessagesModel watchChatModel() =>
+      ref.watch(friendChatMessagesProvider(widget.roomId));
+
+  @override
+  void sendChat(
+    ChatMessageType type,
+    String content,
+    ChatMessageImageContent? imageContent,
+  ) {
+    ref
+        .read(friendChatMessagesProvider(widget.roomId).notifier)
+        .sendChat(type, content, imageContent);
+  }
+
   @override
   Future<void> onScrollNearTop() async {
     await ref
@@ -48,41 +67,6 @@ class _FriendChatPageState extends ChatPageState<FriendChatPage> {
       useClientSeq: message.useClientSeq,
       seq: message.useClientSeq ? message.clientSeq : message.seq,
       showTime: showTime,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final ChatMessagesModel model = ref.watch(
-      friendChatMessagesProvider(widget.roomId),
-    );
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.friendName),
-            if (model.status == ChatMessagesStatus.refreshing)
-              buildRefreshing(model.status),
-            if (model.status == ChatMessagesStatus.refreshError)
-              buildRefreshError(model.status),
-          ],
-        ),
-      ),
-      body: Column(
-        children: [
-          buildChatList(model.messages),
-          ChatInput(
-            controller: inputController,
-            callback: (type, content, imageContent) {
-              ref
-                  .read(friendChatMessagesProvider(widget.roomId).notifier)
-                  .sendChat(type, content, imageContent);
-            },
-          ),
-        ],
-      ),
     );
   }
 }

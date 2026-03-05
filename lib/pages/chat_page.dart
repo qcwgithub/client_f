@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:scene_hub/gen/chat_message_image_content.dart';
+import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/providers/chat_messages_notifier.dart';
 import 'package:scene_hub/sc.dart';
+import 'package:scene_hub/widgets/chat_input.dart';
 
 /// Base state class for chat pages. Provides:
 /// - ScrollController + TextEditingController management
@@ -57,6 +60,19 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
     super.dispose();
   }
 
+  /// The title shown in the AppBar.
+  String get chatTitle;
+
+  /// Watch the chat messages model. Called inside [build].
+  ChatMessagesModel watchChatModel();
+
+  /// Send a chat message via the appropriate provider.
+  void sendChat(
+    ChatMessageType type,
+    String content,
+    ChatMessageImageContent? imageContent,
+  );
+
   Widget buildRefreshing(ChatMessagesStatus status) {
     return const Text(
       '同步中...',
@@ -101,6 +117,37 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
 
           return buildMessageItem(message, showTime);
         },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final model = watchChatModel();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(chatTitle),
+            if (model.status == ChatMessagesStatus.refreshing)
+              buildRefreshing(model.status),
+            if (model.status == ChatMessagesStatus.refreshError)
+              buildRefreshError(model.status),
+          ],
+        ),
+      ),
+      body: Column(
+        children: [
+          buildChatList(model.messages),
+          ChatInput(
+            controller: inputController,
+            callback: (type, content, imageContent) {
+              sendChat(type, content, imageContent);
+            },
+          ),
+        ],
       ),
     );
   }
