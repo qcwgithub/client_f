@@ -17,7 +17,7 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
   void initState() {
     super.initState();
 
-    sc.postFrameCallbackManager.register(scrollToBottom);
+    sc.postFrameCallbackManager.registerNoDuplicate(scrollToBottom);
 
     scrollController.addListener(() async {
       final pos = scrollController.position;

@@ -5,7 +5,7 @@ class PostFrameCallbackManager {
   List<VoidCallback> _callbacks = [];
 
   /// 注册一个 postFrameCallback，如果还没调度则自动调度
-  void register(VoidCallback callback) {
+  void registerNoDuplicate(VoidCallback callback) {
     if (_callbacks.contains(callback)) {
       // 已经注册过了，不重复注册
       return;

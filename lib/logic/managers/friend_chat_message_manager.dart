@@ -45,10 +45,32 @@ class FriendChatMessageManager extends ChatMessageManager {
 
     if (r.e == ECode.success) {
       final res = ResReceiveFriendChatMessages.fromMsgPack(r.res!);
-      if (res.messages.isNotEmpty) {
-        sc.chatMessageStorage.upsertMessages(res.messages);
-        controllerAdd(res.messages);
+      if (res.messageListDict.isNotEmpty) {
+        List<ChatMessage> messages = [];
+        res.messageListDict.forEach((roomId, value) {
+          messages.addAll(value.list);
+        });
+        sc.chatMessageStorage.upsertMessages(messages);
+        controllerAdd(messages);
         sc.eventBus.emit(ChatRefreshEvent(ChatRefreshStatus.success));
+
+        //
+        res.messageListDict.forEach((roomId, value) {
+          if (value.list.isNotEmpty) {
+            int seq = value.list.last.seq;
+            final FriendInfo? friendInfo = sc.friendManager.getFriendByRoomId(
+              roomId,
+            );
+            if (friendInfo != null && seq > friendInfo.receivedSeq) {
+              int friendUserId = friendInfo.userId;
+              if (_toReportReceivedSeqs[friendUserId] == null ||
+                  seq > _toReportReceivedSeqs[friendUserId]!) {
+                _toReportReceivedSeqs[friendUserId] = seq;
+                sc.postFrameCallbackManager.registerNoDuplicate(_postFrameCallback);
+              }
+            }
+          }
+        });
       }
     } else {
       sc.eventBus.emit(ChatRefreshEvent(ChatRefreshStatus.error));
@@ -130,7 +152,7 @@ class FriendChatMessageManager extends ChatMessageManager {
       if (_toReportReceivedSeqs[friendUserId] == null ||
           seq > _toReportReceivedSeqs[friendUserId]!) {
         _toReportReceivedSeqs[friendUserId] = seq;
-        sc.postFrameCallbackManager.register(_postFrameCallback);
+        sc.postFrameCallbackManager.registerNoDuplicate(_postFrameCallback);
       }
     }
   }
@@ -212,7 +234,7 @@ class FriendChatMessageManager extends ChatMessageManager {
       if (_toReportReadSeqs[friendUserId] == null ||
           seq > _toReportReadSeqs[friendUserId]!) {
         _toReportReadSeqs[friendUserId] = seq;
-        sc.postFrameCallbackManager.register(_postFrameCallback);
+        sc.postFrameCallbackManager.registerNoDuplicate(_postFrameCallback);
       }
     }
   }

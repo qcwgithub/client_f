@@ -21,7 +21,7 @@ class _MainPageState extends ConsumerState<MainPage> {
   void initState() {
     super.initState();
 
-    sc.postFrameCallbackManager.register(() {
+    sc.postFrameCallbackManager.registerNoDuplicate(() {
       ref.read(sceneListProvider.notifier).getRecommendedScenes();
     });
   }
