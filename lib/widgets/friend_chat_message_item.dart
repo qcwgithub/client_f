@@ -22,23 +22,16 @@ class FriendChatMessageItem extends ChatMessageItemBase {
 
   @override
   ClientChatMessage watchMessage(WidgetRef ref) {
-    return ref.watch(
-      friendChatMessageProvider((roomId, useClientSeq, seq)),
-    );
+    return ref.watch(friendChatMessageProvider((roomId, useClientSeq, seq)));
   }
 
   @override
   void onMessageViewed(ClientChatMessage message) {
-    sc.friendChatMessageManager.onMessageViewed(
-      roomId,
-      message.inner.seq,
-    );
+    sc.friendChatMessageManager.onMessageViewed(roomId, message.inner.seq);
   }
 
   @override
   void onResendChat(WidgetRef ref, int clientSeq) {
-    ref
-        .read(friendChatMessagesProvider(roomId).notifier)
-        .resendChat(clientSeq);
+    ref.read(friendChatMessagesProvider(roomId).notifier).resendChat(clientSeq);
   }
 }

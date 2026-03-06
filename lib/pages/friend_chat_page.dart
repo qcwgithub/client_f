@@ -27,6 +27,9 @@ class FriendChatPage extends ConsumerStatefulWidget {
 
 class _FriendChatPageState extends ChatPageState<FriendChatPage> {
   @override
+  int get roomId => widget.roomId;
+
+  @override
   String get chatTitle => widget.friendName;
 
   @override

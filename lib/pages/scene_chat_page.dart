@@ -26,6 +26,9 @@ class SceneChatPage extends ConsumerStatefulWidget {
 
 class _ChatPageState extends ChatPageState<SceneChatPage> {
   @override
+  int get roomId => widget.roomId;
+
+  @override
   String get chatTitle => widget.roomInfo.title;
 
   @override

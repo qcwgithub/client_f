@@ -4,8 +4,10 @@ import 'package:scene_hub/gen/chat_message_image_content.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/providers/chat_messages_notifier.dart';
+import 'package:scene_hub/providers/chat_unread_hint_provider.dart';
 import 'package:scene_hub/sc.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
+import 'package:scene_hub/widgets/chat_unread_hint.dart';
 
 /// Base state class for chat pages. Provides:
 /// - ScrollController + TextEditingController management
@@ -15,6 +17,9 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
     extends ConsumerState<T> {
   final ScrollController scrollController = ScrollController();
   final TextEditingController inputController = TextEditingController();
+
+  bool _isNearBottom = true;
+  int _prevMessageCount = 0;
 
   @override
   void initState() {
@@ -29,6 +34,12 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
       // reverse: true → pixels 越大越靠近旧消息（顶部）
       bool nearTop = pos.pixels >= pos.maxScrollExtent - threshold;
       bool nearBottom = pos.pixels <= pos.minScrollExtent + threshold;
+
+      _isNearBottom = nearBottom;
+
+      if (nearBottom) {
+        ref.read(chatUnreadHintProvider(roomId).notifier).clear();
+      }
 
       if (nearTop) {
         await onScrollNearTop();
@@ -59,6 +70,9 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
     inputController.dispose();
     super.dispose();
   }
+
+  /// The roomId used as key for the unread hint provider.
+  int get roomId;
 
   /// The title shown in the AppBar.
   String get chatTitle;
@@ -125,6 +139,22 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
   Widget build(BuildContext context) {
     final model = watchChatModel();
 
+    // 检测新消息到达
+    final currentCount = model.messages.length;
+    if (_prevMessageCount > 0 && currentCount > _prevMessageCount) {
+      final delta = currentCount - _prevMessageCount;
+      if (!_isNearBottom) {
+        // 不在底部，累计未读
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(chatUnreadHintProvider(roomId).notifier).increment(delta);
+        });
+      } else {
+        // 在底部，自动滚到最新
+        sc.postFrameCallbackManager.registerNoDuplicate(scrollToBottom);
+      }
+    }
+    _prevMessageCount = currentCount;
+
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -138,15 +168,20 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
           ],
         ),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          buildChatList(model.messages),
-          ChatInput(
-            controller: inputController,
-            callback: (type, content, imageContent) {
-              sendChat(type, content, imageContent);
-            },
+          Column(
+            children: [
+              buildChatList(model.messages),
+              ChatInput(
+                controller: inputController,
+                callback: (type, content, imageContent) {
+                  sendChat(type, content, imageContent);
+                },
+              ),
+            ],
           ),
+          ChatUnreadHint(roomId: roomId, onTap: scrollToBottom),
         ],
       ),
     );
