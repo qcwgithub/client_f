@@ -4,7 +4,7 @@ import 'package:scene_hub/gen/chat_message_image_content.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/providers/chat_messages_notifier.dart';
-import 'package:scene_hub/providers/chat_unread_hint_provider.dart';
+import 'package:scene_hub/providers/conversation_unread_hint_provider.dart';
 import 'package:scene_hub/sc.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
 import 'package:scene_hub/widgets/chat_unread_hint.dart';
@@ -19,7 +19,6 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
   final TextEditingController inputController = TextEditingController();
 
   bool _isNearBottom = true;
-  int _prevMessageCount = 0;
 
   @override
   void initState() {
@@ -36,10 +35,6 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
       bool nearBottom = pos.pixels <= pos.minScrollExtent + threshold;
 
       _isNearBottom = nearBottom;
-
-      if (nearBottom) {
-        ref.read(chatUnreadHintProvider(roomId).notifier).clear();
-      }
 
       if (nearTop) {
         await onScrollNearTop();
@@ -139,21 +134,10 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
   Widget build(BuildContext context) {
     final model = watchChatModel();
 
-    // 检测新消息到达
-    final currentCount = model.messages.length;
-    if (_prevMessageCount > 0 && currentCount > _prevMessageCount) {
-      final delta = currentCount - _prevMessageCount;
-      if (!_isNearBottom) {
-        // 不在底部，累计未读
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ref.read(chatUnreadHintProvider(roomId).notifier).increment(delta);
-        });
-      } else {
-        // 在底部，自动滚到最新
-        sc.postFrameCallbackManager.registerNoDuplicate(scrollToBottom);
-      }
+    if (_isNearBottom) {
+      // 在底部，自动滚到最新
+      sc.postFrameCallbackManager.registerNoDuplicate(scrollToBottom);
     }
-    _prevMessageCount = currentCount;
 
     return Scaffold(
       appBar: AppBar(

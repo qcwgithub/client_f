@@ -176,6 +176,10 @@ class ConversationManager {
     return List.unmodifiable(_list);
   }
 
+  Conversation? getByRoomId(int roomId) {
+    return _map[roomId];
+  }
+
   Future<void> delete(int roomId) async {
     _list.removeWhere((conv) => conv.roomId == roomId);
     _map.remove(roomId);

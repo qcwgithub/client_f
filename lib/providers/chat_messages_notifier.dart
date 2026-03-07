@@ -7,7 +7,7 @@ import 'package:scene_hub/gen/chat_message_status.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/logic/client_seq_generator.dart';
-import 'package:scene_hub/logic/events/chat_refresh_event.dart';
+import 'package:scene_hub/logic/events/chat_refresh_status_changed_event.dart';
 import 'package:scene_hub/logic/managers/chat_message_manager.dart';
 import 'package:scene_hub/logic/time_utils.dart';
 import 'package:scene_hub/sc.dart';
@@ -78,12 +78,14 @@ class ChatMessagesModel {
 abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
   final ChatMessageManager manager;
   final int roomId;
-  StreamSubscription<ChatRefreshEvent>? _refreshSub;
+  StreamSubscription<ChatRefreshStatusChangedEvent>? _refreshSub;
   StreamSubscription<List<ChatMessage>>? _streamSub;
 
   ChatMessagesNotifier(this.manager, this.roomId)
     : super(ChatMessagesModel.initial()) {
-    _refreshSub = sc.eventBus.on<ChatRefreshEvent>().listen(_onRefreshEvent);
+    _refreshSub = sc.eventBus.on<ChatRefreshStatusChangedEvent>().listen(
+      _onRefreshEvent,
+    );
     _streamSub = manager.stream.listen(_onChatMessages);
     manager.initialLoadMessages(roomId, _loadBatchSize);
   }
@@ -101,7 +103,7 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
     super.dispose();
   }
 
-  void _onRefreshEvent(ChatRefreshEvent event) {
+  void _onRefreshEvent(ChatRefreshStatusChangedEvent event) {
     switch (event.status) {
       case ChatRefreshStatus.refreshing:
         state = state.copyWith(status: ChatMessagesStatus.refreshing);

@@ -14,7 +14,7 @@ import 'package:scene_hub/gen/res_receive_friend_chat_messages.dart';
 import 'package:scene_hub/gen/res_send_friend_chat.dart';
 import 'package:scene_hub/gen/res_set_friend_chat_read_seq.dart';
 import 'package:scene_hub/gen/res_set_friend_chat_received_seq.dart';
-import 'package:scene_hub/logic/events/chat_refresh_event.dart';
+import 'package:scene_hub/logic/events/chat_refresh_status_changed_event.dart';
 import 'package:scene_hub/logic/events/login_event.dart';
 import 'package:scene_hub/logic/managers/chat_message_manager.dart';
 import 'package:scene_hub/sc.dart';
@@ -36,7 +36,9 @@ class FriendChatMessageManager extends ChatMessageManager {
   }
 
   Future<void> requestReceiveFriendChatMessages() async {
-    sc.eventBus.emit(ChatRefreshEvent(ChatRefreshStatus.refreshing));
+    sc.eventBus.emit(
+      ChatRefreshStatusChangedEvent(ChatRefreshStatus.refreshing),
+    );
 
     final r = await sc.server.request(
       MsgType.receiveFriendChatMessages,
@@ -52,7 +54,9 @@ class FriendChatMessageManager extends ChatMessageManager {
         });
         sc.chatMessageStorage.upsertMessages(messages);
         controllerAdd(messages);
-        sc.eventBus.emit(ChatRefreshEvent(ChatRefreshStatus.success));
+        sc.eventBus.emit(
+          ChatRefreshStatusChangedEvent(ChatRefreshStatus.success),
+        );
 
         //
         res.messageListDict.forEach((roomId, value) {
@@ -66,14 +70,16 @@ class FriendChatMessageManager extends ChatMessageManager {
               if (_toReportReceivedSeqs[friendUserId] == null ||
                   seq > _toReportReceivedSeqs[friendUserId]!) {
                 _toReportReceivedSeqs[friendUserId] = seq;
-                sc.postFrameCallbackManager.registerNoDuplicate(_postFrameCallback);
+                sc.postFrameCallbackManager.registerNoDuplicate(
+                  _postFrameCallback,
+                );
               }
             }
           }
         });
       }
     } else {
-      sc.eventBus.emit(ChatRefreshEvent(ChatRefreshStatus.error));
+      sc.eventBus.emit(ChatRefreshStatusChangedEvent(ChatRefreshStatus.error));
     }
   }
 

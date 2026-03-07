@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:scene_hub/providers/chat_unread_hint_provider.dart';
+import 'package:scene_hub/providers/conversation_unread_hint_provider.dart';
 
 class ChatUnreadHint extends ConsumerWidget {
   final int roomId;
@@ -10,7 +10,7 @@ class ChatUnreadHint extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(chatUnreadHintProvider(roomId));
+    final count = ref.watch(conversationUnreadHintProvider(roomId));
     if (count <= 0) return const SizedBox.shrink();
 
     return Positioned(
@@ -19,7 +19,6 @@ class ChatUnreadHint extends ConsumerWidget {
       child: GestureDetector(
         onTap: () {
           onTap();
-          ref.read(chatUnreadHintProvider(roomId).notifier).clear();
         },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
