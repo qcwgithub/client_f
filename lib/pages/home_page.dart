@@ -2,17 +2,19 @@ import 'conversation_list_page.dart';
 import 'main_page.dart';
 import 'profile_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:scene_hub/providers/total_conversation_unread_hint_provider.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<StatefulWidget> createState() {
+  ConsumerState<HomePage> createState() {
     return _HomePageState();
   }
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> {
   int currentIndex = 0;
 
   final List<Widget> pages = const [
@@ -23,6 +25,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final totalUnread = ref.watch(totalConversationUnreadHintProvider);
+
     return Scaffold(
       body: IndexedStack(index: currentIndex, children: pages),
       bottomNavigationBar: NavigationBar(
@@ -33,18 +37,26 @@ class _HomePageState extends State<HomePage> {
             currentIndex = index;
           });
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.chat_outlined),
-            selectedIcon: Icon(Icons.chat),
+            icon: Badge(
+              isLabelVisible: totalUnread > 0,
+              label: Text('$totalUnread'),
+              child: const Icon(Icons.chat_outlined),
+            ),
+            selectedIcon: Badge(
+              isLabelVisible: totalUnread > 0,
+              label: Text('$totalUnread'),
+              child: const Icon(Icons.chat),
+            ),
             label: "Chat",
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
             label: "Home",
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.person_outlined),
             selectedIcon: Icon(Icons.person),
             label: "Profile",
