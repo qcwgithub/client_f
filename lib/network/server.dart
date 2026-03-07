@@ -7,7 +7,7 @@ import 'package:scene_hub/gen/msg_login.dart';
 import 'package:scene_hub/gen/msg_type.dart';
 import 'package:scene_hub/gen/res_login.dart';
 import 'package:scene_hub/i_to_msg_pack.dart';
-import 'package:scene_hub/logic/events/login_event.dart';
+import 'package:scene_hub/logic/event.dart';
 import 'package:scene_hub/logic/events/logout_event.dart';
 import 'package:scene_hub/network/binary_message_packer.dart';
 import 'package:scene_hub/network/my_response.dart';
@@ -23,6 +23,8 @@ class PendingRequest {
 }
 
 class Server {
+  final Event1<int> loginSucceeded = Event1();
+
   TcpClient? client;
   NetworkStatus _state = NetworkStatus.init;
   NetworkStatus get state => _state;
@@ -36,7 +38,7 @@ class Server {
 
     if (e == NetworkStatus.online) {
       _loginCount++;
-      sc.eventBus.emit(LoginEvent(count: _loginCount));
+      loginSucceeded.emit(_loginCount);
     } else if (old == NetworkStatus.online) {
       sc.eventBus.emit(LogoutEvent());
     }

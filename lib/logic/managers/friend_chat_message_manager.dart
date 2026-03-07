@@ -14,13 +14,13 @@ import 'package:scene_hub/gen/res_receive_friend_chat_messages.dart';
 import 'package:scene_hub/gen/res_send_friend_chat.dart';
 import 'package:scene_hub/gen/res_set_friend_chat_read_seq.dart';
 import 'package:scene_hub/gen/res_set_friend_chat_received_seq.dart';
-import 'package:scene_hub/logic/events/login_event.dart';
+import 'package:scene_hub/logic/events/chat_rfresh_status.dart';
 import 'package:scene_hub/logic/managers/chat_message_manager.dart';
 import 'package:scene_hub/sc.dart';
 
 class FriendChatMessageManager extends ChatMessageManager {
   void init() {
-    sc.eventBus.on<LoginEvent>().listen(_onLogin);
+    sc.server.loginSucceeded.on(_onLogin);
   }
 
   Future<void> onQuit() async {
@@ -28,8 +28,8 @@ class FriendChatMessageManager extends ChatMessageManager {
     _toReportReadSeqs.clear();
   }
 
-  void _onLogin(LoginEvent event) async {
-    if (event.count > 1) {
+  void _onLogin(int count) async {
+    if (count > 1) {
       await requestReceiveFriendChatMessages();
     }
   }

@@ -1,16 +1,15 @@
 import 'dart:async';
 
-import 'package:scene_hub/logic/events/login_event.dart';
 import 'package:scene_hub/network/network_status.dart';
 import 'package:scene_hub/sc.dart';
 
 class LifecycleManager {
   void init() {
-    sc.eventBus.on<LoginEvent>().listen(_onLogin);
+    sc.server.loginSucceeded.on(_onLogin);
   }
 
-  void _onLogin(LoginEvent event) async {
-    if (event.count == 1) {
+  void _onLogin(int count) async {
+    if (count == 1) {
       await sc.chatMessageStorage.open();
       await sc.conversationManager.openStorage();
       await sc.conversationManager.initialLoad();
