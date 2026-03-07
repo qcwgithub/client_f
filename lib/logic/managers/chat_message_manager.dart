@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/user_info.dart';
 import 'package:scene_hub/logic/event.dart';
-import 'package:scene_hub/logic/events/chat_refresh_status_changed_event.dart';
+import 'package:scene_hub/logic/events/chat_rfresh_status.dart';
 import 'package:scene_hub/sc.dart';
 
 abstract class ChatMessageManager {
@@ -24,7 +24,9 @@ abstract class ChatMessageManager {
         sc.logger.d("消息 seq 不递增！${messages[i].seq} >= ${messages[i + 1].seq}");
       }
     }
-    sc.logger.d("controllerAdd seq range [${messages.first.seq}, ${messages.last.seq}]");
+    sc.logger.d(
+      "controllerAdd seq range [${messages.first.seq}, ${messages.last.seq}]",
+    );
     _controller.add(messages);
   }
 

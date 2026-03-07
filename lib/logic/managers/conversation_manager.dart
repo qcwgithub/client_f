@@ -13,6 +13,8 @@ class ConversationManager {
   final _storage = ConversationStorage();
 
   final Event conversationListChanged = Event();
+  final Event2<int, int> unreadCountChanged = Event2<int, int>();
+  final Event1<int> totalUnreadCountChanged = Event1<int>();
 
   final List<Conversation> _list = [];
   final Map<int, Conversation> _map = {};
@@ -92,6 +94,8 @@ class ConversationManager {
     bool needSort = false;
     List<StorageConversation>? upserts;
 
+    int previousTotalUnreadCount = getTotalUnreadCount();
+
     for (final message in messages) {
       Conversation? conv = _map[message.roomId];
       if (conv == null) {
@@ -139,6 +143,11 @@ class ConversationManager {
       conversationListChanged.emit();
     }
 
+    int totalUnreadCount = getTotalUnreadCount();
+    if (totalUnreadCount != previousTotalUnreadCount) {
+      totalUnreadCountChanged.emit(totalUnreadCount);
+    }
+
     if (upserts != null) {
       await _storage.upsertMany(upserts);
     }
@@ -149,6 +158,8 @@ class ConversationManager {
     if (conv != null && seq > conv.readSeq) {
       conv.readSeq = seq;
       conversationListChanged.emit();
+      unreadCountChanged.emit(conv.roomId, conv.unreadCount);
+      totalUnreadCountChanged.emit(getTotalUnreadCount());
 
       await _storage.upsert(
         StorageConversation(roomId: conv.roomId, readSeq: conv.readSeq),
@@ -171,6 +182,14 @@ class ConversationManager {
 
   Conversation? getByRoomId(int roomId) {
     return _map[roomId];
+  }
+
+  int getTotalUnreadCount() {
+    int total = 0;
+    for (final conv in _list) {
+      total += conv.unreadCount;
+    }
+    return total;
   }
 
   Future<void> delete(int roomId) async {

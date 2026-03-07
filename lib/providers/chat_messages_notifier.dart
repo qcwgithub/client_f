@@ -7,7 +7,8 @@ import 'package:scene_hub/gen/chat_message_status.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/logic/client_seq_generator.dart';
-import 'package:scene_hub/logic/events/chat_refresh_status_changed_event.dart' show ChatRefreshStatus;
+import 'package:scene_hub/logic/events/chat_rfresh_status.dart'
+    show ChatRefreshStatus;
 import 'package:scene_hub/logic/managers/chat_message_manager.dart';
 import 'package:scene_hub/logic/time_utils.dart';
 import 'package:scene_hub/sc.dart';
