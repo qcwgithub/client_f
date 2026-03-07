@@ -2,10 +2,14 @@ import 'dart:async';
 
 import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/user_info.dart';
+import 'package:scene_hub/logic/event.dart';
+import 'package:scene_hub/logic/events/chat_refresh_status_changed_event.dart';
 import 'package:scene_hub/sc.dart';
 
 abstract class ChatMessageManager {
   UserInfo get userInfo => sc.me.userInfo;
+
+  final Event1<ChatRefreshStatus> chatRefreshStatusChanged = Event1();
 
   final _controller = StreamController<List<ChatMessage>>.broadcast(sync: true);
   Stream<List<ChatMessage>> get stream => _controller.stream;

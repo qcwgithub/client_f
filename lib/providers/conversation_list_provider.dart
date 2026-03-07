@@ -23,7 +23,7 @@ class ConversationListModel {
 
 class ConversationListNotifier extends StateNotifier<ConversationListModel> {
   ConversationListNotifier() : super(ConversationListModel.initial()) {
-    sc.conversationManager.addListener(_onChanged);
+    sc.conversationManager.conversationListChanged.on(_onChanged);
     _load();
   }
 
@@ -38,7 +38,7 @@ class ConversationListNotifier extends StateNotifier<ConversationListModel> {
 
   @override
   void dispose() {
-    sc.conversationManager.removeListener(_onChanged);
+    sc.conversationManager.conversationListChanged.off(_onChanged);
     super.dispose();
   }
 

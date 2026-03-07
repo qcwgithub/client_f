@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/friend_info.dart';
 import 'package:scene_hub/logic/conversation.dart';
+import 'package:scene_hub/logic/event.dart';
 import 'package:scene_hub/sc.dart';
 
 import '../storage/conversation_storage.dart';
@@ -12,14 +12,7 @@ import '../storage/conversation_storage.dart';
 class ConversationManager {
   final _storage = ConversationStorage();
 
-  final List<VoidCallback> _listeners = [];
-  void addListener(VoidCallback listener) => _listeners.add(listener);
-  void removeListener(VoidCallback listener) => _listeners.remove(listener);
-  void _notifyListeners() {
-    for (final listener in _listeners) {
-      listener();
-    }
-  }
+  final Event conversationListChanged = Event();
 
   final List<Conversation> _list = [];
   final Map<int, Conversation> _map = {};
@@ -80,7 +73,7 @@ class ConversationManager {
     }
 
     _sortList();
-    _notifyListeners();
+    conversationListChanged.emit();
 
     if (deletes != null) {
       await _storage.deleteMany(deletes);
@@ -143,7 +136,7 @@ class ConversationManager {
     }
 
     if (needNotify) {
-      _notifyListeners();
+      conversationListChanged.emit();
     }
 
     if (upserts != null) {
@@ -155,7 +148,7 @@ class ConversationManager {
     Conversation? conv = _map[roomId];
     if (conv != null && seq > conv.readSeq) {
       conv.readSeq = seq;
-      _notifyListeners();
+      conversationListChanged.emit();
 
       await _storage.upsert(
         StorageConversation(roomId: conv.roomId, readSeq: conv.readSeq),
@@ -183,7 +176,7 @@ class ConversationManager {
   Future<void> delete(int roomId) async {
     _list.removeWhere((conv) => conv.roomId == roomId);
     _map.remove(roomId);
-    _notifyListeners();
+    conversationListChanged.emit();
     await _storage.delete(roomId);
   }
 }
