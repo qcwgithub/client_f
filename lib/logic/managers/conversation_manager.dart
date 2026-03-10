@@ -93,6 +93,7 @@ class ConversationManager {
     bool needNotify = false;
     bool needSort = false;
     List<StorageConversation>? upserts;
+    List<Conversation>? unreadCountChanges;
 
     int previousTotalUnreadCount = getTotalUnreadCount();
 
@@ -119,6 +120,8 @@ class ConversationManager {
         );
       } else {
         if (message.seq > conv.lastMessage.seq) {
+          int previousUnreadCount = conv.unreadCount;
+
           conv.lastMessage = message;
           needSort = true;
           needNotify = true;
@@ -131,6 +134,11 @@ class ConversationManager {
               StorageConversation(roomId: conv.roomId, readSeq: conv.readSeq),
             );
           }
+
+          if (conv.unreadCount != previousUnreadCount && (unreadCountChanges == null || !unreadCountChanges.contains(conv))) {
+            unreadCountChanges ??= [];
+            unreadCountChanges.add(conv);
+          }
         }
       }
     }
@@ -141,6 +149,12 @@ class ConversationManager {
 
     if (needNotify) {
       conversationListChanged.emit();
+    }
+
+    if (unreadCountChanges != null) {
+      for (final conv in unreadCountChanges) {
+        unreadCountChanged.emit(conv.roomId, conv.unreadCount);
+      }
     }
 
     int totalUnreadCount = getTotalUnreadCount();
