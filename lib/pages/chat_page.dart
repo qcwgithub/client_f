@@ -4,7 +4,6 @@ import 'package:scene_hub/gen/chat_message_image_content.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/providers/chat_messages_notifier.dart';
-import 'package:scene_hub/providers/conversation_unread_hint_provider.dart';
 import 'package:scene_hub/sc.dart';
 import 'package:scene_hub/widgets/chat_input.dart';
 import 'package:scene_hub/widgets/chat_unread_hint.dart';
@@ -20,11 +19,13 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
 
   bool _isNearBottom = true;
 
+  /// 用户不在底部时，冻结显示的消息数量，防止新消息插入导致跳动
+  int? _frozenCount;
+  int _currentMessageCount = 0;
+
   @override
   void initState() {
     super.initState();
-
-    sc.postFrameCallbackManager.registerNoDuplicate(scrollToBottom);
 
     scrollController.addListener(() async {
       final pos = scrollController.position;
@@ -34,7 +35,21 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
       bool nearTop = pos.pixels >= pos.maxScrollExtent - threshold;
       bool nearBottom = pos.pixels <= pos.minScrollExtent + threshold;
 
+      final wasNearBottom = _isNearBottom;
       _isNearBottom = nearBottom;
+
+      // 离开底部 → 冻结当前消息数
+      if (wasNearBottom && !nearBottom) {
+        _frozenCount = _currentMessageCount;
+      }
+
+      // 回到底部 → 解除冻结，显示全部
+      if (!wasNearBottom && nearBottom) {
+        if (_frozenCount != null) {
+          _frozenCount = null;
+          setState(() {});
+        }
+      }
 
       if (nearTop) {
         await onScrollNearTop();
@@ -52,6 +67,7 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
 
   void scrollToBottom() {
     if (!scrollController.hasClients) return;
+    _frozenCount = null;
     scrollController.animateTo(
       scrollController.position.minScrollExtent,
       duration: const Duration(milliseconds: 250),
@@ -105,14 +121,20 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
 
   /// Build the chat list with shared showTime logic.
   Widget buildChatList(List<ClientChatMessage> messages) {
+    _currentMessageCount = messages.length;
+    final displayCount = _frozenCount ?? messages.length;
+
     return Expanded(
       child: ListView.builder(
         controller: scrollController,
         reverse: true,
-        itemCount: messages.length,
+        itemCount: displayCount,
         itemBuilder: (context, index) {
           int L = messages.length;
+          int offset = L - displayCount;
           int itemIndex = L - 1 - index;
+          if (itemIndex < offset) return const SizedBox.shrink();
+
           ClientChatMessage message = messages[itemIndex];
           bool showTime = true;
 
@@ -134,8 +156,7 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
   Widget build(BuildContext context) {
     final model = watchChatModel();
 
-    if (_isNearBottom) {
-      // 在底部，自动滚到最新
+    if (_isNearBottom && model.messages.isNotEmpty) {
       sc.postFrameCallbackManager.registerNoDuplicate(scrollToBottom);
     }
 
@@ -165,7 +186,11 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
               ),
             ],
           ),
-          ChatUnreadHint(roomId: roomId, onTap: scrollToBottom),
+          ChatUnreadHint(roomId: roomId, onTap: () {
+            _frozenCount = null;
+            setState(() {});
+            scrollToBottom();
+          }),
         ],
       ),
     );
