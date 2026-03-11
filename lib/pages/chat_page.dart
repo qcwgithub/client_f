@@ -20,8 +20,8 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
   bool _isNearBottom = true;
 
   /// 用户不在底部时，冻结显示的消息数量，防止新消息插入导致跳动
-  int? _frozenCount;
-  int _currentMessageCount = 0;
+  ClientChatMessage? _frozenMessage;
+  ClientChatMessage? _lastMessage;
 
   @override
   void initState() {
@@ -40,13 +40,13 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
 
       // 离开底部 → 冻结当前消息数
       if (wasNearBottom && !nearBottom) {
-        _frozenCount = _currentMessageCount;
+        _frozenMessage = _lastMessage;
       }
 
       // 回到底部 → 解除冻结，显示全部
       if (!wasNearBottom && nearBottom) {
-        if (_frozenCount != null) {
-          _frozenCount = null;
+        if (_frozenMessage != null) {
+          _frozenMessage = null;
           setState(() {});
         }
       }
@@ -67,7 +67,7 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
 
   void scrollToBottom() {
     if (!scrollController.hasClients) return;
-    _frozenCount = null;
+    _frozenMessage = null;
     scrollController.animateTo(
       scrollController.position.minScrollExtent,
       duration: const Duration(milliseconds: 250),
@@ -121,8 +121,20 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
 
   /// Build the chat list with shared showTime logic.
   Widget buildChatList(List<ClientChatMessage> messages) {
-    _currentMessageCount = messages.length;
-    final displayCount = _frozenCount ?? messages.length;
+    _lastMessage = messages.isEmpty ? null : messages.last;
+    // final displayCount = _frozenMessage ?? messages.length;
+    int displayCount = messages.length;
+    if (_frozenMessage != null) {
+      final fm = _frozenMessage!;
+      for (int i = messages.length - 1; i >= 0; i--) {
+        final message = messages[i];
+        if (!fm.useClientSeq && !message.useClientSeq && message.seq > fm.seq) {
+          displayCount--;
+        } else {
+          break;
+        }
+      }
+    }
 
     return Expanded(
       child: ListView.builder(
@@ -131,9 +143,10 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
         itemCount: displayCount,
         itemBuilder: (context, index) {
           int L = messages.length;
+          // 说明
+          // index = 0 表示最底下一条，对应 L - 1
           int offset = L - displayCount;
-          int itemIndex = L - 1 - index;
-          if (itemIndex < offset) return const SizedBox.shrink();
+          int itemIndex = L - 1 - index - offset;
 
           ClientChatMessage message = messages[itemIndex];
           bool showTime = true;
@@ -186,11 +199,14 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
               ),
             ],
           ),
-          ChatUnreadHint(roomId: roomId, onTap: () {
-            _frozenCount = null;
-            setState(() {});
-            scrollToBottom();
-          }),
+          ChatUnreadHint(
+            roomId: roomId,
+            onTap: () {
+              _frozenMessage = null;
+              setState(() {});
+              scrollToBottom();
+            },
+          ),
         ],
       ),
     );
