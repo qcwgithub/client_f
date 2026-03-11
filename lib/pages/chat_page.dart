@@ -201,6 +201,7 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
           ),
           ChatUnreadHint(
             roomId: roomId,
+            visible: !_isNearBottom,
             onTap: () {
               _frozenMessage = null;
               setState(() {});

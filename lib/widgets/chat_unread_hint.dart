@@ -4,12 +4,18 @@ import 'package:scene_hub/providers/conversation_unread_hint_provider.dart';
 
 class ChatUnreadHint extends ConsumerWidget {
   final int roomId;
+  final bool visible;
   final VoidCallback onTap;
-
-  const ChatUnreadHint({super.key, required this.roomId, required this.onTap});
+  const ChatUnreadHint({
+    super.key,
+    required this.roomId,
+    this.visible = true,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!visible) return const SizedBox.shrink();
     final count = ref.watch(conversationUnreadHintProvider(roomId));
     if (count <= 0) return const SizedBox.shrink();
 
