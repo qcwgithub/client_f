@@ -18,8 +18,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   int currentIndex = 0;
 
   final List<Widget> pages = const [
-    ConversationListPage(),
     MainPage(),
+    ConversationListPage(),
     ProfilePage(),
   ];
 
@@ -30,7 +30,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Scaffold(
       body: IndexedStack(index: currentIndex, children: pages),
       bottomNavigationBar: NavigationBar(
-        height: 65,
+        height: 55,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
         selectedIndex: currentIndex,
         onDestinationSelected: (index) {
           setState(() {
@@ -38,6 +39,11 @@ class _HomePageState extends ConsumerState<HomePage> {
           });
         },
         destinations: [
+          const NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: "Home",
+          ),
           NavigationDestination(
             icon: Badge(
               isLabelVisible: totalUnread > 0,
@@ -50,11 +56,6 @@ class _HomePageState extends ConsumerState<HomePage> {
               child: const Icon(Icons.chat),
             ),
             label: "Chat",
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: "Home",
           ),
           const NavigationDestination(
             icon: Icon(Icons.person_outlined),
