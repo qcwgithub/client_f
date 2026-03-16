@@ -103,7 +103,8 @@ class SceneChatMessageItem extends ConsumerWidget {
 
           if (!isMe) const SizedBox(height: 4),
 
-          if (message.type == ChatMessageType.text)
+          if (message.type == ChatMessageType.text ||
+              message.type == ChatMessageType.system)
             _buildTextBubble(context, message, isMe),
 
           // if (messageItem.type == "image") _buildImageBubble(context, isMe),
@@ -228,7 +229,8 @@ class SceneChatMessageItem extends ConsumerWidget {
     switch (selected) {
       case "copy":
         if (context.mounted) {
-          if (message.type == ChatMessageType.text) {
+          if (message.type == ChatMessageType.text ||
+              message.type == ChatMessageType.system) {
             Clipboard.setData(ClipboardData(text: message.content));
             ScaffoldMessenger.of(
               context,

@@ -17,6 +17,7 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
   final ScrollController scrollController = ScrollController();
   final TextEditingController inputController = TextEditingController();
 
+  bool _isNearTop = false;
   bool _isNearBottom = true;
 
   /// 用户不在底部时，冻结显示的消息数量，防止新消息插入导致跳动
@@ -31,29 +32,29 @@ abstract class ChatPageState<T extends ConsumerStatefulWidget>
       final pos = scrollController.position;
       const threshold = 200.0;
 
-      // reverse: true → pixels 越大越靠近旧消息（顶部）
-      bool nearTop = pos.pixels >= pos.maxScrollExtent - threshold;
-      bool nearBottom = pos.pixels <= pos.minScrollExtent + threshold;
-
+      final wasNearTop = _isNearTop;
       final wasNearBottom = _isNearBottom;
-      _isNearBottom = nearBottom;
+
+      // reverse: true → pixels 越大越靠近旧消息（顶部）
+      _isNearTop = pos.pixels >= pos.maxScrollExtent - threshold;
+      _isNearBottom = pos.pixels <= pos.minScrollExtent + threshold;
 
       // 离开底部 → 冻结当前消息数
-      if (wasNearBottom && !nearBottom) {
+      if (wasNearBottom && !_isNearBottom) {
         _frozenMessage = _lastMessage;
       }
 
       // 回到底部 → 解除冻结，显示全部
-      if (!wasNearBottom && nearBottom) {
+      if (!wasNearBottom && _isNearBottom) {
         if (_frozenMessage != null) {
           _frozenMessage = null;
           setState(() {});
         }
       }
 
-      if (nearTop) {
+      if (!wasNearTop && _isNearTop) {
         await onScrollNearTop();
-      } else if (nearBottom) {
+      } else if (!wasNearBottom && _isNearBottom) {
         await onScrollNearBottom();
       }
     });

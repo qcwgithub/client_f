@@ -138,15 +138,17 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
 
   // ---- 消息窗口管理 ----
 
-  static const int _maxServerMessages = 3000;
-  static const int _loadBatchSize = 200;
-  static const int _trimOnceCount = 600;
+  static const int _maxServerMessages = 200;
+  static const int _loadBatchSize = 50;
+  static const int _trimOnceCount = 100;
 
   bool _shouldTrim(int serverMessageCount) {
     return serverMessageCount >= _maxServerMessages;
   }
 
   void _trimOldest(List<ClientChatMessage> list) {
+    sc.logger.e("_trimOldest, before: [${list.first.seq}, ${list.last.seq}]");
+
     int removed = 0;
     list.removeWhere((m) {
       if (removed >= _trimOnceCount) return false;
@@ -154,9 +156,13 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
       removed++;
       return true;
     });
+
+    sc.logger.e("_trimOldest, after: [${list.first.seq}, ${list.last.seq}]");
   }
 
   void _trimNewest(List<ClientChatMessage> list) {
+    sc.logger.e("_trimNewest, before: [${list.first.seq}, ${list.last.seq}]");
+
     int removed = 0;
     for (int i = list.length - 1; i >= 0 && removed < _trimOnceCount; i--) {
       if (!list[i].useClientSeq) {
@@ -164,6 +170,8 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
         removed++;
       }
     }
+
+    sc.logger.e("_trimNewest, after: [${list.first.seq}, ${list.last.seq}]");
   }
 
   /// 将服务器消息插入或更新到 [list] 中，返回是否有变更。
