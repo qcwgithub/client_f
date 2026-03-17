@@ -120,6 +120,13 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
 
     final updatedMessages = [...state.messages];
 
+    bool hasOlder = false;
+    if (updatedMessages.isEmpty) {
+      hasOlder = false;
+    } else {
+      hasOlder = roomMessages.first.seq < updatedMessages.first.seq;
+    }
+
     int delta = 0;
     for (final inner in roomMessages) {
       final result = _upsertIntoList(updatedMessages, inner);
@@ -127,9 +134,7 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
     }
 
     if (delta > 0) {
-      // 如果我正在浏览旧的，这里会不会把我要看的 trim 没了？
-      // 不会的，看旧的一定会走到 loadOlderMessages，那里已经 trim 新的了，这里不会再满足 trim 条件
-      if (_shouldTrim(state.serverMessageCount + delta)) {
+      if (!hasOlder && _shouldTrim(state.serverMessageCount + delta)) {
         _trimOldest(updatedMessages);
       }
       state = state.copyWith(messages: updatedMessages);

@@ -6,11 +6,14 @@ class MsgGetSceneChatHistory implements IToMsgPack {
     // [1]
     int beforeSeq;
     // [2]
+    int afterSeq;
+    // [3]
     int count;
 
     MsgGetSceneChatHistory({
       required this.roomId,
       required this.beforeSeq,
+      required this.afterSeq,
       required this.count,
     });
 
@@ -19,6 +22,7 @@ class MsgGetSceneChatHistory implements IToMsgPack {
       return [
         roomId,
         beforeSeq,
+        afterSeq,
         count,
       ];
     }
@@ -27,7 +31,8 @@ class MsgGetSceneChatHistory implements IToMsgPack {
       return MsgGetSceneChatHistory(
         roomId: list[0] as int,
         beforeSeq: list[1] as int,
-        count: list[2] as int,
+        afterSeq: list[2] as int,
+        count: list[3] as int,
       );
     }
 }
