@@ -10,11 +10,10 @@ abstract class ChatMessageManager {
   UserInfo get userInfo => sc.me.userInfo;
 
   final Event1<ChatRefreshStatus> chatRefreshStatusChanged = Event1();
+  final Event1<List<ChatMessage>> messagesAdded = Event1();
+  final Event messagesCleared = Event();
 
-  final _controller = StreamController<List<ChatMessage>>.broadcast(sync: true);
-  Stream<List<ChatMessage>> get stream => _controller.stream;
-
-  void controllerAdd(List<ChatMessage> messages) {
+  void addMessages(List<ChatMessage> messages) {
     if (messages.isEmpty) return;
     for (int i = 0; i < messages.length - 1; i++) {
       if (messages[i].seq == 0) {
@@ -25,12 +24,12 @@ abstract class ChatMessageManager {
       }
     }
     sc.logger.d(
-      "controllerAdd seq range [${messages.first.seq}, ${messages.last.seq}]",
+      "addMessages seq range [${messages.first.seq}, ${messages.last.seq}]",
     );
-    _controller.add(messages);
+    messagesAdded.emit(messages);
   }
 
-  Future<void> initialLoadMessages(int roomId, int count);
+  Future<List<ChatMessage>> initialLoadMessages(int roomId, int count);
   Future<void> unloadMessages(int roomId);
   Future<void> loadOlderMessages(int roomId, int beforeSeq, int count);
   Future<void> loadNewerMessages(int roomId, int afterSeq, int count);

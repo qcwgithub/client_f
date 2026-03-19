@@ -82,11 +82,8 @@ class ConversationManager {
     }
   }
 
-  StreamSubscription<List<ChatMessage>>? _friendChatSub;
   void listenForFriendChatMessages() {
-    _friendChatSub = sc.friendChatMessageManager.stream.listen(
-      _onFriendChatMessage,
-    );
+    sc.friendChatMessageManager.messagesAdded.on(_onFriendChatMessage);
   }
 
   Future<void> _onFriendChatMessage(List<ChatMessage> messages) async {
@@ -182,8 +179,7 @@ class ConversationManager {
   }
 
   Future<void> onQuit() async {
-    _friendChatSub?.cancel();
-    _friendChatSub = null;
+    sc.friendChatMessageManager.messagesAdded.off(_onFriendChatMessage);
     _list.clear();
     _map.clear();
     await _storage.close();

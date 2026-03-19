@@ -50,7 +50,7 @@ class FriendChatMessageManager extends ChatMessageManager {
           messages.addAll(value.list);
         });
         sc.chatMessageStorage.upsertMessages(messages);
-        controllerAdd(messages);
+        addMessages(messages);
         chatRefreshStatusChanged.emit(ChatRefreshStatus.success);
 
         //
@@ -79,12 +79,12 @@ class FriendChatMessageManager extends ChatMessageManager {
   }
 
   @override
-  Future<void> initialLoadMessages(int roomId, int count) async {
+  Future<List<ChatMessage>> initialLoadMessages(int roomId, int count) async {
     final messages = await sc.chatMessageStorage.getMessages(
       roomId,
       limit: count,
     );
-    controllerAdd(messages);
+    return messages;
   }
 
   @override
@@ -97,7 +97,7 @@ class FriendChatMessageManager extends ChatMessageManager {
       beforeSeq,
       limit: count,
     );
-    controllerAdd(messages);
+    addMessages(messages);
   }
 
   @override
@@ -107,7 +107,7 @@ class FriendChatMessageManager extends ChatMessageManager {
       afterSeq,
       limit: count,
     );
-    controllerAdd(messages);
+    addMessages(messages);
   }
 
   @override
@@ -132,7 +132,7 @@ class FriendChatMessageManager extends ChatMessageManager {
     if (r.e == ECode.success) {
       final res = ResSendFriendChat.fromMsgPack(r.res as List);
       sc.chatMessageStorage.upsertMessage(res.message);
-      controllerAdd([res.message]);
+      addMessages([res.message]);
       return true;
     }
 
@@ -145,7 +145,7 @@ class FriendChatMessageManager extends ChatMessageManager {
     ChatMessage message = msg.message;
 
     sc.chatMessageStorage.upsertMessage(message);
-    controllerAdd([message]);
+    addMessages([message]);
 
     int friendUserId = friendInfo.userId;
     int seq = message.seq;

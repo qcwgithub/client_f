@@ -79,25 +79,33 @@ class ChatMessagesModel {
 abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
   final ChatMessageManager manager;
   final int roomId;
-  StreamSubscription<List<ChatMessage>>? _streamSub;
 
   ChatMessagesNotifier(this.manager, this.roomId)
     : super(ChatMessagesModel.initial()) {
+    manager.messagesCleared.on(_onChatCleared);
     manager.chatRefreshStatusChanged.on(_onRefreshStatus);
-    _streamSub = manager.stream.listen(_onChatMessages);
-    manager.initialLoadMessages(roomId, _loadBatchSize);
+    manager.messagesAdded.on(_onMessagesAdded);
+
+    _initialLoad();
+  }
+
+  Future<void> _initialLoad() async {
+    var messages = await manager.initialLoadMessages(roomId, _loadBatchSize);
+    _onMessagesAdded(messages);
   }
 
   @override
   void dispose() {
-    _streamSub?.cancel();
-    _streamSub = null;
-
+    manager.messagesCleared.off(_onChatCleared);
     manager.chatRefreshStatusChanged.off(_onRefreshStatus);
-
+    manager.messagesAdded.off(_onMessagesAdded);
     manager.unloadMessages(roomId);
 
     super.dispose();
+  }
+
+  void _onChatCleared() {
+    state = ChatMessagesModel.initial();
   }
 
   void _onRefreshStatus(ChatRefreshStatus status) {
@@ -114,7 +122,7 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
     }
   }
 
-  void _onChatMessages(List<ChatMessage> messages) {
+  void _onMessagesAdded(List<ChatMessage> messages) {
     final roomMessages = messages.where((m) => m.roomId == roomId).toList();
     if (roomMessages.isEmpty) return;
 
@@ -143,16 +151,16 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
 
   // ---- 消息窗口管理 ----
 
-  static const int _maxServerMessages = 200;
-  static const int _loadBatchSize = 50;
-  static const int _trimOnceCount = 100;
+  static const int _maxServerMessages = 10000;
+  static const int _loadBatchSize = 200;
+  static const int _trimOnceCount = 1000;
 
   bool _shouldTrim(int serverMessageCount) {
     return serverMessageCount >= _maxServerMessages;
   }
 
   void _trimOldest(List<ClientChatMessage> list) {
-    sc.logger.e("_trimOldest, before: [${list.first.seq}, ${list.last.seq}]");
+    // sc.logger.e("_trimOldest, before: [${list.first.seq}, ${list.last.seq}]");
 
     int removed = 0;
     list.removeWhere((m) {
@@ -162,11 +170,11 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
       return true;
     });
 
-    sc.logger.e("_trimOldest, after: [${list.first.seq}, ${list.last.seq}]");
+    // sc.logger.e("_trimOldest, after: [${list.first.seq}, ${list.last.seq}]");
   }
 
   void _trimNewest(List<ClientChatMessage> list) {
-    sc.logger.e("_trimNewest, before: [${list.first.seq}, ${list.last.seq}]");
+    // sc.logger.e("_trimNewest, before: [${list.first.seq}, ${list.last.seq}]");
 
     int removed = 0;
     for (int i = list.length - 1; i >= 0 && removed < _trimOnceCount; i--) {
@@ -176,7 +184,7 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
       }
     }
 
-    sc.logger.e("_trimNewest, after: [${list.first.seq}, ${list.last.seq}]");
+    // sc.logger.e("_trimNewest, after: [${list.first.seq}, ${list.last.seq}]");
   }
 
   /// 将服务器消息插入或更新到 [list] 中，返回是否有变更。
@@ -311,11 +319,15 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
   Future<void> loadOlderMessages() async {
     if (state.minSeq <= 1) return;
 
-    if (_shouldTrim(state.serverMessageCount)) {
-      final trimmed = [...state.messages];
-      _trimNewest(trimmed);
-      state = state.copyWith(messages: trimmed);
-    }
+    // 先不干这个事了，演示一个 bug
+    // 1、用户查看旧消息，导致这里 trim new
+    // 2、后面又要查看新消息，那里 loadNewerMessages，新出来的消息会一次性显示到尾部，不连续了
+    // 也就是说只 trim old
+    // if (_shouldTrim(state.serverMessageCount)) {
+    //   final trimmed = [...state.messages];
+    //   _trimNewest(trimmed);
+    //   state = state.copyWith(messages: trimmed);
+    // }
 
     await manager.loadOlderMessages(roomId, state.minSeq, _loadBatchSize);
   }

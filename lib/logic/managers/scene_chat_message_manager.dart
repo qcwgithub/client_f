@@ -17,19 +17,19 @@ class SceneChatMessageManager extends ChatMessageManager {
   final Map<int, List<ChatMessage>> _sceneMessages = {};
   void onEnterSceneSuccess(int roomId, List<ChatMessage> recentMessages) {
     _sceneMessages[roomId] = recentMessages;
+
+    messagesCleared.emit();
+    addMessages(recentMessages);
   }
 
   @override
-  Future<void> initialLoadMessages(int roomId, int count) async {
+  Future<List<ChatMessage>> initialLoadMessages(int roomId, int count) async {
     List<ChatMessage>? messages = _sceneMessages[roomId];
     if (messages == null) {
-      return;
+      return [];
     }
 
-    List<ChatMessage> result = messages.sublist(
-      messages.length > count ? messages.length - count : 0,
-    );
-    controllerAdd(result);
+    return messages;
   }
 
   @override
@@ -49,7 +49,7 @@ class SceneChatMessageManager extends ChatMessageManager {
 
     if (r.e == ECode.success) {
       final res = ResGetSceneChatHistory.fromMsgPack(r.res as List);
-      controllerAdd(res.messages);
+      addMessages(res.messages);
     }
   }
 
@@ -67,7 +67,7 @@ class SceneChatMessageManager extends ChatMessageManager {
 
     if (r.e == ECode.success) {
       final res = ResGetSceneChatHistory.fromMsgPack(r.res as List);
-      controllerAdd(res.messages);
+      addMessages(res.messages);
     }
   }
 
@@ -86,7 +86,7 @@ class SceneChatMessageManager extends ChatMessageManager {
 
     if (r.e == ECode.success) {
       final res = ResSendSceneChat.fromMsgPack(r.res as List);
-      controllerAdd([res.message]);
+      addMessages([res.message]);
       return true;
     }
 
@@ -95,6 +95,6 @@ class SceneChatMessageManager extends ChatMessageManager {
 
   void onMsgAChatMessage(MsgAChatMessage msg) async {
     ChatMessage message = msg.message;
-    controllerAdd([message]);
+    addMessages([message]);
   }
 }
