@@ -14,8 +14,8 @@ class ConversationListModel {
   Conversation getAt(int index) => conversations[index];
 
   Conversation? getByRoomId(int roomId) {
-    for (final c in conversations) {
-      if (c.roomId == roomId) return c;
+    for (final conv in conversations) {
+      if (conv.sconv.roomId == roomId) return conv;
     }
     return null;
   }

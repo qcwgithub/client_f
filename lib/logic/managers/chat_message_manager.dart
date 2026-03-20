@@ -11,7 +11,7 @@ abstract class ChatMessageManager {
 
   final Event1<ChatRefreshStatus> chatRefreshStatusChanged = Event1();
   final Event1<List<ChatMessage>> messagesAdded = Event1();
-  final Event messagesCleared = Event();
+  final Event1<int> messagesCleared = Event1<int>();
 
   void addMessages(List<ChatMessage> messages) {
     if (messages.isEmpty) return;

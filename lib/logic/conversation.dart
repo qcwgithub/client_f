@@ -1,18 +1,18 @@
 import 'package:scene_hub/gen/chat_message.dart';
+import 'package:scene_hub/logic/storage/conversation_storage.dart';
 
 class Conversation {
-  int roomId;
+  StorageConversation sconv;
   ChatMessage lastMessage;
 
-  // 这个记提当前内存里最大值，有别于 friendInfo.readSeq 和 StorageConversation.readSeq
-  int readSeq;
   int get unreadCount {
-    return lastMessage.seq - readSeq;
+    switch (sconv.type) {
+      case ConversationType.friend:
+        return lastMessage.seq - sconv.readSeq;
+      case ConversationType.scene:
+        return 0;
+    }
   }
 
-  Conversation({
-    required this.roomId,
-    required this.lastMessage,
-    required this.readSeq,
-  });
+  Conversation({required this.sconv, required this.lastMessage});
 }

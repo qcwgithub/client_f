@@ -134,7 +134,7 @@ class ChatMessageStorage {
   }
 
   /// 批量获取多个房间各自 max seq 对应的那条消息
-  Future<Map<int, ChatMessage>> getLatestMessages(List<int> roomIds) async {
+  Future<Map<int, ChatMessage>> getLastMessages(List<int> roomIds) async {
     if (roomIds.isEmpty) return {};
     final placeholders = roomIds.map((_) => '?').join(',');
     final rows = await _database.rawQuery('''

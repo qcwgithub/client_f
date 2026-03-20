@@ -19,6 +19,7 @@ import 'package:scene_hub/logic/managers/chat_message_manager.dart';
 import 'package:scene_hub/sc.dart';
 
 class FriendChatMessageManager extends ChatMessageManager {
+  // 全局调用1次
   void init() {
     sc.server.loginSucceeded.on(_onLogin);
   }

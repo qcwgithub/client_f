@@ -56,6 +56,7 @@ class Sc {
     appRebuildNotifier.value++;
   }
 
+  // 全局调用1次
   void init() {
     lifecycleManager.init();
     friendChatMessageManager.init();

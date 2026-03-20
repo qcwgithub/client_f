@@ -1,5 +1,5 @@
 import 'conversation_list_page.dart';
-import 'main_page.dart';
+import 'scene_list_page.dart';
 import 'profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,8 +18,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   int currentIndex = 0;
 
   final List<Widget> pages = const [
-    MainPage(),
     ConversationListPage(),
+    SceneListPage(),
     ProfilePage(),
   ];
 
@@ -39,11 +39,6 @@ class _HomePageState extends ConsumerState<HomePage> {
           });
         },
         destinations: [
-          const NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: "Home",
-          ),
           NavigationDestination(
             icon: Badge(
               isLabelVisible: totalUnread > 0,
@@ -56,6 +51,11 @@ class _HomePageState extends ConsumerState<HomePage> {
               child: const Icon(Icons.chat),
             ),
             label: "Chat",
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: "Scenes",
           ),
           const NavigationDestination(
             icon: Icon(Icons.person_outlined),

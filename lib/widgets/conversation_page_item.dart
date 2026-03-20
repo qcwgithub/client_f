@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scene_hub/logic/conversation.dart';
+import 'package:scene_hub/logic/storage/conversation_storage.dart';
 import 'package:scene_hub/pages/avatar_pick_page.dart';
 import 'package:scene_hub/providers/conversation_item_provider.dart';
 
 class ConversationPageItem extends ConsumerWidget {
+  final ConversationType type;
   final int roomId;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
   const ConversationPageItem({
     super.key,
+    required this.type,
     required this.roomId,
     required this.onTap,
     required this.onDelete,

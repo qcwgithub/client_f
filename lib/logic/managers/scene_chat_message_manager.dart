@@ -3,23 +3,47 @@ import 'dart:async';
 import 'package:scene_hub/gen/chat_message.dart';
 import 'package:scene_hub/gen/e_code.dart';
 import 'package:scene_hub/gen/msg_a_chat_message.dart';
+import 'package:scene_hub/gen/msg_enter_scene.dart';
 import 'package:scene_hub/gen/msg_get_scene_chat_history.dart';
 import 'package:scene_hub/gen/msg_send_scene_chat.dart';
 import 'package:scene_hub/gen/msg_type.dart';
+import 'package:scene_hub/gen/res_enter_scene.dart';
 import 'package:scene_hub/gen/res_get_scene_chat_history.dart';
 import 'package:scene_hub/gen/res_send_scene_chat.dart';
+import 'package:scene_hub/logic/event.dart';
 import 'package:scene_hub/logic/managers/chat_message_manager.dart';
 import 'package:scene_hub/sc.dart';
 
 class SceneChatMessageManager extends ChatMessageManager {
+  // 全局调用1次
   void init() {}
+  Event2<int, List<ChatMessage>> onEnterSceneSuccess =
+      Event2<int, List<ChatMessage>>();
 
   final Map<int, List<ChatMessage>> _sceneMessages = {};
-  void onEnterSceneSuccess(int roomId, List<ChatMessage> recentMessages) {
-    _sceneMessages[roomId] = recentMessages;
 
-    messagesCleared.emit();
-    addMessages(recentMessages);
+  Future<bool> requestEnterScene(int roomId) async {
+    final r = await sc.server.request(
+      MsgType.enterScene,
+      MsgEnterScene(roomId: roomId, lastSeq: 0),
+    );
+
+    if (r.e != ECode.success) {
+      return false;
+    }
+
+    var res = ResEnterScene.fromMsgPack(r.res!);
+    _sceneMessages[roomId] = res.recentMessages;
+    
+    messagesCleared.emit(roomId);
+    addMessages(res.recentMessages);
+    onEnterSceneSuccess.emit(roomId, res.recentMessages);
+
+    return true;
+  }
+
+  List<ChatMessage> getSceneMessages(int roomId) {
+    return _sceneMessages[roomId] ?? [];
   }
 
   @override

@@ -3,13 +3,38 @@ import 'package:scene_hub/gen/scene_room_info.dart';
 import 'package:scene_hub/pages/scene_chat_page.dart';
 import 'package:flutter/material.dart';
 import 'package:scene_hub/providers/enter_scene_provider.dart';
-import 'package:scene_hub/providers/scene_chat_messages_provider.dart';
-import 'package:scene_hub/sc.dart';
 
 class SceneCard extends ConsumerWidget {
   final SceneRoomInfo roomInfo;
 
   const SceneCard({super.key, required this.roomInfo});
+
+  static Future<void> s_enterScene(
+    BuildContext context,
+    WidgetRef ref,
+    int roomId,
+  ) async {
+    final EnterSceneNotifier notifier = ref.read(enterSceneProvider.notifier);
+
+    final success = await notifier.enterScene(roomId);
+    if (!context.mounted) return;
+
+    if (!success) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("enter scene failed")));
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) {
+          return SceneChatPage(roomId: roomId);
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,33 +52,7 @@ class SceneCard extends ConsumerWidget {
             ),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () async {
-              final EnterSceneNotifier notifier = ref.read(
-                enterSceneProvider.notifier,
-              );
-
-              final success = await notifier.enterScene(roomInfo.roomId);
-              if (!context.mounted) return;
-
-              if (!success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("enter scene failed")),
-                );
-                return;
-              }
-
-              sc.sceneChatMessageManager.onEnterSceneSuccess(
-                roomInfo.roomId,
-                ref.read(enterSceneProvider).recentMessages,
-              );
-
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) {
-                    return SceneChatPage(roomInfo: roomInfo);
-                  },
-                ),
-              );
+              await s_enterScene(context, ref, roomInfo.roomId);
             },
           ),
         ],

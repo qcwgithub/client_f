@@ -104,8 +104,10 @@ abstract class ChatMessagesNotifier extends StateNotifier<ChatMessagesModel> {
     super.dispose();
   }
 
-  void _onChatCleared() {
-    state = ChatMessagesModel.initial();
+  void _onChatCleared(int roomId) {
+    if (roomId == this.roomId) {
+      state = ChatMessagesModel.initial();
+    }
   }
 
   void _onRefreshStatus(ChatRefreshStatus status) {

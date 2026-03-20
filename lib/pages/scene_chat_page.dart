@@ -4,7 +4,6 @@ import 'package:scene_hub/gen/chat_message_image_content.dart';
 import 'package:scene_hub/gen/chat_message_type.dart';
 import 'package:scene_hub/gen/msg_leave_scene.dart';
 import 'package:scene_hub/gen/msg_type.dart';
-import 'package:scene_hub/gen/scene_room_info.dart';
 import 'package:scene_hub/logic/client_chat_message.dart';
 import 'package:scene_hub/pages/chat_page.dart';
 import 'package:scene_hub/providers/chat_messages_notifier.dart';
@@ -13,10 +12,9 @@ import 'package:scene_hub/sc.dart';
 import 'package:scene_hub/widgets/scene_chat_message_item.dart';
 
 class SceneChatPage extends ConsumerStatefulWidget {
-  final SceneRoomInfo roomInfo;
-  int get roomId => roomInfo.roomId;
+  final int roomId;
 
-  const SceneChatPage({super.key, required this.roomInfo});
+  const SceneChatPage({super.key, required this.roomId});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() {
@@ -29,7 +27,7 @@ class _ChatPageState extends ChatPageState<SceneChatPage> {
   int get roomId => widget.roomId;
 
   @override
-  String get chatTitle => widget.roomInfo.title;
+  String get chatTitle => "TO DO";
 
   @override
   ChatMessagesModel watchChatModel() =>

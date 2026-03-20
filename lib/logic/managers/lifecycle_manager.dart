@@ -4,6 +4,7 @@ import 'package:scene_hub/network/network_status.dart';
 import 'package:scene_hub/sc.dart';
 
 class LifecycleManager {
+  // 全局调用1次
   void init() {
     sc.server.loginSucceeded.on(_onLogin);
   }
